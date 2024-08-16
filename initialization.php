@@ -3,8 +3,8 @@
 Plugin Name: Verified Profiles - Scale My Publication (Michael Peres)
 Description: Verified Profiles Functionality
 Version: 1.0
-Author: Michael Peres
-*/
+Author: Michael Peres hi   sss
+*/ 
 
 //Precheck WordPress is set up correctly
 include_once("wordpress-pre-check.php");
