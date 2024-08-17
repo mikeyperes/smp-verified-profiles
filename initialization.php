@@ -4,8 +4,8 @@ Plugin Name: Verified Profiles - Scale My Publication (Michael Peres)
 Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
-Description: Custom plugin for SMP Verified Profiles.
-Version: 1.0.2
+Description: Verified Profile integration for Scale My Publication systems.
+Version: 1.0.4
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -27,7 +27,6 @@ include_once("register-acf-fields.php");
 //Precheck WordPress is set up correctly
 include_once("initiate-user-roles.php");
 
-
 //Build Dashboard
 include_once("settings-dashboard.php");
 
@@ -38,4 +37,31 @@ include_once("verified-profile-dashboard.php");
 include_once("create-pages-and-listing-grids.php");
 
 // Run updater check
-include_once("plugin-updater.php");
+//include_once("plugin-updater.php");
+
+    // Include the WP_GitHub_Updater class file
+if (file_exists(plugin_dir_path(__FILE__) . 'GitHub_Updater.php')) {
+    require_once(plugin_dir_path(__FILE__) . 'GitHub_Updater.php');
+} else {
+    error_log('WP_GitHub_Updater.php file is missing.');
+}
+
+// Initialize the updater
+if (is_admin()) { // Ensure this runs only in the admin area
+
+    $config = array(
+        'slug' => plugin_basename(__FILE__), // Plugin slug
+        'proper_folder_name' => dirname(plugin_basename(__FILE__)), // Proper folder name
+        'sslverify' => true, // SSL verification for the download
+      //  'access_token' => 'YOUR_GITHUB_ACCESS_TOKEN', // GitHub access token (if required for private repositories)
+        'api_url' => 'https://api.github.com/repos/mikeyperes/smp-verified-profiles', // GitHub API URL
+        'raw_url' => 'https://raw.githubusercontent.com/mikeyperes/smp-verified-profiles/main', // Raw GitHub URL
+        'github_url' => 'https://github.com/mikeyperes/smp-verified-profiles', // GitHub repository URL
+        'zip_url' => 'https://github.com/mikeyperes/smp-verified-profiles/archive/main.zip', // Zip URL for the latest version
+        'requires' => '5.0', // Minimum required WordPress version
+        'tested' => '6.0', // Tested up to WordPress version
+        'readme' => 'README.md', // Readme file for version checking
+    );
+
+    $updater = new WP_GitHub_Updater($config);
+}
