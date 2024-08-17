@@ -35,3 +35,6 @@ include_once("verified-profile-dashboard.php");
 
 // Functionality to process empty Pages and Jet Engine Listing Grids
 include_once("create-pages-and-listing-grids.php");
+
+// Run updater check
+include_once("plugin-updater.php");
