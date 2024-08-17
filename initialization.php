@@ -3,7 +3,14 @@
 Plugin Name: Verified Profiles - Scale My Publication (Michael Peres)
 Description: Verified Profiles Functionality
 Version: 1.0
-Author: Michael Peres hi   sss
+Author: Michael Peres
+Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
+Description: Custom plugin for SMP Verified Profiles.
+Version: 1.0.1
+Author: Your Name
+Author URI: https://michaelperes.com
+GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
+GitHub Branch: main
 */ 
 
 //Precheck WordPress is set up correctly
