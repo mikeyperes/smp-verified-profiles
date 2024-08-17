@@ -5,17 +5,18 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Custom plugin for SMP Verified Profiles.
-Version: 1.0.1
+Version: 1.0.2
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
 */ 
 
+// Ensure this file is being included by a parent file
+defined('ABSPATH') or die('No script kiddies please!');
+
 //Precheck WordPress is set up correctly
 include_once("wordpress-pre-check.php");
 
-// Ensure this file is being included by a parent file
-defined('ABSPATH') or die('No script kiddies please!');
 
 //Import ACF Fields for wp-admin settings page
 include_once("register-acf-fields-settings-page.php");
