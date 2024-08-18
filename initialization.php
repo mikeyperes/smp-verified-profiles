@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 1.0.6
+Version: 1.0.7
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -16,6 +16,19 @@ defined('ABSPATH') or die('No script kiddies please!');
 
 //Generic functions import
 include_once("generic-functions.php");
+
+// Check if ACF is installed and active using the generic function
+list($acf_installed, $acf_active, $acf_auto_update) = check_plugin_status('advanced-custom-fields/acf.php');
+
+// If ACF is not active, display a warning and prevent the plugin from running
+if (!$acf_active) {
+    add_action('admin_notices', function() {
+        echo '<div class="notice notice-error"><p><strong>Verified Profiles - Scale My Publication:</strong> The Advanced Custom Fields (ACF) plugin is required and must be active to use this plugin. Please activate ACF.</p></div>';
+    });
+
+    // Stop further execution of the plugin
+    return;
+}
 
 //Precheck WordPress is set up correctly
 include_once("wordpress-pre-check.php");
