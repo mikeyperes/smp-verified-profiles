@@ -40,7 +40,7 @@ function verified_profiles_page() {?><div class="wrap">
 <h3>Theme</h3>
 <ul>
     <li><?php display_check_status(is_hello_elementor_theme_active(), 'Hello Elementor theme is active.', 'Hello Elementor theme is not active. Please activate it to use the Hello World Plugin.'); ?></li>
-    <li style="margin-left: 20px;"><?php display_check_status(is_hello_elementor_theme_auto_update_enabled(), 'Hello Elementor theme auto updates are enabled.', 'Hello Elementor theme auto updates are not enabled. Please enable them.'); ?></li>
+    <li style="margin-left: 20px;"><?php display_check_status(is_theme_auto_update_enabled("hello-elementor"), 'Hello Elementor theme auto updates are enabled.', 'Hello Elementor theme auto updates are not enabled. Please enable them.'); ?></li>
 </ul>
 
 <h3>Plugins</h3>
@@ -128,44 +128,3 @@ function is_acf_field_group_imported($key) {
     return false;
 
 }
- /*
-add_action('wp_ajax_get_settings_pages_and_post_reports', 'get_settings_pages_and_post_reports');
-add_action('wp_ajax_nopriv_get_settings_pages_and_post_reports', 'get_settings_pages_and_post_reports');
-
-function get_settings_pages_and_post_reports() {
-    // Debugging: Check if function is called
-    error_log("ACF Field Statuses Function Called");
-
-    $fields = array(
-        'field_page_verified_profiles_badges',
-        'field_page_verified_profiles_claim',
-        'field_page_verified_profiles_apply',
-        'field_page_verified_profiles_welcome',
-        'field_single_profile',
-        'field_page_profile_archive',
-        'field_home_profile_archive',
-        'field_single_profile_words_by',
-        'field_single_profile_mentioned'
-    );
-
-    $data = array();
-
-    foreach ($fields as $field) {
-        $post_id = get_field($field, 'option');
-        if ($post_id) {
-            $data[$field] = array(
-                'post_id' => $post_id,
-                'view_link' => get_permalink($post_id),
-                'edit_link' => get_edit_post_link($post_id)
-            );
-        } else {
-            $data[$field] = null;
-        }
-    }
-
-    // Debugging: Log the data array
-    error_log(print_r($data, true));
-
-    wp_send_json_success($data);
-}*/
-?>

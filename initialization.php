@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 1.0.4
+Version: 1.0.5
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -14,9 +14,11 @@ GitHub Branch: main
 // Ensure this file is being included by a parent file
 defined('ABSPATH') or die('No script kiddies please!');
 
+//Generic functions import
+include_once("generic-functions.php");
+
 //Precheck WordPress is set up correctly
 include_once("wordpress-pre-check.php");
-
 
 //Import ACF Fields for wp-admin settings page
 include_once("register-acf-fields-settings-page.php");

@@ -325,7 +325,7 @@ function is_profile_manager($strict = false)
 function is_contributor($strict = false)
 {
     
-       if (!perform_verified_profiles_plugin_prechecks()) return;
+       if (!smp_vp_perform_prechecks()) 
 	    // Get current user
     $user = wp_get_current_user();
 
