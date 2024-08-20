@@ -1,4 +1,4 @@
-<? function display_settings_acf_post_and_pages_form(){?><form method="post" action="options.php">
+<? function smp_vp_display_settings_acf_post_and_pages_form(){?><form method="post" action="options.php">
     <?php
     // Render ACF fields within the form
     acf_form(array(
@@ -54,7 +54,7 @@ jQuery(document).ready(function($) {
     });
 });
 </script><? }
-function display_settings_create_pages_and_listing_grids(){ ?>
+function smp_vp_display_settings_create_pages_and_listing_grids(){ ?>
     <button id="create-posts-button" class="button button-primary">Create Pages and Listing Grids (Jet Engine posts)</button>
     <div id="acf-loader" style="display:none;">Loading...</div>
     <div id="create-posts-result"></div>
@@ -132,14 +132,10 @@ function display_acf_field_status() {
     }
 }
 
-// Get the field label for an ACF field
-function get_field_label($field_name) {
-    $field_object = get_field_object($field_name);
-    return $field_object['label'];
-}
 
 
-function create_posts_and_listing_grids() {
+
+function smp_vp_create_posts_and_listing_grids() {
     // Define the ACF fields and their corresponding titles
     $acf_fields = [
         'field_page_verified_profiles_badges' => 'Verified Profiles - Badges',
@@ -214,5 +210,5 @@ function create_posts_and_listing_grids() {
 
 
 
-add_action('wp_ajax_create_posts_and_listing_grids', 'create_posts_and_listing_grids');
-add_action('wp_ajax_nopriv_create_posts_and_listing_grids', 'create_posts_and_listing_grids');
+add_action('wp_ajax_create_posts_and_listing_grids', 'smp_vp_create_posts_and_listing_grids');
+add_action('wp_ajax_nopriv_create_posts_and_listing_grids', 'smp_vp_create_posts_and_listing_grids');

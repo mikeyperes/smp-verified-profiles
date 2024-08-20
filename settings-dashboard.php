@@ -1,20 +1,24 @@
 <?php
-// Function to add settings page under "Settings"
-function add_verified_profiles_menu() {
-    add_options_page(
-        'Verified Profiles', // Page title
-        'Verified Profiles', // Menu title
-        'manage_options',    // Capability
-        'verified-profiles', // Menu slug
-        'verified_profiles_page' // Callback function
+
+
+//function declared in a generic-functions.php 
+add_action('admin_menu', 'smp_vp_add_verified_profiles_menu');
+
+
+// Specific usage example for Verified Profiles
+function smp_vp_add_verified_profiles_menu() {
+    add_settings_menu(
+        'Verified Profiles',       // Page title
+        'Verified Profiles',       // Menu title
+        'manage_options',          // Capability
+        'verified-profiles',       // Menu slug
+        'verified_profiles_page'   // Callback function
     );
 }
-add_action('admin_menu', 'add_verified_profiles_menu');
-
 
 
 // Callback function to display content on the settings page
-function verified_profiles_page() {?><div class="wrap">
+function smp_vp_display_verified_profiles_page() {?><div class="wrap">
         
         
 
@@ -107,24 +111,4 @@ foreach ($plugins as $plugin => $name):
 
 
     </div><?php
-}
-
-// Ensure ACF form functions are available
-if (function_exists('acf_form_head')) {
-    add_action('admin_head', 'acf_form_head');
-}
-
-// Hook the add_verified_profiles_menu function to the admin_menu action
-add_action('admin_menu', 'add_verified_profiles_menu');
-
-// Function to check if the ACF field group is imported
-function is_acf_field_group_imported($key) {
-    $groups = acf_get_local_field_groups();
-    foreach ($groups as $group) {
-        if ($group['key'] === $key) {
-            return true;
-        }
-    }
-    return false;
-
 }
