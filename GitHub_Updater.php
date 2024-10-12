@@ -1,4 +1,4 @@
-<?php
+<?php namespace smp_verified_profiles;
 
 // Prevent loading this file directly and/or if the class is already defined
 if ( ! defined( 'ABSPATH' ) || class_exists( 'WPGitHubUpdater' ) || class_exists( 'WP_GitHub_Updater' ) )
@@ -6,7 +6,7 @@ if ( ! defined( 'ABSPATH' ) || class_exists( 'WPGitHubUpdater' ) || class_exists
 
 class WP_GitHub_Updater {
 
-	/**
+	/** 
 	 * GitHub Updater version
 	 */
 	const VERSION = 1.6;
@@ -67,7 +67,7 @@ class WP_GitHub_Updater {
 
 		// set timeout
 		add_filter( 'http_request_timeout', array( $this, 'http_request_timeout' ) );
-
+ 
 		// set sslverify for zip download
 		add_filter( 'http_request_args', array( $this, 'http_request_sslverify' ), 10, 2 );
 	}
@@ -184,50 +184,26 @@ class WP_GitHub_Updater {
 	 * @since 1.0
 	 * @return int $version the version number
 	 */
-	public function get_new_version() {
-		$version = get_site_transient( md5($this->config['slug']).'_new_version' );
+    public function get_new_version() {
+        $query = trailingslashit($this->config['raw_url']) . Config::$plugin_starter_file;
+        $response = wp_remote_get($query);
+    
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) != 200) {
+            write_log("WP_GitHub_Updater: Error fetching version from GitHub.<br />URL: ".$query , "true");
+            return false;
+        }
+    
+        // Extract version from the plugin header
+        if (preg_match('/^Version:\s*(.*)$/mi', wp_remote_retrieve_body($response), $matches)) {
+            $version = trim($matches[1]);
+            set_site_transient(md5($this->config['slug']).'_new_version', $version, 60*60*6);
+            return $version;
+        } else {
+            write_log("WP_GitHub_Updater: No version found in the file.", "true");
+            return false;
+        }
+    }
 
-		if ( $this->overrule_transients() || ( !isset( $version ) || !$version || '' == $version ) ) {
-
-			$raw_response = $this->remote_get( trailingslashit( $this->config['raw_url'] ) . basename( $this->config['slug'] ) );
-
-			if ( is_wp_error( $raw_response ) )
-				$version = false;
-
-			if (is_array($raw_response)) {
-				if (!empty($raw_response['body']))
-					preg_match( '/.*Version\:\s*(.*)$/mi', $raw_response['body'], $matches );
-			}
-
-			if ( empty( $matches[1] ) )
-				$version = false;
-			else
-				$version = $matches[1];
-
-			// back compat for older readme version handling
-			// only done when there is no version found in file name
-			if ( false === $version ) {
-				$raw_response = $this->remote_get( trailingslashit( $this->config['raw_url'] ) . $this->config['readme'] );
-
-				if ( is_wp_error( $raw_response ) )
-					return $version;
-
-				preg_match( '#^\s*`*~Current Version\:\s*([^~]*)~#im', $raw_response['body'], $__version );
-
-				if ( isset( $__version[1] ) ) {
-					$version_readme = $__version[1];
-					if ( -1 == version_compare( $version, $version_readme ) )
-						$version = $version_readme;
-				}
-			}
-
-			// refresh every 6 hours
-			if ( false !== $version )
-				set_site_transient( md5($this->config['slug']).'_new_version', $version, 60*60*6 );
-		}
-
-		return $version;
-	}
 
 
 	/**
@@ -326,30 +302,41 @@ class WP_GitHub_Updater {
 	 * @param object  $transient the plugin data transient
 	 * @return object $transient updated plugin data transient
 	 */
-	public function api_check( $transient ) {
-
-		// Check if the transient contains the 'checked' information
-		// If not, just return its value without hacking it
-		if ( empty( $transient->checked ) )
-			return $transient;
-
-		// check the version and decide if it's new
-		$update = version_compare( $this->config['new_version'], $this->config['version'] );
-
-		if ( 1 === $update ) {
-			$response = new stdClass;
-			$response->new_version = $this->config['new_version'];
-			$response->slug = $this->config['proper_folder_name'];
-			$response->url = add_query_arg( array( 'access_token' => $this->config['access_token'] ), $this->config['github_url'] );
-			$response->package = $this->config['zip_url'];
-
-			// If response is false, don't alter the transient
-			if ( false !== $response )
-				$transient->response[ $this->config['slug'] ] = $response;
-		}
-
-		return $transient;
-	}
+    public function api_check($transient) {
+        // Log that the api_check function is called
+       write_log('WP_GitHub_Updater: api_check called.',true);
+    
+        // Check if the transient contains the 'checked' information
+        if (empty($transient->checked)) {
+            write_log('WP_GitHub_Updater: No checked information in transient.',true);
+            return $transient;
+        }
+    
+        // Check the version and decide if it's new
+        $update = version_compare($this->config['new_version'], $this->config['version']);
+        write_log("WP_GitHub_Updater: Comparing versions. New: {$this->config['new_version']}, Current: {$this->config['version']}", true);
+    
+        if ($update === 1) {
+            $response = new \stdClass;
+            $response->new_version = $this->config['new_version'];
+            $response->slug = $this->config['proper_folder_name'];
+            $response->url = add_query_arg(array('access_token' => $this->config['access_token']), $this->config['github_url']);
+            $response->package = $this->config['zip_url'];
+    
+            // Log that an update is available
+            write_log("WP_GitHub_Updater: Update available. New version: {$this->config['new_version']}", true);
+    
+            // If response is false, don't alter the transient
+            if ($response !== false) {
+                $transient->response[$this->config['slug']] = $response;
+            }
+        } else {
+            // Log that no update is found
+            write_log("WP_GitHub_Updater: No update found.", true);
+        }
+    
+        return $transient;
+    }
 
 
 	/**

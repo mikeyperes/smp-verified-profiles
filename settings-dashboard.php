@@ -1,111 +1,34 @@
-<?php
+<?php namespace smp_verified_profiles;
+ 
 
-/**
- * Verified Profiles Settings Page
- * --------------------------------
- * This script adds a settings page to the WordPress admin menu under "Settings."
- * It includes various checks for themes, plugins, ACF field groups, and more.
- */
 
-add_action('admin_menu', 'smp_vp_add_verified_profiles_menu');
-
-/**
- * Add Verified Profiles Menu
- * --------------------------
- * Registers the "Verified Profiles" settings page in the WordPress admin menu.
- */
-function smp_vp_add_verified_profiles_menu() {
-    add_settings_menu(
-        'Verified Profiles',       // Page title
-        'Verified Profiles',       // Menu title
-        'manage_options',          // Capability
-        'verified-profiles',       // Menu slug
-        'smp_vp_display_settings_page'   // Callback function
+// Abstract function to add a settings menu and page
+function add_wp_admin_settings_page() {
+    add_options_page(
+        Config::$settings_page_name,       // Page title
+        Config::$settings_page_name,       // Menu title
+        Config::$settings_page_capability,        // Capability
+        Config::$settings_page_slug,        // Menu slug
+        __NAMESPACE__ . '\\display_wp_admin_settings_page'    // Callback function
     );
 }
 
-/**
- * Display Settings Page Content
- * -----------------------------
- * Renders the content for the Verified Profiles settings page.
- */
-function smp_vp_display_settings_page() {
+// Add settings menu and page
+add_action('admin_menu', __NAMESPACE__ . '\\add_wp_admin_settings_page');
+
+
+function display_wp_admin_settings_page() {
+    
+    if (ob_get_level() == 0) ob_start();
+    
+
+   
     ?>
-    <style>
-        /* Minimalist styling */
-        .verified-profiles-settings {
-            margin-top:20px;
-            font-family: Arial, sans-serif;
-            max-width: 100%; /* Full-width, no centering */
-            padding: 20px;
-            background: #fff;
-            border-left: 4px solid #007cba;
-        }
+   
 
-        .verified-profiles-settings h1 {
-            font-size: 24px;
-            color: #333;
-            margin-bottom: 20px;
-        }
+<?php  
 
-        .verified-profiles-settings h2 {
-            font-size: 20px;
-            color: #007cba;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #e1e1e1;
-            padding-bottom: 5px;
-        }
-
-        .verified-profiles-settings h3 {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 10px;
-        }
-
-        .verified-profiles-settings ul {
-            list-style: none;
-            padding-left: 0;
-            margin-bottom: 20px;
-        }
-
-        .verified-profiles-settings ul li {
-            padding: 8px;
-            margin-bottom: 6px;
-            background: #f9f9f9;
-            border-left: 4px solid #ddd;
-            transition: border-color 0.3s ease;
-        }
-
-        .verified-profiles-settings ul li:hover {
-            border-left: 4px solid #007cba;
-        }
-
-        .verified-profiles-settings button.button-primary {
-            background-color: #007cba;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .verified-profiles-settings button.button-primary:hover {
-            background-color: #005a9c;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .verified-profiles-settings {
-                padding: 15px;
-            }
-        }
-    </style>
-
-    <div class="verified-profiles-settings">
-        <!-- Page Title -->
-        <h1>Verified Profiles</h1>
-
+/*?>
         <!-- Section 1: ACF Field Groups Status -->
         <section id="acf-field-groups-status">
             <h2>ACF Field Groups Status</h2>
@@ -119,36 +42,10 @@ function smp_vp_display_settings_page() {
                 <li style="opacity:.5"><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_verified_profiles_settings'), 'Verified Profiles Settings fields are imported.', 'Verified Profiles Settings fields are not imported.'); ?></li>
             </ul>
         </section>
+<?php */ ?>
 
-        <!-- Section 2: Pre-checks -->
-        <section id="pre-checks">
-            <h2>Pre-checks</h2>
-
-            <!-- Subsection: Theme Checks -->
-            <div class="theme-checks">
-                <h3>Theme</h3>
-                <ul>
-                    <li><?php display_check_status(is_theme_active('Hello Elementor'), 'Hello Elementor theme is active.', 'Hello Elementor theme is not active. Please activate it to use the Hello World Plugin.'); ?></li>
-                    <li style="margin-left: 20px;"><?php display_check_status(is_theme_auto_update_enabled('hello-elementor'), 'Hello Elementor theme auto updates are enabled.', 'Hello Elementor theme auto updates are not enabled. Please enable them.'); ?></li>
-                </ul>
-            </div>
-
-            <!-- Subsection: Plugins Checks -->
-            <div class="plugins-checks">
-                <h3>Plugins</h3>
-                <?php 
-                $plugins = smp_vp_get_plugins_list();
-                foreach ($plugins as $plugin => $name): 
-                    list($is_installed, $is_active, $is_auto_update_enabled) = check_plugin_status($plugin);
-                ?>
-                <ul>
-                    <li><?php display_check_status($is_installed, "{$name} Plugin exists.", "{$name} Plugin does not exist. Please install it to use the Hello World Plugin."); ?></li>
-                    <li style="margin-left: 20px;"><?php display_check_status($is_active, "{$name} Plugin is active.", "{$name} Plugin is not active. Please activate it to use the Hello World Plugin."); ?></li>
-                    <li style="margin-left: 20px;"><?php display_check_status($is_auto_update_enabled, "{$name} Plugin auto updates are enabled.", "{$name} Plugin auto updates are not enabled. Please enable them."); ?></li>
-                </ul>
-                <?php endforeach; ?>
-            </div>
-
+      
+<?php /*
             <!-- Subsection: Other Checks -->
             <div class="other-checks">
                 <h3>Other Checks</h3>
@@ -217,5 +114,149 @@ function smp_vp_display_settings_page() {
             });
         });
     </script>
-    <?php
+    <?php */
+
+    ?>
+
+    <style>
+  /* Updated Minimalist Panel Styles with Depth */
+.panel {
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0; /* Slightly lighter border for subtlety */
+    border-radius: 6px; /* Slightly more rounded corners */
+    background-color: #f9f9f9; /* Lighter background for a clean look */
+    padding: 20px; /* Increased padding for better spacing */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
 }
+
+.panel-title {
+    padding: 15px;
+    border-bottom: 1px solid #ddd; /* Lighter border to separate the title */
+    font-size: 18px; /* Slightly larger font for emphasis */
+    font-weight: 600; /* Bold for better readability */
+    color: #333; /* Darker text color for contrast */
+    margin-bottom: 10px;
+    border-radius: 4px 4px 0 0; /* Round the top corners */
+}
+
+.panel-content {
+    padding: 15px;
+    border-radius: 0 0 4px 4px; /* Round the bottom corners */
+}
+
+.button {
+    padding: 10px 16px; /* Increased padding for a more prominent button */
+    font-size: 14px;
+    border-radius: 4px; /* Slightly more rounded for modern look */
+    text-decoration: none;
+    color: #fff;
+    background-color: #0073aa; /* WordPress standard blue color */
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 10px;
+    transition: background-color 0.3s ease; /* Smooth hover transition */
+}
+
+.button:hover {
+    background-color: #005c89; /* Darker shade on hover */
+}
+
+/* WP-Config Constants Expand/Collapse */
+.wp-config-expandable {
+    margin-top: 0px;
+    padding-top: 15px;
+}
+
+
+/* Styles for the toggle links */
+.wp-config-toggle {
+    cursor: pointer;
+    color: #3b82f6;
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: inline-block;
+    background-color: #e0f2fe;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+.wp-config-toggle:hover {
+    background-color: #bfdbfe;
+}
+.wp-config-content {
+    display: none;
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+}
+.wp-config-content ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.wp-config-content ul li {
+    margin-bottom: 8px;
+    padding: 8px;
+    background-color: #f3f4f6;
+    border-radius: 4px;
+}
+
+pre {
+    background-color: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+/* Button styles */
+.button {
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #ffffff;
+    background-color: #3b82f6;
+    border: none;
+    cursor: pointer;
+    display: inline-block;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover { 
+    background-color: #2563eb;
+}
+</style>
+
+<div class="wrap" id="<?php echo Config::$settings_page_html_id;?>">
+<h1><?php echo Config::$settings_page_display_title;?></h1>
+
+<?php smp_vp_display_settings_acf_post_and_pages_form();
+
+smp_vp_display_settings_create_pages_and_listing_grids();
+
+display_acf_field_status();
+ 
+?>
+
+<?php //display_settings_overview();?>
+<?php display_settings_system_checks();?>
+<?php display_settings_check_plugins();?>
+<?php //display_settings_theme_checks();?>
+<?php display_settings_snippets();?>
+<?php //hws_ct_display_settings_wp_config();?>
+<?php //hws_ct_display_settings_php_ini();?>
+<?php //if(get_option('enable_custom_rss_functionality', false)) display_settings_rss_dashboard();?>
+<?php //if(get_option('enable_comments_management', false)) display_settings_comments_dashboard();?>
+<?php display_plugin_info();?>
+</div>
+<?php
+  // Get the buffer contents and clean (erase) the output buffer
+  if (ob_get_level() != 0) echo ob_get_clean();
+}
+?>

@@ -1,4 +1,6 @@
-<? function smp_vp_display_settings_acf_post_and_pages_form(){?><form method="post" action="options.php">
+<?php namespace smp_verified_profiles;
+
+function smp_vp_display_settings_acf_post_and_pages_form(){?><form method="post" action="options.php">
     <?php
     // Render ACF fields within the form
     acf_form(array(
@@ -53,7 +55,7 @@ jQuery(document).ready(function($) {
         }
     });
 });
-</script><? }
+</script><?php }
 function smp_vp_display_settings_create_pages_and_listing_grids(){ ?>
     <button id="create-posts-button" class="button button-primary">Create Pages and Listing Grids (Jet Engine posts)</button>
     <div id="acf-loader" style="display:none;">Loading...</div>
