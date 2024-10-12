@@ -12,7 +12,7 @@ function add_custom_admin_pages() {
    // if (!perform_verified_profiles_plugin_prechecks()) return;
 
     // Check if the current user is a profile manager
-    //if (!is_profile_manager()) return;
+    if (!is_profile_manager()) return;
     
     // Add a Profiles Dashboard menu item
     add_menu_page('Profiles Dashboard', 'Profiles Dashboard', 'read', 'profiles-dashboard', 'display_admin_profiles_dashboard');
