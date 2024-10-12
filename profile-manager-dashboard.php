@@ -1,4 +1,6 @@
-<?php // Add custom admin pages
+<?php namespace smp_verified_profiles;
+
+// Add custom admin pages
 function add_custom_admin_pages() {
 	//if(!check_plugin_acf()){return;}
     // Check if the current user is a profile manager
