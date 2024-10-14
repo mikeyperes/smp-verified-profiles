@@ -1,9 +1,10 @@
 <?php namespace smp_verified_profiles;
 
+function snippet_post_functionality(){
 add_action('admin_footer', __NAMESPACE__.'\custom_post_admin_footer_scripts');
 add_action('save_post',  __NAMESPACE__.'\process_profiles_on_save', 10, 3);
 add_action('admin_footer-post.php',  __NAMESPACE__.'\add_edit_profile_links_inside_label');
-
+}
 /**
  * Add custom JavaScript functionality to 'post' post type in the admin footer
  * Adds 'Process profiles' button and CMD + Y shortcut functionality to handle profiles.

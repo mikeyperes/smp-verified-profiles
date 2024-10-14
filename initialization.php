@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 1.1.2
+Version: 1.2
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -140,9 +140,122 @@ function get_settings_snippets()
             'info' => '',
             'function' => 'enable_profile_category_meta_box_adjustment'
         ],  
+        [
+            'id' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
+            'name' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
+            'description' => '',
+            'info' => '',
+            'function' => 'enable_snippet_adjust_wp_admin_for_profile_managers'
+        ],  
 
+        [
+            'id' => 'enable_snippet_wp_admin_user_page_functionality',
+            'name' => 'enable_snippet_wp_admin_user_page_functionality',
+            'description' => '',
+            'info' => '',
+            'function' => 'enable_snippet_wp_admin_user_page_functionality'
+        ],  
+            [
+                'id' => 'enable_snippet_adjust_profiles_category_meta_box',
+                'name' => 'enable_snippet_adjust_profiles_category_meta_box',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_adjust_profiles_category_meta_box'
+            ],
+            [
+                'id' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
+                'name' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_adjust_wp_admin_for_profile_managers'
+            ],
+            [
+                'id' => 'enable_snippet_wp_admin_user_page_functionality',
+                'name' => 'enable_snippet_wp_admin_user_page_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_wp_admin_user_page_functionality'
+            ],
+            [
+                'id' => 'snippet_post_functionality',
+                'name' => 'snippet_post_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'snippet_post_functionality'
+            ],
+            [
+                'id' => 'enable_snippet_faviconn_for_verified_pages',
+                'name' => 'enable_snippet_faviconn_for_verified_pages',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_faviconn_for_verified_pages'
+            ],
+            [
+                'id' => 'enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles',
+                'name' => 'enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles'
+            ],
+            [
+                'id' => 'enable_snippet_woocommerce_base',
+                'name' => 'enable_snippet_woocommerce_base',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_woocommerce_base'
+            ],
+            [
+                'id' => 'enable_snippet_woocommerce_stripe_integration',
+                'name' => 'enable_snippet_woocommerce_stripe_integration',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_woocommerce_stripe_integration'
+            ],
+            [
+                'id' => 'enable_snippet_claim_profile_functionality',
+                'name' => 'enable_snippet_claim_profile_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_claim_profile_functionality'
+            ],
+            [
+                'id' => 'enable_snippet_profile_post_wp_admin_functionality',
+                'name' => 'enable_snippet_profile_post_wp_admin_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_profile_post_wp_admin_functionality'
+            ],
+            [
+                'id' => 'enable_snippet_wp_admin_user_page_optional_functionality',
+                'name' => 'enable_snippet_wp_admin_user_page_optional_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_wp_admin_user_page_optional_functionality'
+            ],
+            [
+                'id' => 'enable_snippet_muckrack_functionality',
+                'name' => 'enable_snippet_muckrack_functionality',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_muckrack_functionality'
+            ],
+            [
+                'id' => 'enable_snippet_disable_password_reset',
+                'name' => 'enable_snippet_disable_password_reset',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_disable_password_reset'
+            ],
+            [
+                'id' => 'enable_snippet_verified_profile_shortcodes',
+                'name' => 'enable_snippet_verified_profile_shortcodes',
+                'description' => '',
+                'info' => '',
+                'function' => 'enable_snippet_verified_profile_shortcodes'
+            ]
+        
        
-
+        
         
         
 
@@ -299,16 +412,28 @@ add_action('acf/init', function() {
 
 
     include_once("register-acf-structures.php");
-
-    include_once("snippet-adjust-profiles-category-meta-box.php");
+    include_once("register-acf-user-profile.php");
     
+    
+include_once("snippet-adjust-profiles-category-meta-box.php");
+    include_once("snippet-adjust-wp-admin-for-profile-managers.php");
+    include_once("snippet-wp-admin-user-page-functionality.php");
     include_once("snippet-post-functionality.php");
-    include_once("snippet-profile-functionality.php");
+    include_once("snippet-faviconn-for-verified-pages.php");
+    include_once("snippet-wp-admin-adjust-table-for-unclaimed-profiles.php");
+   include_once("snippet-woocommerce-base.php");
+    include_once("snippet-woocommerce-stripe-integration.php");
+    include_once("snippet-claim-profile-functionality.php");
+    include_once("snippet-profile-post-wp-admin-functionality.php");
+    include_once("snippet-wp-admin-user-page-optional-functionality.php");
+    include_once("snippet-muckrack-functionality.php");
+    include_once("snippet-disable-password-reset.php");
+    include_once("snippet-verified-profile-shortcodes.php");
     
 
 
+    
     include_once("profile-manager-dashboard.php");
-
     include_once("create-pages-and-listing-grids.php");
     include_once("settings-dashboard-snippets.php");
     include_once("settings-dashboard-system-checks.php");
