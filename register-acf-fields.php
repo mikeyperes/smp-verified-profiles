@@ -1,7 +1,12 @@
-<? 
+<?php namespace smp_verified_profiles;
+/*
+register_acf_fields_general()
+register_acf_post_type_profile()
+*/
 
-//register CPT 'profile'
-add_action( 'init', function() {
+
+function register_acf_post_type_profile()
+{
 	register_post_type( 'profile', array(
 	'labels' => array(
 		'name' => 'Verified Profiles',
@@ -54,18 +59,11 @@ add_action( 'init', function() {
 	),
 	'delete_with_user' => false,
 ) );
-} );
+}
 
 
-
-// register ACFs site-wide
-  add_action( 'acf/init', function() {
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
-		return;
-	}
-
-
-
+function register_acf_fields_general()
+{
 	acf_add_local_field_group( array(
 	'key' => 'group_66b7bdf713e77',
 	'title' => 'Post - Verified Profile - Admin',
@@ -1314,4 +1312,5 @@ add_action( 'init', function() {
 	'active' => true,
 	'description' => '',
 	'show_in_rest' => 0,
-) );});
+) );
+}

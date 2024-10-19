@@ -236,9 +236,9 @@ pre {
 <div class="wrap" id="<?php echo Config::$settings_page_html_id;?>">
 <h1><?php echo Config::$settings_page_display_title;?></h1>
 
-<?php smp_vp_display_settings_acf_post_and_pages_form();
+<?php display_settings_acf_post_and_pages_form();
 
-smp_vp_display_settings_create_pages_and_listing_grids();
+display_settings_create_pages_and_listing_grids();
 
 display_acf_field_status();
  

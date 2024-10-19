@@ -1,39 +1,90 @@
 <?php namespace smp_verified_profiles;
 
-// Shortcode and action declarations at the top
-add_shortcode('featured_in_posts', __NAMESPACE__ . '\\display_users_featured_posts');
-add_shortcode('display_profile_council_banner', __NAMESPACE__ . '\\display_profile_council_banner');
-add_shortcode('display_profile_quick_online_profiles', __NAMESPACE__ . '\\display_profile_quick_online_profiles');
-add_shortcode('display_profile_quick_contact', __NAMESPACE__ . '\\display_profile_quick_contact');
-add_shortcode('display_profile_education', __NAMESPACE__ . '\\display_profile_education');
-add_shortcode('display_profile_organizations_founded', __NAMESPACE__ . '\\display_profile_organizations_founded');
-add_shortcode('display_profile_contributing_articles', __NAMESPACE__ . '\\display_profile_contributing_articles');
-add_shortcode('display_profile_current_residence', __NAMESPACE__ . '\\display_profile_current_residence');
-add_shortcode('display_profile_press_releases', __NAMESPACE__ . '\\display_profile_press_releases');
-add_shortcode('display_profile_validate_schema_button', __NAMESPACE__ . '\\display_profile_validate_schema_button');
-add_shortcode('display_profile_location_born', __NAMESPACE__ . '\\display_profile_location_born');
-add_shortcode('display_profile_notable_mentions', __NAMESPACE__ . '\\get_profile_notable_mentions');
-add_shortcode('display_profile_internal_features', __NAMESPACE__ . '\\display_profile_internal_features');
-add_shortcode('display_homepage_profiles', __NAMESPACE__ . '\\display_homepage_profiles');
-add_shortcode('display_post_mentions', __NAMESPACE__ . '\\display_post_mentions');
-add_shortcode('display_website_footer_external_profiles', __NAMESPACE__ . '\\display_website_footer_external_profiles');
+// Function to get the list of shortcodes for both registration and listing
+function get_verified_profile_shortcodes() {
+    return [
+        'display_single_profile_education' => __NAMESPACE__ . '\\display_single_profile_education',
+        'display_single_profile_organizations_founded' => __NAMESPACE__ . '\\display_single_profile_organizations_founded',
+        'display_single_profile_press_releases' => __NAMESPACE__ . '\\display_single_profile_press_releases',
+        'display_single_profile_article_written_by' => __NAMESPACE__ . '\\display_single_profile_article_written_by',
+        'display_single_profile_articles_featured_in' => __NAMESPACE__ . '\\display_single_profile_articles_featured_in',
+        'display_single_profile_text_based_social_profiles' => __NAMESPACE__ . '\\display_single_profile_text_based_social_profiles',
+        'display_homepage_profiles' => __NAMESPACE__ . '\\display_homepage_profiles',
+        'display_single_post_mentioned_in_article' => __NAMESPACE__ . '\\display_single_post_mentioned_in_article',
+        'display_theme_footer_text_social_links' => __NAMESPACE__ . '\\display_theme_footer_text_social_links',
+        'display_single_profile_validate_schema_button' => __NAMESPACE__ . '\\display_single_profile_validate_schema_button',
+        
+
+        'display_profiles_featured_in_single_post' => __NAMESPACE__ . '\\display_profiles_featured_in_single_post',
+        'display_profile_council_banner' => __NAMESPACE__ . '\\display_profile_council_banner',
+        'display_profile_quick_contact' => __NAMESPACE__ . '\\display_profile_quick_contact',
+        'display_profile_current_residence' => __NAMESPACE__ . '\\display_profile_current_residence',
+        'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
+        'display_profile_notable_mentions' => __NAMESPACE__ . '\\get_profile_notable_mentions',
+    ];
+}
+
+// Function to register the shortcodes using the list
+function enable_snippet_verified_profile_shortcodes() {
+    $shortcodes = get_verified_profile_shortcodes();
+    
+    foreach ($shortcodes as $shortcode => $callback) {
+        add_shortcode($shortcode, $callback);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+/**
+ * Generic function to get the list of shortcodes formatted properly.
+ *
+ * @param callable $get_shortcode_list_function A callback function that returns an associative array of shortcodes.
+ * @return string The formatted list of shortcodes.
+ */
+function get_formatted_shortcode_list($get_shortcode_list_function) {
+    // Ensure the provided argument is a callable function.
+    if (!is_callable($get_shortcode_list_function)) {
+        return "Error: Provided argument is not a valid function.";
+    }
+
+    // Get the array of shortcodes from the provided function.
+    $shortcodes = array_keys(call_user_func($get_shortcode_list_function));
+    
+    // Format the shortcodes.
+    $shortcode_list = array_map(function($shortcode) {
+        return "[$shortcode]";
+    }, $shortcodes);
+
+    // Combine and return the formatted shortcodes.
+    return "<br />" . implode("<br />", $shortcode_list);
+}
+
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_users_featured_posts')) {
+if (!function_exists(__NAMESPACE__ . '\\display_profiles_featured_in_single_post')) {
     /**
      * Displays featured posts for a specific profile ID using JetEngine's Listing Grid.
      * Ensures the required class is available and manages ACF repeater queries.
      *
      * @return string Rendered HTML content of the featured posts or an error message.
      */
-    function display_users_featured_posts() {
+    function display_profiles_featured_in_single_post() {
         // Ensure JetEngine class exists
         if (!class_exists('Jet_Engine_Render_Listing_Grid')) 
             return 'JetEngine is not active or the required class is not available.';
 
         global $post;
-        $profile_id = 14481;
-        $listing_id = 15006;
+        //$profile_id = 14481;
+        //$listing_id = 15006;
+        $listing_id = get_field('display_single_profile_articles_featured_in', 'option');
+
         $post_ids = [];
 
         // Add custom filter for modifying the ACF repeater query
@@ -61,6 +112,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_users_featured_posts')) {
         // Configure JetEngine settings
         $settings = [
             'listing_id' => $listing_id,
+            'lisitng_id'  => $listing_id,
             'columns' => 1,
             'columns_tablet' => 1,
             'columns_mobile' => 1,
@@ -131,14 +183,14 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_council_banner')) {
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_online_profiles')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_text_based_social_profiles')) {
     /**
      * Displays online profiles like Crunchbase, F6S, etc., for the current user.
      *
      * @return string HTML of online profiles or CSS to hide element if none exist.
      */
-    function display_profile_quick_online_profiles() {
-        $output = '<span class="shortcode_display_profile_quick_online_profiles">';
+    function display_single_profile_text_based_social_profiles() {
+        $output = '<span class="shortcode_display_single_profile_text_based_social_profiles">';
         $profile_added = false;
 
         $crunchbase = get_field('social_profiles_crunchbase');
@@ -186,7 +238,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_online_profiles'))
         return $output;
     }
 } else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_quick_online_profiles function is already declared", true);
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_text_based_social_profiles function is already declared", true);
 
 
 // Ensure function existence before declaring
@@ -254,13 +306,13 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_contact')) {
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_education')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
     /**
      * Displays the education details for a profile using ACF repeater field.
      *
      * @return string HTML of the education section or CSS to hide element if none exist.
      */
-    function display_profile_education() {
+    function display_single_profile_education() {
         $has_school_content = false;
 
         // Check if the repeater field has rows of data
@@ -314,13 +366,13 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_education')) {
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_organizations_founded')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_organizations_founded')) {
     /**
      * Displays organizations founded by the profile using a repeater field.
      *
      * @return string HTML of the organizations or CSS to hide element if none exist.
      */
-    function display_profile_organizations_founded() {
+    function display_single_profile_organizations_founded() {
         $output = '<div class="shortcode_display_profile_organizations">';
 
         // Check if the 'organizations_founded' repeater field has rows of data
@@ -397,18 +449,18 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_organizations_founded'))
         return $output;
     }
 } else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_organizations_founded function is already declared", true);
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_organizations_founded function is already declared", true);
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_contributing_articles')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_article_written_by')) {
     /**
      * Displays contributing articles for a profile using JetEngine Listing Grid.
      *
      * @return string HTML or a message if no articles are found.
      */
-    function display_profile_contributing_articles() {
-        $no_results = "<style>.profile_contributing_articles{display:none !important;}</style>";
+    function display_single_profile_article_written_by() {
+        $no_results = "<style>.single_profile_article_written_by{display:none !important;}</style>";
 
         global $post;
         $contributor_id = get_field('contributor_profile', $post->ID);
@@ -416,8 +468,10 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_contributing_articles'))
         if (empty($contributor_id) || count_user_posts($contributor_id) == 0) 
             return $no_results;
 
-        $listing_id = 15006;
-        $content = '<div class="display_contributor_articles">';
+        //$listing_id = 15006;
+        $listing_id = get_field('display_single_profile_article_written_by', 'option');
+
+        $content = '<div class="single_profile_article_written_by">';
 
         $args = [
             'post_type' => 'post',
@@ -475,7 +529,7 @@ $content .= '</div>';
 return $content;
 }
 } else 
-write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_contributing_articles function is already declared", true);
+write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_article_written_by function is already declared", true);
 
 
 // Ensure function existence before declaring
@@ -519,12 +573,14 @@ global $post;
 $profile_id = $post->ID;
 $post_ids = [];
 $listing_id = 15315;
+$listing_id = get_field('display_single_profile_press_releases', 'option');
+
 
 if (have_rows('additional_hexa_pr_wire_releases', $profile_id) == false && get_field('hexa_pr_wire_username', $profile_id) == "") {
-return '<style>.profile_official_announcements{display:none !important}</style>';
+return '<style>.single_profile_press_releases{display:none !important}</style>';
 }
 
-$content = "<div class='display_profile_press_releases'>";
+$content = "<div class='single_profile_press_releases'>";
 $hexa_pr_wire_username = get_field('hexa_pr_wire_username', $profile_id);
 
 // Query press releases by author_slug
@@ -584,21 +640,21 @@ $content .= "</div>";
 return $content;
 }
 } else 
-write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_press_releases function is already declared", true);
+write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_press_releases function is already declared", true);
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_validate_schema_button')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_validate_schema_button')) {
 /**
 * Displays a button to validate the schema of the current profile page.
 *
 * @return string HTML of the schema validation button.
 */
-function display_profile_validate_schema_button() {
+function display_single_profile_validate_schema_button() {
 return '<a target=_blank href="https://validator.schema.org/#url=' . get_the_permalink() . '">Validate schema of ' . get_the_title() . '<i aria-hidden="true" class="fas fa-external-link-square-alt"></i></a>';
 }
 } else 
-write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_validate_schema_button function is already declared", true);
+write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_validate_schema_button function is already declared", true);
 
 
 // Ensure function existence before declaring
@@ -671,13 +727,13 @@ $output .= '</div>';
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_internal_features')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_profile_articles_featured_in')) {
     /**
      * Displays internal features related to the profile using JetEngine's Listing Grid.
      *
      * @return string HTML or a message if no features are found.
      */
-    function display_profile_internal_features() {
+    function display_single_profile_articles_featured_in() {
         global $post;
         $profile_id = $post->ID;
         $post_ids = find_posts_with_profile($profile_id);
@@ -688,6 +744,8 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_internal_features')) {
         }
 
         $listing_id = 15006;
+        $listing_id = get_field('display_single_profile_articles_featured_in', 'option');
+
         $content = '<div class="profile-internal-features">';
 
         // Settings for JetEngine Listing Grid
@@ -719,8 +777,15 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_internal_features')) {
         return $content;
     }
 } else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_internal_features function is already declared", true);
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_articles_featured_in function is already declared", true);
 
+
+
+
+
+
+
+    
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
@@ -734,6 +799,13 @@ if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
 
         if (!class_exists('Jet_Engine_Render_Listing_Grid')) {
             return 'JetEngine is not active or the required class is not available.';
+        }
+
+        // Fetch the listing ID dynamically from the ACF field 'home_profile_archive'
+        $listing_id = get_field('home_profile_archive', 'option');
+
+        if (!$listing_id) {
+            return 'No listing ID found in the ACF field.';
         }
 
         $args = [
@@ -760,11 +832,11 @@ if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
         }
 
         $content = '<div class="display_home_profiles">';
-        $listing_id = 17978;
-
+        
         // Settings for JetEngine Listing Grid
         $settings = [
             'listing_id' => $listing_id,
+    'lisitng_id'  => $listing_id,
             'columns' => 7,
             'lazy_load' => false,
             'columns_tablet' => 4,
@@ -790,19 +862,22 @@ if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
         $content .= '</div>';
         return $content;
     }
-} else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
+} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
+
+
+
+
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_post_mentions')) {
+if (!function_exists(__NAMESPACE__ . '\\display_single_post_mentioned_in_article')) {
     /**
      * Displays profiles mentioned in a post using JetEngine's Listing Grid.
      *
      * @return string HTML or a message if no profiles are found.
      */
-    function display_post_mentions() {
-        $no_results = "<style>.display_post_mentions{display:none !important}</style>";
+    function display_single_post_mentioned_in_article() {
+        $no_results = "<style>.display_single_post_mentioned_in_article{display:none !important}</style>";
 
         if (!class_exists('Jet_Engine_Render_Listing_Grid')) {
             return 'JetEngine is not active or the required class is not available.';
@@ -830,12 +905,14 @@ if (!function_exists(__NAMESPACE__ . '\\display_post_mentions')) {
             return $no_results;
         }
 
-        $content = '<div class="display_post_mentions">';
+        $content = '<div class="shortcode_display_single_post_mentioned_in_article">';
         $listing_id = 15768;
+        $listing_id = get_field('display_single_post_mentioned_in_article', 'option');
 
         // Settings for JetEngine Listing Grid
         $settings = [
             'listing_id' => $listing_id,
+            'lisitng_id'  => $listing_id,
             'columns' => 7,
             'lazy_load' => false,
             'columns_tablet' => 5,
@@ -862,11 +939,11 @@ if (!function_exists(__NAMESPACE__ . '\\display_post_mentions')) {
         return $content;
     }
 } else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_post_mentions function is already declared", true);
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_post_mentioned_in_article function is already declared", true);
 
 
 // Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_website_footer_external_profiles')) {
+if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')) {
     /**
      * Displays external profiles like Crunchbase, Google News, etc. in the website footer.
      *
@@ -899,6 +976,53 @@ if (!function_exists(__NAMESPACE__ . '\\display_website_footer_external_profiles
         return $output;
     }
 } else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_website_footer_external_profiles function is already declared", true);?>
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_theme_footer_text_social_links function is already declared", true);
 
 
+
+function find_posts_with_profile($profile_id) {
+    // Add a filter to modify the WHERE clause of the SQL query
+    add_filter('posts_where', __NAMESPACE__.'\customize_posts_where');
+
+    // Custom function to modify the WHERE clause
+    function customize_posts_where( $where ) {
+        $where = str_replace("meta_key = 'profiles_$", "meta_key LIKE 'profiles_%", $where);
+        return $where;
+    }
+
+    // Set up a custom query with your specific parameters
+    $args = array(
+        'post_type' => 'post', // or your specific custom post type
+        'posts_per_page' => -1,
+        'meta_query' => array(
+            array(
+                'key' => 'profiles_$_profile', // Adjust based on your ACF field name
+                'value' => $profile_id, // The profile ID you're searching for
+                'compare' => 'LIKE'
+            )
+        )
+    );
+
+    // Execute the custom query
+    $the_query = new \WP_Query($args);
+
+    // Array to store the IDs of posts that match the criteria
+    $matching_post_ids = array();
+
+    // Check if there are posts that match the criteria
+    if ($the_query->have_posts()) {
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+            $matching_post_ids[] = get_the_ID(); // Store the post ID
+        }
+    }
+
+    // Clean up after the custom query
+    wp_reset_postdata();
+
+    // Remove the filter to avoid affecting other queries
+    remove_filter('posts_where', __NAMESPACE__.'\customize_posts_where');
+ 
+    // Return the array of matching post IDs
+    return $matching_post_ids;
+}

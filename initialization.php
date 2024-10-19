@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 1.2.1
+Version: 1.3
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -110,6 +110,9 @@ if (!$acf_active) {
 
 function get_settings_snippets()
 {
+
+
+
     $settings_snippets = [
      
         [
@@ -120,16 +123,24 @@ function get_settings_snippets()
             'function' => 'register_profile_custom_post_type'
         ],
         [
-            'id' => 'register_profile_acf_fields',
+            'id' => 'register_profile_general_acf_fields',
             'name' => 'register_profile_acf_fields',
-            'description' => '',
+            'description' => display_acf_structures(
+                [
+                    'group_66b7bdf713e77',  // Post - Verified Profile - Admin
+                    'group_656ea6b4d7088',  // Profile - Admin
+                    'group_656eb036374de',  // Profile - Person - Public
+                    'group_65a8b25062d91',  // User - Profile Manager
+                    'group_658602c9eaa49',  // User - Verified Profile Manager - Admin
+                ]
+        ),
             'info' => '',
-            'function' => 'register_profile_acf_fields'
+            'function' => 'register_profile_general_acf_fields'
         ],
         [
             'id' => 'register_verified_profile_pages_custom_fields',
             'name' => 'register_verified_profile_pages_custom_fields',
-            'description' => '',
+            'description' => display_acf_structures("group_verified_profiles_settings"),
             'info' => '',
             'function' => 'register_verified_profile_pages_custom_fields'
         ],  
@@ -235,7 +246,7 @@ function get_settings_snippets()
             [
                 'id' => 'enable_snippet_muckrack_functionality',
                 'name' => 'enable_snippet_muckrack_functionality',
-                'description' => '',
+                'description' => get_formatted_shortcode_list(__NAMESPACE__."\get_muckrack_shortcodes"),
                 'info' => '',
                 'function' => 'enable_snippet_muckrack_functionality'
             ],
@@ -249,7 +260,7 @@ function get_settings_snippets()
             [
                 'id' => 'enable_snippet_verified_profile_shortcodes',
                 'name' => 'enable_snippet_verified_profile_shortcodes',
-                'description' => '',
+                'description' => get_formatted_shortcode_list(__NAMESPACE__."\get_verified_profile_shortcodes"),
                 'info' => '',
                 'function' => 'enable_snippet_verified_profile_shortcodes'
             ]
@@ -434,7 +445,9 @@ include_once("snippet-adjust-profiles-category-meta-box.php");
 
     
     include_once("profile-manager-dashboard.php");
-    include_once("create-pages-and-listing-grids.php");
+    include_once("settings-dashboard-define-pages-and-listing-grids.php");
+    
+   
     include_once("settings-dashboard-snippets.php");
     include_once("settings-dashboard-system-checks.php");
     include_once("settings-dashboard-plugin-info.php");

@@ -56,15 +56,7 @@ function register_profile_custom_post_type(){
 ) );
 }
 
-function register_profile_acf_fields(){
-
-// register ACFs site-wide
-
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
-		return;
-	}
-
-
+function register_profile_general_acf_fields(){
 
 	acf_add_local_field_group( array(
 	'key' => 'group_66b7bdf713e77',
@@ -1319,7 +1311,7 @@ function register_profile_acf_fields(){
 }
 
  
-
+/*
 function register_verified_profile_pages_custom_fields(){
     if (function_exists('acf_add_local_field_group')) {
     acf_add_local_field_group(array(
@@ -1434,3 +1426,184 @@ function register_verified_profile_pages_custom_fields(){
             ),
         ),
     ));}}
+    */
+
+    function register_verified_profile_pages_custom_fields() {
+        if (function_exists('acf_add_local_field_group')) {
+            acf_add_local_field_group(array(
+                'key' => 'group_verified_profiles_settings',
+                'title' => 'Verified Profiles Settings',
+                'fields' => array(
+                    array(
+                        'key' => 'display_single_profile_organizations_founded',
+                        'label' => 'display_single_profile_organizations_founded -Display Single Profile: Organizations Founded',
+                        'name' => 'display_single_profile_organizations_founded',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_profile_press_releases',
+                        'label' => 'display_single_profile_press_releases - Display Single Profile: Press Releases',
+                        'name' => 'display_single_profile_press_releases',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_profile_article_written_by',
+                        'label' => 'display_single_profile_article_written_by - Display Single Profile: Article Written By',
+                        'name' => 'display_single_profile_article_written_by',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_profile_articles_featured_in',
+                        'label' => 'display_single_profile_articles_featured_in - Display Single Profile: Articles Featured In',
+                        'name' => 'display_single_profile_articles_featured_in',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_profile_text_based_social_profiles',
+                        'label' => 'display_single_profile_text_based_social_profiles - Display Single Profile: Text-Based Social Profiles',
+                        'name' => 'display_single_profile_text_based_social_profiles',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_post_mentioned_in_article',
+                        'label' => 'display_single_post_mentioned_in_article - Display Single Post: Mentioned in Article',
+                        'name' => 'display_single_post_mentioned_in_article',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_homepage_profiles',
+                        'label' => 'display_homepage_profiles - Display Homepage Profiles',
+                        'name' => 'display_homepage_profiles',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_theme_footer_text_social_links',
+                        'label' => 'display_theme_footer_text_social_links - Display Theme Footer: Text Social Links',
+                        'name' => 'display_theme_footer_text_social_links',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'display_single_profile_validate_schema_button',
+                        'label' => 'display_single_profile_validate_schema_button - Display Single Profile: Validate Schema Button',
+                        'name' => 'display_single_profile_validate_schema_button',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'page_verified_profiles_badges',
+                        'label' => 'page_verified_profiles_badge - Page: Verified Profiles - Badges',
+                        'name' => 'page_verified_profiles_badges',
+                        'type' => 'post_object',
+                        'post_type' => array('page'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'page_verified_profiles_claim',
+                        'label' => 'page_verified_profiles_claim - Page: Verified Profiles - Claim',
+                        'name' => 'page_verified_profiles_claim',
+                        'type' => 'post_object',
+                        'post_type' => array('page'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'page_verified_profiles_apply',
+                        'label' => 'page_verified_profiles_apply - Page: Verified Profiles - Apply',
+                        'name' => 'page_verified_profiles_apply',
+                        'type' => 'post_object',
+                        'post_type' => array('page'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'page_verified_profiles_welcome',
+                        'label' => 'page_verified_profiles_welcome - Page: Verified Profiles - Welcome',
+                        'name' => 'page_verified_profiles_welcome',
+                        'type' => 'post_object',
+                        'post_type' => array('page'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'single_profile',
+                        'label' => 'single_profile - Single Profile',
+                        'name' => 'single_profile',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'page_profile_archive',
+                        'label' => 'page_profile_archive - Profile - Archive (page.php)',
+                        'name' => 'page_profile_archive',
+                        'type' => 'post_object',
+                        'post_type' => array('page'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    ),
+                    array(
+                        'key' => 'home_profile_archive',
+                        'label' => 'home_profile_archive - Profile - Archive on Home (home.php)',
+                        'name' => 'home_profile_archive',
+                        'type' => 'post_object',
+                        'post_type' => array('jet-engine'),
+                        'return_format' => 'id',
+                        'ui' => 1,
+                        'allow_null' => 1,
+                    )
+                ),
+                'location' => array(
+                    array(
+                        array(
+                            'param' => 'options_page',
+                            'operator' => '==',
+                            'value' => 'verified-profiles',
+                        ),
+                    ),
+                ),
+            ));
+        }
+    }

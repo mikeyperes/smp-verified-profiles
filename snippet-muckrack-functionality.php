@@ -1,15 +1,27 @@
 <?php namespace smp_verified_profiles;
 
+function get_muckrack_shortcodes() {
+    return [
+        'display_profile_muckrack_verified' => __NAMESPACE__ . '\\display_profile_muckrack_verified',
+        'muckrack_verified' => __NAMESPACE__ . '\\muckrack_verified',
+        'acf_author_field' => __NAMESPACE__ . '\\acf_author_field_shortcode',
+        'verified_icon_author' => __NAMESPACE__ . '\\verified_icon_author',
+        'verified_single' => __NAMESPACE__ . '\\muckrack_single',
+        'verified_author' => __NAMESPACE__ . '\\muckrack_author',
+        'verified_icon_single' => __NAMESPACE__ . '\\verified_icon_single',
+        // Make sure you don't duplicate the shortcode as seen in the original version
+    ];
+}
+
+
 function enable_snippet_muckrack_functionality(){
-// Shortcodes
-add_shortcode('display_profile_muckrack_verified', __NAMESPACE__.'\display_profile_muckrack_verified');
-add_shortcode('muckrack_verified', __NAMESPACE__.'\muckrack_verified');
-add_shortcode('acf_author_field', __NAMESPACE__.'\acf_author_field_shortcode');
-add_shortcode('verified_icon_author', __NAMESPACE__.'\verified_icon_author');
-add_shortcode('verified_single', __NAMESPACE__.'\muckrack_single');
-add_shortcode('verified_author', __NAMESPACE__.'\muckrack_author');
-add_shortcode('verified_icon_single', __NAMESPACE__.'\verified_icon_single');
-add_shortcode('acf_author_field', __NAMESPACE__.'\acf_author_field_shortcode');
+   // Retrieve the shortcodes and their callbacks
+   $shortcodes = get_muckrack_shortcodes();
+    
+   // Loop through each shortcode and register it
+   foreach ($shortcodes as $shortcode => $callback) {
+       add_shortcode($shortcode, $callback);
+   }
 }
 
 // Shortcode for Muckrack verification on single profile page
