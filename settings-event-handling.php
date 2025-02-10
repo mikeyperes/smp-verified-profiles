@@ -213,7 +213,7 @@ function toggleSnippet(snippetId) {
 
           // Handle "Toggle Auto Updates" button click
     // Handle "Toggle Auto Updates" button click
-    $('#hws-base-tools .modify-snippet-via-button').on('click', function() {
+    $('#'.__NAMESPACE__.' .modify-snippet-via-button').on('click', function() {
         var snippetId = $(this).data('snippet-id');
         var action = $(this).data('action');
         

@@ -122,6 +122,7 @@ function get_settings_snippets()
             'info' => '',
             'function' => 'register_profile_custom_post_type'
         ],
+
         [
             'id' => 'register_profile_general_acf_fields',
             'name' => 'register_profile_acf_fields',
@@ -424,8 +425,14 @@ add_action('acf/init', function() {
 
     include_once("register-acf-structures.php");
     include_once("register-acf-user-profile.php");
+    include_once("register-acf-user-profile.php");
     
+
+
     
+
+
+
 include_once("snippet-adjust-profiles-category-meta-box.php");
     include_once("snippet-adjust-wp-admin-for-profile-managers.php");
     include_once("snippet-wp-admin-user-page-functionality.php");

@@ -233,7 +233,10 @@ pre {
 }
 </style>
 
-<div class="wrap" id="<?php echo Config::$settings_page_html_id;?>">
+<div class="wrap" id="<?php echo __NAMESPACE__;
+
+
+//Config::$settings_page_html_id;?>">
 <h1><?php echo Config::$settings_page_display_title;?></h1>
 
 <?php display_settings_acf_post_and_pages_form();
