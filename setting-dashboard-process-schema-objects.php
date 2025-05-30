@@ -90,34 +90,38 @@ jQuery(document).ready(function($){
 add_action( 'wp_ajax_smp_vp_reprocess_schema', __NAMESPACE__ . '\\ajax_reprocess_schema' );
 function ajax_reprocess_schema() {
     if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error([ 'message' => 'Permission denied.' ]);
+        wp_send_json_error( [ 'message' => 'Permission denied.' ] );
     }
 
-    $offset     = isset($_POST['offset'])     ? intval($_POST['offset'])     : 0;
-    $batch_size = isset($_POST['batch_size']) ? intval($_POST['batch_size']) : 20;
+    // get dynamic post type from settings
+    $settings  = get_verified_profile_settings();
+    $post_type = isset( $settings['slug'] ) ? sanitize_key( $settings['slug'] ) : 'profile';
 
-    // total published profiles
-    $count = wp_count_posts( 'profile' );
-    $total = isset($count->publish) ? $count->publish : 0;
+    $offset     = isset( $_POST['offset'] )     ? intval( $_POST['offset'] )     : 0;
+    $batch_size = isset( $_POST['batch_size'] ) ? intval( $_POST['batch_size'] ) : 20;
+
+    // total published posts of this type
+    $counts = wp_count_posts( $post_type );
+    $total  = isset( $counts->publish ) ? $counts->publish : 0;
 
     // fetch this batch of IDs
-    $q = new \WP_Query([
-        'post_type'      => 'profile',
+    $q = new \WP_Query( [
+        'post_type'      => $post_type,
         'posts_per_page' => $batch_size,
         'offset'         => $offset,
         'fields'         => 'ids',
         'post_status'    => 'publish',
         'no_found_rows'  => true,
-    ]);
+    ] );
 
     $items = [];
     foreach ( $q->posts as $post_id ) {
         // 1) generate & save schema
         generate_schema_markup( $post_id );
-    
+
         // 2) now retrieve what was saved
         $schema = get_field( 'schema_markup', $post_id );
-    
+
         // 3) build your response item
         $items[] = [
             'post_id'    => $post_id,
@@ -126,10 +130,13 @@ function ajax_reprocess_schema() {
             'view_link'  => get_permalink( $post_id ),
         ];
     }
-    
 
-    wp_send_json_success([
-        'total' => $total,
-        'items' => $items,
-    ]);
+    wp_send_json_success( [
+        'total'    => $total,
+        'batch'    => count( $items ),
+        'offset'   => $offset,
+        'items'    => $items,
+        'postType' => $post_type,
+    ] );
 }
+
