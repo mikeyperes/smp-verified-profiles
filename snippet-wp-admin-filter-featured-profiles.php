@@ -26,23 +26,33 @@ add_action('restrict_manage_posts', function($post_type, $which) {
 }, 10, 2);
 
 // 2) Modify the query when that button/link is active
-add_action('pre_get_posts', function($query) {
+// 2) Modify the query when that button/link is active
+add_action('pre_get_posts', function(\WP_Query $query) {
     global $pagenow;
-    $verified_profile_settings = get_verified_profile_settings();
 
+    // Bail unless we’re in wp-admin on the main edit.php for your CPT
     if (
-        is_admin()
-        && $pagenow === 'edit.php'
-        && $query->get('post_type') === $verified_profile_settings["slug"]
-        && isset($_GET['featured_filter'])
-        && $_GET['featured_filter'] === '1'
+        ! is_admin()                                 // only in admin
+     || ! $query->is_main_query()                    // only the main query
+     || $pagenow !== 'edit.php'                      // only the post list screen
+     || $query->get('post_type') !== get_verified_profile_settings()['slug'] // only your CPT
     ) {
+        return;
+    }
+
+    // Skip ACF’s own get_field() queries, which set this var
+    if ( isset( $query->query_vars['acf_field_name'] ) ) {
+        return;
+    }
+
+    // Only proceed if our filter button is active
+    if ( isset($_GET['featured_filter']) && $_GET['featured_filter'] === '1' ) {
         $meta_query = $query->get('meta_query') ?: [];
         $meta_query[] = [
-            'key'     => 'featured',      // your ACF field name
-            'value'   => '1',             // true_false stores "1" for checked
+            'key'     => 'featured',  // your ACF field name
+            'value'   => '1',         // true_false stores "1" when checked
             'compare' => '=',
         ];
         $query->set('meta_query', $meta_query);
     }
-});
+}, 10, 1);

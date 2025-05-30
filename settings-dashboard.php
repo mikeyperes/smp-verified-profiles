@@ -24,100 +24,6 @@ function display_wp_admin_settings_page() {
 
    
     ?>
-   
-
-<?php  
-
-/*?>
-        <!-- Section 1: ACF Field Groups Status -->
-        <section id="acf-field-groups-status">
-            <h2>ACF Field Groups Status</h2>
-            <ul>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_656ea6b4d7088'), 'Profile - Admin fields are imported.', 'Profile - Admin fields are not imported.'); ?></li>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_656ea59dc5ad8'), 'Profile - Organization - Public fields are imported.', 'Profile - Organization - Public fields are not imported.'); ?></li>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_656eb036374de'), 'Profile - Person - Public fields are imported.', 'Profile - Person - Public fields are not imported.'); ?></li>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_66b7bdf713e77'), 'Post - Verified Profile - Admin fields are imported.', 'Post - Verified Profile - Admin fields are not imported.'); ?></li>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_65a8b25062d91'), 'User - Profile Manager fields are imported.', 'User - Profile Manager fields are not imported.'); ?></li>
-                <li><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_658602c9eaa49'), 'User - Verified Profile Manager - Admin fields are imported.', 'User - Verified Profile Manager - Admin fields are not imported.'); ?></li>
-                <li style="opacity:.5"><?php smp_vp_dashboard_display_check_status(is_acf_field_group_imported('group_verified_profiles_settings'), 'Verified Profiles Settings fields are imported.', 'Verified Profiles Settings fields are not imported.'); ?></li>
-            </ul>
-        </section>
-<?php */ ?>
-
-      
-<?php /*
-            <!-- Subsection: Other Checks -->
-            <div class="other-checks">
-                <h3>Other Checks</h3>
-                <ul>
-                    <li><?php display_check_status(does_post_type_exist('profile'), '"Profile" Custom Post Type is active.', '"Profile" Custom Post Type is not active. Please register it to use the Hello World Plugin.'); ?></li>
-                    <li style="margin-left: 20px;">
-                        <?php display_check_status(does_taxonomy_exist('category'), 'Categories are enabled for "profile" CPT.', 'Categories are not enabled for "profile" CPT.'); ?>
-                        <ul style="margin-left: 20px;">
-                            <li><?php display_check_status(does_term_exist('person', 'category'), 'Category "Person" exists.', 'Category "Person" does not exist.'); ?></li>
-                            <li><?php display_check_status(does_term_exist('organization', 'category'), 'Category "Organization" exists.', 'Category "Organization" does not exist.'); ?></li>
-                        </ul>
-                    </li>
-                    <li><?php display_check_status(does_taxonomy_exist('post_tag'), 'Tags are enabled for "profile" CPT.', 'Tags are not enabled for "profile" CPT.'); ?></li>
-                    <li><?php display_check_status(does_user_exist('unclaimed-profile'), 'The "unclaimed-profile" user exists.', 'The "unclaimed-profile" user does not exist. Please create this user to use the Hello World Plugin.'); ?></li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- Section 3: Action Buttons -->
-        <section id="action-buttons">
-            <button id="create-categories-button" class="button button-primary">Create Verified Profile Categories (person and company)</button>
-        </section>
-
-        <!-- Section 4: ACF Field Management -->
-        <section id="acf-field-management">
-            <h2>ACF Field Management</h2>
-            <?php display_settings_create_pages_and_listing_grids(); ?>
-        </section>
-
-        <!-- Section 5: Additional Settings -->
-        <section id="additional-settings">
-            <h2>Settings</h2>
-            <?php display_settings_acf_post_and_pages_form(); ?>
-        </section>
-    </div>
-
-    <!-- jQuery for handling button click -->
-    <script type="text/javascript">
-        jQuery(document).ready(function($) {
-                        // Handle the "Create Verified Profile Categories" button click
-            $('#create-categories-button').on('click', function(e) {
-                e.preventDefault();
-                var $button = $(this);
-
-                // Disable the button to prevent multiple submissions
-                $button.prop('disabled', true).text('Creating...');
-
-                // AJAX request to create categories
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        'action': 'create_verified_profile_categories'
-                    },
-                    success: function(response) {
-                        // Reload the page after the request is successful
-                        location.reload();
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle errors here
-                        console.error('Error:', error);
-                        alert('An error occurred while creating categories. Please try again.');
-                        $button.prop('disabled', false).text('Create Verified Profile Categories (person and company)');
-                    }
-                });
-            });
-        });
-    </script>
-    <?php */
-
-    ?>
-
     <style>
   /* Updated Minimalist Panel Styles with Depth */
 .panel {
@@ -250,7 +156,7 @@ render_reprocess_profile_schema_page();
 
 <?php //display_settings_overview();?>
 
-<?php display_verified_profile_settings();?>
+<?php //display_verified_profile_settings();?>
 <?php display_settings_system_checks();?>
 <?php display_settings_check_plugins();?>
 <?php //display_settings_theme_checks();?>

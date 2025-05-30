@@ -380,7 +380,17 @@ if (!function_exists(__NAMESPACE__ . '\\update_user_email_settings')) {
         $user_full_name = $user_data->display_name;
         $user_first_name = $user_data->first_name;
 
-        $credentials_dashboard_content = "<b>Login URL:</b> https://herforward.com/wp-admin<br /><b>Username:</b> $user_username<br /><b>Email:</b><b>Password:</b> $user_password";
+  // build the login URL dynamically
+$dashboard_url = esc_url( admin_url() ); // e.g. https://herforward.com/wp-admin/
+
+// make sure you also have the email variable
+$user_email = isset( $user_email ) ? $user_email : '';
+
+$credentials_dashboard_content  = '<b>Login URL:</b> ' . $dashboard_url . '<br />';
+$credentials_dashboard_content .= '<b>Username:</b> ' . esc_html( $user_username ) . '<br />';
+$credentials_dashboard_content .= '<b>Email:</b> '    . esc_html( $user_email )    . '<br />';
+$credentials_dashboard_content .= '<b>Password:</b> ' . esc_html( $user_password );
+
 
         // Define groups of settings and their corresponding fields.
         $groups = array(
@@ -475,36 +485,4 @@ if (!function_exists(__NAMESPACE__ . '\\add_user_edit_js')) {
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\add_user_edit_js function is already declared", true);
 
 
-/**
- * Refresh user profile when the user is updated on the user-edit page.
- */
-if (!function_exists(__NAMESPACE__ . '\\update_user_profile_content')) {
-    function update_user_profile_content($user_id) {
-        add_action('acf/save_post', function() use ($user_id) {
-            update_user_email_settings($user_id);
 
-            if (isset($_POST['pass1']) && !empty($_POST['pass1'])) {
-                $password = sanitize_text_field($_POST['pass1']);
-                update_field('password', $password, 'user_' . $user_id);
-            }
-        }, 20); // Priority 20 to ensure it runs after ACF fields have been saved
-    }
-} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\update_user_profile_content function is already declared", true);
-
-
-/**
- * Handles the user refresh via AJAX.
- */
-if (!function_exists(__NAMESPACE__ . '\\handle_refresh_user')) {
-    function handle_refresh_user() {
-        check_ajax_referer('refresh_user_nonce', 'nonce');
-
-        $user_id = intval($_POST['user_id']);
-        $password = sanitize_text_field($_POST['password']);
-
-        update_field("password", $password, "user_" . $user_id);
-        update_user_email_settings($user_id);
-
-        wp_send_json_success(['message' => 'User and email content updated for user ID ' . $user_id]);
-    }
-} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\handle_refresh_user function is already declared", true);

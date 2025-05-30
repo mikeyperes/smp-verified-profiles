@@ -1,16 +1,5 @@
 <?php namespace smp_verified_profiles;
 
-// 1) Add a submenu under “Settings”
-add_action( 'admin_menu', function() {
-    add_submenu_page(
-        'options-general.php',
-        __( 'Reprocess Profile Schema', 'smp_verified_profiles' ),
-        __( 'Reprocess Profile Schema', 'smp_verified_profiles' ),
-        'manage_options',
-        'smp-reprocess-profile-schema',
-        __NAMESPACE__ . '\\render_reprocess_profile_schema_page'
-    );
-});
 
 /**
  * 2) Render the page with the button + report container + inline jQuery

@@ -1,26 +1,36 @@
 <?php namespace smp_verified_profiles;
 
 
-
 /**
- * Fetch and sanitize Verified Profile settings
+ * Fetch and sanitize Verified Profile settings from ACF options
  *
  * @return array{singular:string,plural:string,slug:string}
  */
 function get_verified_profile_settings(): array {
+    // default fallbacks
+    //DELETE SOON as ACF has default values
     $defaults = [
         'singular' => 'Verified Profile',
         'plural'   => 'Verified Profiles',
         'slug'     => 'profile',
     ];
-    $opts = wp_parse_args((array) get_option('smp_verified_profile_settings', []), $defaults);
+
+    // if ACF isn't active, return defaults
+    if ( ! function_exists('get_field') ) {
+        return $defaults;
+    }
+
+    // pull values from ACF options, falling back to defaults if empty
+    $raw_singular = get_field('verified_profile_cpt_singular_name', 'option');
+    $raw_plural   = get_field('verified_profile_cpt_plural_name',  'option');
+    $raw_slug     = get_field('verified_profile_cpt_slug',         'option');
+
     return [
-        'singular' => sanitize_text_field($opts['singular']),
-        'plural'   => sanitize_text_field($opts['plural']),
-        'slug'     => sanitize_title($opts['slug']),
+        'singular' => sanitize_text_field( $raw_singular ?: $defaults['singular'] ),
+        'plural'   => sanitize_text_field( $raw_plural   ?: $defaults['plural']   ),
+        'slug'     => sanitize_title( $raw_slug        ?: $defaults['slug']     ),
     ];
 }
-
 
 
 // Define the write_log function only if it isn't already defined
@@ -83,8 +93,6 @@ if (!function_exists(__NAMESPACE__ . '\\is_profile_manager')) {
      * @return bool Returns true if the current user is a Profile Manager, false otherwise.
      */
     function is_profile_manager($strict = false) {
-        // Log if the function is executed
-        write_log(__FUNCTION__ . " function called.", true);
 
         // Check if the user is an admin and not in strict mode, or if they have the 'verified_profile_manager' capability
         if ((is_admin() && !$strict) || current_user_can('verified_profile_manager')) {
@@ -109,13 +117,7 @@ if (!function_exists(__NAMESPACE__ . '\\is_contributor')) {
      * @return bool Returns true if the current user is a Contributor or Council Member, false otherwise.
      */
     function is_contributor($strict = false) {
-        // Log if the function is executed
-        write_log(__FUNCTION__ . " function called.", true);
-
-        // Ensure ACF plugin is active before proceeding
-      /*  if (!check_plugin_acf()) {
-            return false;
-        }*/
+ 
 
         // Get the current user
         $user = wp_get_current_user();

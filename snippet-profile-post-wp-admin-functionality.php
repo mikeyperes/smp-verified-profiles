@@ -21,7 +21,8 @@ add_action('init',  __NAMESPACE__.'\disable_content_editor_for_profile');
  * Removes the WordPress content editor from the 'profile' post type.
  */
 function disable_content_editor_for_profile() {
-    remove_post_type_support('profile', 'editor');
+    $verified_profile_settings = get_verified_profile_settings();
+    remove_post_type_support($verified_profile_settings["slug"], 'editor');
 }
 
 
@@ -202,14 +203,23 @@ $social_profiles = array_filter([
 // Prepare sameAs array
 $same_as_urls = array_values($social_profiles);
 
-// Build the Person object with explicit null checks
+// --- Person object with cleaned name & guarded image ---
 $person = [
     "@type" => "Person",
     "@id"   => get_permalink($post_id) . "#person",
     "url"   => get_permalink($post_id),
-    "name"  => get_the_title($post_id),
-    "image" => get_the_post_thumbnail_url($post_id),
 ];
+
+// Clean up the title: decode entities + convert NBSP to normal space
+$title = html_entity_decode( get_the_title($post_id), ENT_QUOTES, 'UTF-8' );
+$title = preg_replace( '/\x{00A0}+/u', ' ', $title );
+$person['name'] = sanitize_text_field( $title );
+
+// Only include image if it’s a valid URL
+$thumb_url = get_the_post_thumbnail_url( $post_id );
+if ( $thumb_url && filter_var( $thumb_url, FILTER_VALIDATE_URL ) ) {
+    $person['image'] = esc_url_raw( $thumb_url );
+}
 
 if ($birth_place !== null && $birth_place !== '') {
     $person['birthPlace'] = [
@@ -315,10 +325,11 @@ $schema = [
         $schema = array_filter($schema, function($value) {
             return ($value !== null && $value !== []);
         });
-
-        // Convert the schema array to JSON and store it in the 'schema_markup' ACF field
-        $schema_json = json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        update_field('schema_markup', $schema_json, $post_id);                       
+        $schema_json = wp_json_encode(
+            $schema,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        update_field( 'schema_markup', $schema_json, $post_id );                   
     }
 } else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\generate_schema_markup function is already declared", true);

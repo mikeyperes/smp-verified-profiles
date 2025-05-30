@@ -18,9 +18,9 @@ $plural   = ! empty( $opts['plural']   ) ? sanitize_text_field( $opts['plural'] 
 $slug     = ! empty( $opts['slug']     ) ? sanitize_title( $opts['slug']     ) : 'profile';
 
 $labels = [
-    'name'                     => $plural . ' – Wiki 2',
+    'name'                     => $plural ,
     'singular_name'            => $singular,
-    'menu_name'                => $plural . ' – Wiki – in dev 2',
+    'menu_name'                => $plural ,
     'all_items'                => 'All ' . $plural,
     'edit_item'                => 'Edit ' . $singular,
     'view_item'                => 'View ' . $singular,
@@ -69,61 +69,7 @@ register_post_type( $slug, [
     'delete_with_user'   => false,
 ] );
 
-return;
 
-
-	register_post_type( 'profile', array(
-	'labels' => array(
-		'name' => 'Verified Profiles',
-		'singular_name' => 'Profile',
-		'menu_name' => 'Verified Profiles',
-		'all_items' => 'All Verified Profiles',
-		'edit_item' => 'Edit Profile',
-		'view_item' => 'View Profile',
-		'view_items' => 'View Verified Profiles',
-		'add_new_item' => 'Add New Profile',
-		'add_new' => 'Add New Profile',
-		'new_item' => 'New Profile',
-		'parent_item_colon' => 'Parent Profile:',
-		'search_items' => 'Search Verified Profiles',
-		'not_found' => 'No verified profiles found',
-		'not_found_in_trash' => 'No verified profiles found in Trash',
-		'archives' => 'Profile Archives',
-		'attributes' => 'Profile Attributes',
-		'insert_into_item' => 'Insert into profile',
-		'uploaded_to_this_item' => 'Uploaded to this profile',
-		'filter_items_list' => 'Filter verified profiles list',
-		'filter_by_date' => 'Filter verified profiles by date',
-		'items_list_navigation' => 'Verified Profiles list navigation',
-		'items_list' => 'Verified Profiles list',
-		'item_published' => 'Profile published.',
-		'item_published_privately' => 'Profile published privately.',
-		'item_reverted_to_draft' => 'Profile reverted to draft.',
-		'item_scheduled' => 'Profile scheduled.',
-		'item_updated' => 'Profile updated.',
-		'item_link' => 'Profile Link',
-		'item_link_description' => 'A link to a profile.',
-	),
-	'public' => true,
-	'show_in_rest' => true,
-	'supports' => array(
-		0 => 'title',
-		1 => 'author',
-		2 => 'trackbacks',
-		3 => 'editor',
-		4 => 'excerpt',
-		5 => 'revisions',
-		6 => 'page-attributes',
-		7 => 'thumbnail',
-		8 => 'custom-fields',
-		9 => 'post-formats',
-	),
-	'taxonomies' => array(
-		0 => 'category',
-		1 => 'post_tag',
-	),
-	'delete_with_user' => false,
-) );
 }
 
 
@@ -278,7 +224,6 @@ function register_profile_general_acf_fields() {
 
 
 
-
 function register_verified_profile_pages_custom_fields() {
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
@@ -290,40 +235,31 @@ function register_verified_profile_pages_custom_fields() {
     $singular  = $settings['singular'];
     $domain    = parse_url( home_url(), PHP_URL_HOST );
 
-    // ---- CONFIG: define all fields here ----
+    // ---- CONFIG: define all loop-item & page fields here ----
     $fields_config = [
-    /*    [
-            'id'         => 'display_single_profile_organizations_founded',
-            'label'      => 'Display Single %s: Organizations Founded',
-            // show on your custom post type AND on Elementor Loop Grid templates
-            'post_types' => ['elementor_library' ],
-        ],*/
-
         // Elementor Loop Items
         [
             'id'         => 'display_single_profile_press_releases',
             'label'      => 'Elementor Loop-Item: Single Profile - Press Releases',
-            'post_types' => [ 'elementor_library'],
+            'post_types' => [ 'elementor_library' ],
         ],
         [
             'id'         => 'display_single_profile_article_written_by',
             'label'      => 'Elementor Loop-Item: Single Profile - Articles Written by Profile Entity',
-            'post_types' => [ 'elementor_library'],
+            'post_types' => [ 'elementor_library' ],
         ],
         [
             'id'         => 'display_single_profile_articles_featured_in',
             'label'      => 'Elementor Loop-Item: Single Profile - Articles Profile Entity was Featured In',
-            'post_types' => [ 'elementor_library'],
+            'post_types' => [ 'elementor_library' ],
         ],
-
         [
             'id'         => 'display_single_post_mentioned_in_article',
             'label'      => 'Elementor Loop-Item: Single Post - Entities Mentioned in Article',
-            'post_types' => [ 'elementor_library'],
+            'post_types' => [ 'elementor_library' ],
         ],
 
-        //PAGES 
-
+        // Pages
         [
             'id'         => 'page_verified_profiles_badges',
             'label'      => 'Page: Verified Profiles - Verified Profile Badges',
@@ -344,71 +280,16 @@ function register_verified_profile_pages_custom_fields() {
             'label'      => 'Page: Verified Profiles - Welcome?',
             'post_types' => [ 'page' ],
         ],
-
-
-
-
-/*
-
-        [
-            'id'         => 'display_single_post_mentioned_in_article',
-            'label'      => 'Display Single Post: Mentioned in Article',
-            'post_types' => [ $slug ],
-        ],
-
-
-
-
-
-        [
-            'id'         => 'display_single_profile_text_based_social_profiles',
-            'label'      => 'Display Single %s: Text-Based Social Profiles',
-            'post_types' => [ $slug ],
-        ],
-    
-        [
-            'id'         => 'display_homepage_profiles',
-            'label'      => 'Display Homepage %ss',
-            'post_types' => [ $slug ],
-        ],
-        [
-            'id'         => 'display_theme_footer_text_social_links',
-            'label'      => 'Display Theme Footer: Text Social Links',
-            'post_types' => [ 'page' ],
-        ],
-        [
-            'id'         => 'display_single_profile_validate_schema_button',
-            'label'      => 'Display Single %s: Validate Schema Button',
-            'post_types' => [ $slug ],
-        ],
-   
-   
-        [
-            'id'         => 'single_profile',
-            'label'      => 'Single %s',
-            'post_types' => [ $slug ],
-        ],
-        [
-            'id'         => 'page_profile_archive',
-            'label'      => '%s Archive (page.php)',
-            'post_types' => [ 'page' ],
-        ],
-        [
-            'id'         => 'home_profile_archive',
-            'label'      => '%s Archive on Home (home.php)',
-            'post_types' => [ $slug ],
-        ],
-             */
     ];
     // ----------------------------------------
 
-    // Build actual ACF field definitions
+    // Build actual ACF field definitions from config
     $acf_fields = [];
     foreach ( $fields_config as $cfg ) {
         $acf_fields[] = [
             'key'           => $cfg['id'],
             'name'          => $cfg['id'],
-            'label'         => sprintf( $cfg['label'], $singular ),
+            'label'         => $cfg['label'],
             'type'          => 'post_object',
             'post_type'     => $cfg['post_types'],
             'return_format' => 'id',
@@ -417,7 +298,76 @@ function register_verified_profile_pages_custom_fields() {
         ];
     }
 
-    // Register the group
+    // ---- ADDITIONAL SETTINGS FIELDS ----
+    // CPT slug & names
+    $acf_fields[] = [
+        'key'           => 'verified_profile_cpt_slug',
+        'name'          => 'verified_profile_cpt_slug',
+        'label'         => 'Verified Profile CPT Slug',
+        'type'          => 'text',
+        'default_value' => 'profile',
+    ];
+    $acf_fields[] = [
+        'key'           => 'verified_profile_cpt_plural_name',
+        'name'          => 'verified_profile_cpt_plural_name',
+        'label'         => 'Verified Profile CPT Plural Name',
+        'type'          => 'text',
+        'default_value' => 'Profiles',
+    ];
+    $acf_fields[] = [
+        'key'           => 'verified_profile_cpt_singular_name',
+        'name'          => 'verified_profile_cpt_singular_name',
+        'label'         => 'Verified Profile CPT Singular Name',
+        'type'          => 'text',
+        'default_value' => 'Profile',
+    ];
+
+    // Program info
+    $acf_fields[] = [
+        'key'  => 'verified_profile_program_name',
+        'name' => 'verified_profile_program_name',
+        'label'=> 'Verified Profile Program Name',
+        'type' => 'text',
+    ];
+    $acf_fields[] = [
+        'key'  => 'verified_profile_program_email',
+        'name' => 'verified_profile_program_email',
+        'label'=> 'Verified Profile Program Email',
+        'type' => 'text',
+    ];
+    $acf_fields[] = [
+        'key'           => 'verified_profile_program_logo',
+        'name'          => 'verified_profile_program_logo',
+        'label'         => 'Verified Profile Program Logo',
+        'type'          => 'file',
+        'return_format' => 'url',
+        'library'       => 'all',
+    ];
+
+    // Contributor network info
+    $acf_fields[] = [
+        'key'  => 'contributor_network_program_name',
+        'name' => 'contributor_network_program_name',
+        'label'=> 'Contributor Network Program Name',
+        'type' => 'text',
+    ];
+    $acf_fields[] = [
+        'key'  => 'contributor_network_program_email',
+        'name' => 'contributor_network_program_email',
+        'label'=> 'Contributor Network Program Email',
+        'type' => 'text',
+    ];
+    $acf_fields[] = [
+        'key'           => 'contributor_network_program_logo',
+        'name'          => 'contributor_network_program_logo',
+        'label'         => 'Contributor Network Program Logo',
+        'type'          => 'file',
+        'return_format' => 'url',
+        'library'       => 'all',
+    ];
+    // ----------------------------------------
+
+    // Register the field group on the Verified Profiles options page
     acf_add_local_field_group([
         'key'      => 'group_verified_profiles_settings',
         'title'    => 'Verified Profiles Settings',

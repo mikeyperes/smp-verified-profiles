@@ -75,6 +75,32 @@ function display_verified_profile_settings() {
         </table>
         <?php submit_button('Save Changes','primary','submit_verified_profile_settings'); ?>
       </form>
+
+      <?php
+      // Render ACF fields on this options page
+      if ( function_exists('acf_add_local_field_group') ) {
+          // ACF will inject fields below
+      }
+      ?>
     </div>
     <?php
+}
+
+// Register additional ACF fields on the same settings page
+add_action('acf/init', __NAMESPACE__ . '\\register_acf_additional_fields');
+function register_acf_additional_fields() {
+    if ( ! function_exists('acf_add_local_field_group') ) return;
+
+    acf_add_local_field_group([
+        'key'      => 'group_verified_profile_additional',
+        'title'    => 'Additional Verified Profile Settings',
+        'fields'   => [
+            ['key'=>'field_verified_profile_program_name','label'=>'Verified Profile Program Name','name'=>'verified_profile_program_name','type'=>'text'],
+            ['key'=>'field_contributor_network_program_name','label'=>'Contributor Network Program Name','name'=>'contributor_network_program_name','type'=>'text'],
+            ['key'=>'field_profile_fallback_image','label'=>'Profile Fallback Image','name'=>'profile_fallback_image','type'=>'image','return_format'=>'id','preview_size'=>'thumbnail'],
+            ['key'=>'field_verified_profile_program_logo','label'=>'Verified Profile Program Logo','name'=>'verified_profile_program_logo','type'=>'image','return_format'=>'id','preview_size'=>'thumbnail'],
+            ['key'=>'field_contributor_network_profile_logo','label'=>'Contributor Network Profile Logo','name'=>'contributor_network_profile_logo','type'=>'image','return_format'=>'id','preview_size'=>'thumbnail'],
+        ],
+        'location' => [[['param'=>'options_page','operator'=>'==','value'=>'verified-profile-settings']]],
+    ]);
 }
