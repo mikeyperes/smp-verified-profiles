@@ -267,46 +267,105 @@ $schema = [
             
 
 
-        } elseif (in_array('organization', $category_slugs)) {
-            $schema = [
-                "@context" => "https://schema.org",
-                "@type" => "Organization",
-                "name" => get_field('organization_name', $post_id),
-                "url" => get_field('organization_url', $post_id),
-                "legalName" => get_field('legal_name', $post_id),
-                "naics" => get_field('naics', $post_id),
-                "email" => get_field('email', $post_id),
-                "description" => json_encode(get_field('description', $post_id)),
-                "alternateName" => get_field('alternate_name', $post_id),
-                "logo" => get_field('logo', $post_id),
-                "award" => get_field('award', $post_id),
-                "brand" => get_field('brand', $post_id),
-                "contactPoint" => array_filter([
-                    "@type" => "ContactPoint",
-                    "contactType" => get_field('contact_type', $post_id),
-                    "email" => get_field('contact_email', $post_id),
-                    "telephone" => get_field('contact_telephone', $post_id)
-                ]),
-                "founder" => array_filter([
-                    "@type" => "Person",
-                    "@id" => get_field('founder_id', $post_id) ?: null,
-                    "url" => get_field('founder_url', $post_id) ?: null,
-                    "name" => get_field('founder_name', $post_id) ?: null
-                ]),
-                "foundingDate" => get_field('founding_date', $post_id),
-                "numberOfEmployees" => get_field('number_of_employees', $post_id),
-                "seeks" => get_field('seeks', $post_id),
-                "sameAs" => array_values(array_filter([get_field('same_as', $post_id)])),
-                "address" => array_filter([
-                    "@type" => "PostalAddress",
-                    "streetAddress" => get_field('street_address', $post_id),
-                    "addressLocality" => get_field('address_locality', $post_id),
-                    "addressRegion" => get_field('address_region', $post_id),
-                    "postalCode" => get_field('postal_code', $post_id),
-                    "addressCountry" => get_field('address_country', $post_id)
-                ])
-            ];
-        }      // Entity post type: Vocabulary word
+} elseif ( in_array( 'organization', $category_slugs, true ) ) {
+    // Fetch ACF fields
+    $org_name            = get_field( 'organization_name', $post_id );
+    $org_url             = get_field( 'organization_url', $post_id );
+    $legal_name          = get_field( 'legal_name', $post_id );
+    $naics               = get_field( 'naics', $post_id );
+    $email               = get_field( 'email', $post_id );
+    $description         = get_field( 'description', $post_id );
+    $alternate_name      = get_field( 'alternate_name', $post_id );
+    $logo                = get_field( 'logo', $post_id );
+    $award               = get_field( 'award', $post_id );
+    $brand               = get_field( 'brand', $post_id );
+    $founder_id          = get_field( 'founder_id', $post_id );
+    $founder_url         = get_field( 'founder_url', $post_id );
+    $founder_name        = get_field( 'founder_name', $post_id );
+    $founding_date       = get_field( 'founding_date', $post_id );
+    $number_of_employees = get_field( 'number_of_employees', $post_id );
+    $seeks               = get_field( 'seeks', $post_id );
+    $same_as             = get_field( 'same_as', $post_id );      // array or string
+    // ContactPoint fields
+    $contact_type        = get_field( 'contact_type', $post_id );
+    $contact_email       = get_field( 'contact_email', $post_id );
+    $contact_tel         = get_field( 'contact_telephone', $post_id );
+    // Address fields
+    $street_address      = get_field( 'street_address', $post_id );
+    $address_locality    = get_field( 'address_locality', $post_id );
+    $address_region      = get_field( 'address_region', $post_id );
+    $postal_code         = get_field( 'postal_code', $post_id );
+    $address_country     = get_field( 'address_country', $post_id );
+
+    // Build Organization schema, only adding non-empty values
+    $org = [
+        "@context" => "https://schema.org",
+        "@type"    => "Organization",
+    ];
+    if ( $org_name )            { $org['name']               = $org_name; }
+    if ( $org_url )             { $org['url']                = $org_url; }
+    if ( $legal_name )          { $org['legalName']          = $legal_name; }
+    if ( $naics )               { $org['naics']              = $naics; }
+    if ( $email )               { $org['email']              = $email; }
+    if ( $description )         { $org['description']        = $description; }
+    if ( $alternate_name )      { $org['alternateName']      = $alternate_name; }
+    if ( $logo )                { $org['logo']               = $logo; }
+    if ( $award )               { $org['award']              = $award; }
+    if ( $brand )               { $org['brand']              = $brand; }
+    if ( $founding_date )       { $org['foundingDate']       = $founding_date; }
+    if ( $number_of_employees ) { $org['numberOfEmployees']  = $number_of_employees; }
+    if ( $seeks )               { $org['seeks']              = $seeks; }
+    if ( ! empty( $same_as ) )  { $org['sameAs']             = $same_as; }
+
+    // ContactPoint
+    if ( $contact_type || $contact_email || $contact_tel ) {
+        $cp = [ "@type" => "ContactPoint" ];
+        if ( $contact_type )  { $cp['contactType'] = $contact_type; }
+        if ( $contact_email ) { $cp['email']       = $contact_email; }
+        if ( $contact_tel )   { $cp['telephone']   = $contact_tel; }
+        $org['contactPoint'] = $cp;
+    }
+
+    // Founder
+    if ( $founder_id || $founder_url || $founder_name ) {
+        $f = [ "@type" => "Person" ];
+        if ( $founder_id )   { $f['@id']  = $founder_id; }
+        if ( $founder_url )  { $f['url']  = $founder_url; }
+        if ( $founder_name ) { $f['name'] = $founder_name; }
+        $org['founder'] = $f;
+    }
+
+    // PostalAddress
+    if ( $street_address || $address_locality || $address_region || $postal_code || $address_country ) {
+        $addr = [ "@type" => "PostalAddress" ];
+        if ( $street_address )   { $addr['streetAddress']   = $street_address; }
+        if ( $address_locality ) { $addr['addressLocality']  = $address_locality; }
+        if ( $address_region )   { $addr['addressRegion']    = $address_region; }
+        if ( $postal_code )      { $addr['postalCode']       = $postal_code; }
+        if ( $address_country )  { $addr['addressCountry']   = $address_country; }
+        $org['address'] = $addr;
+    }
+
+    $schema = $org;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         elseif (get_post_type($post_id) === 'entity') {
             $schema = [
                 "@context"         => "https://schema.org",
