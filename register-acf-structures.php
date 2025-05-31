@@ -156,6 +156,7 @@ function register_profile_general_acf_fields() {
                 [['param'=>'current_user_role','operator'=>'==','value'=>'administrator']],
             ],
         ],
+
         // 2) Profile - Admin
         [
             'key'      => 'group_' . $slug . '_admin',
@@ -171,6 +172,7 @@ function register_profile_general_acf_fields() {
             ],
             'location' => [[['param'=>'post_type','operator'=>'==','value'=>$slug],['param'=>'current_user_role','operator'=>'==','value'=>'administrator']]],
         ],
+
         // 3) Profile - Person - Public
         [
             'key'      => 'group_' . $slug . '_person_public',
@@ -186,41 +188,116 @@ function register_profile_general_acf_fields() {
                     'button_label' => 'Add Row',
                     'rows_per_page'=> 20,
                     'sub_fields'   => [
-                        ['key'=>'field_organization','label'=>'Organization','name'=>'organization','type'=>'post_object','post_type'=>[$slug],'post_status'=>['publish'],'return_format'=>'object','ui'=>1],
+                        [
+                            'key'           => 'field_organization',
+                            'label'         => 'Organization',
+                            'name'          => 'organization',
+                            'type'          => 'post_object',
+                            'post_type'     => [$slug],
+                            'post_status'   => ['publish'],
+                            'return_format' => 'object',
+                            'ui'            => 1,
+                        ],
                     ],
                 ],
-                ['key'=>'field_books','label'=>'Books','name'=>'books','type'=>'repeater','layout'=>'table','button_label'=>'Add Row','rows_per_page'=>20,'sub_fields'=>[
-                    ['key'=>'field_book_title','label'=>'Title','name'=>'title','type'=>'text'],
-                    ['key'=>'field_book_cover','label'=>'Cover','name'=>'cover','type'=>'image','return_format'=>'array','preview_size'=>'medium'],
-                ]],
-                ['key'=>'field_personal_info','label'=>'Personal Information','name'=>'personal','type'=>'group','layout'=>'block','sub_fields'=>[
-                    ['key'=>'field_location_born','label'=>'Location Born','name'=>'location_born','type'=>'group','layout'=>'block','sub_fields'=>[
-                        ['key'=>'field_location_name_born','label'=>'Name','name'=>'name','type'=>'text'],
-                        ['key'=>'field_location_wikipedia_born','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
-                    ]],
-                    ['key'=>'field_current_residence','label'=>'Current Residence','name'=>'current_residence','type'=>'group','layout'=>'block','sub_fields'=>[
-                        ['key'=>'field_residence_name','label'=>'Name','name'=>'name','type'=>'text'],
-                        ['key'=>'field_residence_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
-                    ]],
-                    ['key'=>'field_marital_status','label'=>'Marital Status','name'=>'marital_status','type'=>'select','choices'=>['single'=>'Single','married'=>'Married','divorced'=>'Divorced','other'=>'Other']],
-                    ['key'=>'field_children','label'=>'Children','name'=>'children','type'=>'text','instructions'=>'Leave empty to hide from profile.'],
-                    ['key'=>'field_education','label'=>'Education','name'=>'education','type'=>'repeater','layout'=>'table','button_label'=>'Add Row','rows_per_page'=>20,'sub_fields'=>[
-                        ['key'=>'field_school','label'=>'School','name'=>'school','type'=>'text','instructions'=>'School name (ex: University of Miami)'],
-                        ['key'=>'field_degree','label'=>'Degree','name'=>'degree','type'=>'text','instructions'=>'Degree type (ex: BS)'],
-                        ['key'=>'field_education_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text','instructions'=>'Wikipedia url of the school'],
-                    ]],
-                    ['key'=>'field_gender','label'=>'Gender','name'=>'gender','type'=>'select','choices'=>['female'=>'Female','male'=>'Male','other'=>'Other','na'=>'Do Not Show Publicly']],
-                ]],
+                [
+                    'key'           => 'field_books',
+                    'label'         => 'Books',
+                    'name'          => 'books',
+                    'type'          => 'repeater',
+                    'layout'        => 'table',
+                    'button_label'  => 'Add Row',
+                    'rows_per_page' => 20,
+                    'sub_fields'    => [
+                        ['key'=>'field_book_title','label'=>'Title','name'=>'title','type'=>'text'],
+                        ['key'=>'field_book_cover','label'=>'Cover','name'=>'cover','type'=>'image','return_format'=>'array','preview_size'=>'medium'],
+                    ],
+                ],
+
+                // Personal Information group
+                [
+                    'key'          => 'field_personal_info',
+                    'label'        => 'Personal Information',
+                    'name'         => 'personal',
+                    'type'         => 'group',
+                    'layout'       => 'block',
+                    'sub_fields'   => [
+                        // Location Born
+                        [
+                            'key'          => 'field_location_born',
+                            'label'        => 'Location Born',
+                            'name'         => 'location_born',
+                            'type'         => 'group',
+                            'layout'       => 'block',
+                            'sub_fields'   => [
+                                ['key'=>'field_location_name_born','label'=>'Name','name'=>'name','type'=>'text'],
+                                ['key'=>'field_location_wikipedia_born','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
+                            ],
+                        ],
+
+                        // Current Residence
+                        [
+                            'key'          => 'field_current_residence',
+                            'label'        => 'Current Residence',
+                            'name'         => 'current_residence',
+                            'type'         => 'group',
+                            'layout'       => 'block',
+                            'sub_fields'   => [
+                                ['key'=>'field_residence_name','label'=>'Name','name'=>'name','type'=>'text'],
+                                ['key'=>'field_residence_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
+                            ],
+                        ],
+
+                        ['key'=>'field_marital_status','label'=>'Marital Status','name'=>'marital_status','type'=>'select','choices'=>['single'=>'Single','married'=>'Married','divorced'=>'Divorced','other'=>'Other']],
+                        ['key'=>'field_children','label'=>'Children','name'=>'children','type'=>'text','instructions'=>'Leave empty to hide from profile.'],
+
+                        // Education repeater
+                        [
+                            'key'          => 'field_education',
+                            'label'        => 'Education',
+                            'name'         => 'education',
+                            'type'         => 'repeater',
+                            'layout'       => 'table',
+                            'button_label' => 'Add Row',
+                            'rows_per_page'=> 20,
+                            'sub_fields'   => [
+                                ['key'=>'field_school','label'=>'School','name'=>'school','type'=>'text','instructions'=>'School name (ex: University of Miami)'],
+                                ['key'=>'field_degree','label'=>'Degree','name'=>'degree','type'=>'text','instructions'=>'Degree type (ex: BS)'],
+                                ['key'=>'field_education_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text','instructions'=>'Wikipedia url of the school'],
+                            ],
+                        ],
+
+                        // **Updated Gender field – allow_null => 1, no default_value**
+                        [
+                            'key'           => 'field_gender',
+                            'label'         => 'Gender',
+                            'name'          => 'gender',
+                            'type'          => 'select',
+                            'choices'       => [
+                                'female' => 'Female',
+                                'male'   => 'Male',
+                                'other'  => 'Other',
+                                'na'     => 'Do Not Show Publicly',
+                            ],
+                            'allow_null'    => 1,          // <-- This lets you save with no selection
+                            // 'default_value' => '',     // <-- Make sure there's no default here
+                        ],
+                    ],
+                ],
             ],
-            'location' => [[['param'=>'post_type','operator'=>'==','value'=>$slug],['param'=>'post_category','operator'=>'==','value'=>'category:person']]],
+            'location' => [
+                [
+                    ['param'=>'post_type','operator'=>'==','value'=>$slug],
+                    ['param'=>'post_category','operator'=>'==','value'=>'category:person']
+                ]
+            ],
         ],
     ];
 
-    foreach ($groups as $grp) {
-        acf_add_local_field_group($grp);
+    foreach ( $groups as $grp ) {
+        acf_add_local_field_group( $grp );
     }
 }
-
 
 
 

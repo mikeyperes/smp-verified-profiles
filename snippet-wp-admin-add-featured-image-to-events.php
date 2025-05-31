@@ -37,11 +37,10 @@ add_filter( 'pre_get_posts', __NAMESPACE__ . '\\jpn_structure_filter_profiles_by
 // Filter the admin query for the 'profile' post type based on a URL parameter
 function jpn_structure_filter_profiles_by_featured( $query ) {
 
-    // 1) Only run in the admin area
-    if ( ! is_admin() ) {
+    // 1) Only run in the admin area and skip AJAX calls
+    if ( ! is_admin() || wp_doing_ajax() ) {
         return;
     }
-
     // 2) Don’t run on ACF’s internal field lookups (they set acf_field_name)
     if ( $query->get('acf_field_name') ) {
         return;
