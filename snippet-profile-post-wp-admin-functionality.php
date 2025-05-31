@@ -242,7 +242,7 @@ if ( in_array( "person", $category_slugs, true ) ) {
        
 
 
-} elseif ( in_array( 'organization', $category_slugs, true ) ) {
+ elseif ( in_array( 'organization', $category_slugs, true ) ) {
     // Fetch ACF fields (adjust keys below if your ACF field names differ)
     $org_name            = get_field( 'organization_name', $post_id );
     $social_website      = get_field( 'social_website',    $post_id );  // <-- Website URL
