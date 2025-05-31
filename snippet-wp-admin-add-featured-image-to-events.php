@@ -36,19 +36,32 @@ function display_profile_featured_image_column( $column, $post_id ) {
 add_filter( 'pre_get_posts', __NAMESPACE__ . '\\jpn_structure_filter_profiles_by_featured' );
 // Filter the admin query for the 'profile' post type based on a URL parameter
 function jpn_structure_filter_profiles_by_featured( $query ) {
+
+    // 1) Only run in the admin area
+    if ( ! is_admin() ) {
+        return;
+    }
+
+    // 2) Don’t run on ACF’s internal field lookups (they set acf_field_name)
+    if ( $query->get('acf_field_name') ) {
+        return;
+    }
+
+    // 3) Only target the main WP_Query (so we don’t accidentally fire on secondary queries)
+    if ( ! $query->is_main_query() ) {
+        return;
+    }
+
+    // 4) Only run on the profile edit‐list screen (edit.php?post_type=profile)
     global $pagenow;
-    
-
-    
-    // Ensure we are in the admin, on the edit.php page, and for the 'profile' post type
-    if ( is_admin() && 'edit.php' === $pagenow && isset( $_GET['post_type'] ) ) {
-
-
-        $settings = get_verified_profile_settings();
-        $slug = $settings['slug'];
-
-    if( $slug === $_GET['post_type']){
-        
+    if ( $pagenow !== 'edit.php' ) {
+        return;
+    }
+   $verified_profile_settings =  get_verified_profile_settings();
+    // 5) Ensure it’s specifically the “profile” CPT being listed
+    if ( $query->get('post_type') !== $verified_profile_settings["slug"] ) {
+        return;
+    }
 
 
         // Check for the custom URL parameter (e.g. featured_filter=1)
@@ -66,7 +79,7 @@ function jpn_structure_filter_profiles_by_featured( $query ) {
             $query->set( 'meta_query', $meta_query );
         }
     }
-}}
+
 
 
 

@@ -7,6 +7,17 @@
  * @return array{singular:string,plural:string,slug:string}
  */
 function get_verified_profile_settings(): array {
+
+    global $my_verified_profile_settings_cache;
+    if ( isset( $my_verified_profile_settings_cache ) ) {
+        return $my_verified_profile_settings_cache;
+    }
+    // If we’re in an ACF field lookup, just return a default (or false):
+    if ( is_admin() && did_action('acf/fields_loaded') ) {
+        return []; 
+    }
+
+    
     // default fallbacks
     //DELETE SOON as ACF has default values
     $defaults = [

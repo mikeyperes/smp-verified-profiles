@@ -26,33 +26,44 @@ add_action('restrict_manage_posts', function($post_type, $which) {
 }, 10, 2);
 
 // 2) Modify the query when that button/link is active
-// 2) Modify the query when that button/link is active
-add_action('pre_get_posts', function(\WP_Query $query) {
-    global $pagenow;
-
-    // Bail unless we’re in wp-admin on the main edit.php for your CPT
-    if (
-        ! is_admin()                                 // only in admin
-     || ! $query->is_main_query()                    // only the main query
-     || $pagenow !== 'edit.php'                      // only the post list screen
-     || $query->get('post_type') !== get_verified_profile_settings()['slug'] // only your CPT
-    ) {
+add_action( 'pre_get_posts', function( \WP_Query $query ) {
+    // 1) Only run in wp-admin (skip front-end & AJAX).
+    if ( ! is_admin() || wp_doing_ajax() ) {
         return;
     }
 
-    // Skip ACF’s own get_field() queries, which set this var
+    // 2) Only target the main query.
+    if ( ! $query->is_main_query() ) {
+        return;
+    }
+
+    // 3) Force the pagenow check: must be edit.php
+    global $pagenow;
+    if ( $pagenow !== 'edit.php' ) {
+        return;
+    }
+
+    // 4) Only target your CPT slug.
+    //    If get_verified_profile_settings() calls get_field() unguarded, 
+    //    wrap it in a try/catch or guard inside get_verified_profile_settings().
+    $settings = get_verified_profile_settings();
+    if ( empty( $settings['slug'] ) || $query->get('post_type') !== $settings['slug'] ) {
+        return;
+    }
+
+    // 5) Skip ACF’s own internal queries.
     if ( isset( $query->query_vars['acf_field_name'] ) ) {
         return;
     }
 
-    // Only proceed if our filter button is active
-    if ( isset($_GET['featured_filter']) && $_GET['featured_filter'] === '1' ) {
+    // Now that all checks are passed, only filter by ‘featured’ if the GET param is set:
+    if ( isset( $_GET['featured_filter'] ) && $_GET['featured_filter'] === '1' ) {
         $meta_query = $query->get('meta_query') ?: [];
         $meta_query[] = [
-            'key'     => 'featured',  // your ACF field name
-            'value'   => '1',         // true_false stores "1" when checked
+            'key'     => 'featured',
+            'value'   => '1',
             'compare' => '=',
         ];
-        $query->set('meta_query', $meta_query);
+        $query->set( 'meta_query', $meta_query );
     }
-}, 10, 1);
+}, 10, 1 );
