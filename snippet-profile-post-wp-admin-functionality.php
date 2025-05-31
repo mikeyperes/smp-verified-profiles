@@ -264,17 +264,31 @@ $schema = [
 ];
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             
 
-
 } elseif ( in_array( 'organization', $category_slugs, true ) ) {
-    // Fetch ACF fields
+    // Fetch ACF fields (adjust keys below if your ACF field names differ)
     $org_name            = get_field( 'organization_name', $post_id );
     $org_url             = get_field( 'organization_url', $post_id );
     $legal_name          = get_field( 'legal_name', $post_id );
     $naics               = get_field( 'naics', $post_id );
     $email               = get_field( 'email', $post_id );
-    $description         = get_field( 'description', $post_id );
+    $acf_description     = get_field( 'description', $post_id );      // ACF key “description”
     $alternate_name      = get_field( 'alternate_name', $post_id );
     $logo                = get_field( 'logo', $post_id );
     $award               = get_field( 'award', $post_id );
@@ -285,11 +299,13 @@ $schema = [
     $founding_date       = get_field( 'founding_date', $post_id );
     $number_of_employees = get_field( 'number_of_employees', $post_id );
     $seeks               = get_field( 'seeks', $post_id );
-    $same_as             = get_field( 'same_as', $post_id );      // array or string
+    $same_as             = get_field( 'same_as', $post_id );          // Could be array or string
+
     // ContactPoint fields
     $contact_type        = get_field( 'contact_type', $post_id );
     $contact_email       = get_field( 'contact_email', $post_id );
     $contact_tel         = get_field( 'contact_telephone', $post_id );
+
     // Address fields
     $street_address      = get_field( 'street_address', $post_id );
     $address_locality    = get_field( 'address_locality', $post_id );
@@ -297,58 +313,82 @@ $schema = [
     $postal_code         = get_field( 'postal_code', $post_id );
     $address_country     = get_field( 'address_country', $post_id );
 
-    // Build Organization schema, only adding non-empty values
+    // Fallbacks: if ACF “organization_name” is empty, use post_title
+    if ( empty( $org_name ) ) {
+        $org_name = get_the_title( $post_id );
+    }
+    // Fallback for description: if ACF “description” is empty, use post_excerpt or post_content
+    if ( empty( $acf_description ) ) {
+        $acf_description = get_the_excerpt( $post_id );
+        if ( empty( $acf_description ) ) {
+            $acf_description = wp_strip_all_tags( get_the_content( null, false, $post_id ) );
+        }
+    }
+
+    // Build Organization schema object, only adding non-empty values
     $org = [
         "@context" => "https://schema.org",
         "@type"    => "Organization",
+        "name"     => $org_name,
     ];
-    if ( $org_name )            { $org['name']               = $org_name; }
-    if ( $org_url )             { $org['url']                = $org_url; }
-    if ( $legal_name )          { $org['legalName']          = $legal_name; }
-    if ( $naics )               { $org['naics']              = $naics; }
-    if ( $email )               { $org['email']              = $email; }
-    if ( $description )         { $org['description']        = $description; }
-    if ( $alternate_name )      { $org['alternateName']      = $alternate_name; }
-    if ( $logo )                { $org['logo']               = $logo; }
-    if ( $award )               { $org['award']              = $award; }
-    if ( $brand )               { $org['brand']              = $brand; }
-    if ( $founding_date )       { $org['foundingDate']       = $founding_date; }
-    if ( $number_of_employees ) { $org['numberOfEmployees']  = $number_of_employees; }
-    if ( $seeks )               { $org['seeks']              = $seeks; }
-    if ( ! empty( $same_as ) )  { $org['sameAs']             = $same_as; }
+    if ( $org_url )             { $org['url']               = esc_url_raw( $org_url ); }
+    if ( $legal_name )          { $org['legalName']         = sanitize_text_field( $legal_name ); }
+    if ( $naics )               { $org['naics']             = sanitize_text_field( $naics ); }
+    if ( $email )               { $org['email']             = sanitize_email( $email ); }
+    if ( $acf_description )     { $org['description']       = wp_kses_post( $acf_description ); }
+    if ( $alternate_name )      { $org['alternateName']     = sanitize_text_field( $alternate_name ); }
+    if ( $logo && filter_var( $logo, FILTER_VALIDATE_URL ) ) { 
+        $org['logo']           = esc_url_raw( $logo ); 
+    }
+    if ( $award )               { $org['award']             = sanitize_text_field( $award ); }
+    if ( $brand )               { $org['brand']             = sanitize_text_field( $brand ); }
+    if ( $founding_date )       { $org['foundingDate']      = sanitize_text_field( $founding_date ); }
+    if ( $number_of_employees ) { $org['numberOfEmployees'] = intval( $number_of_employees ); }
+    if ( $seeks )               { 
+        $org['seeks']           = is_array( $seeks ) 
+                                    ? array_map( 'sanitize_text_field', $seeks ) 
+                                    : sanitize_text_field( $seeks ); 
+    }
+    if ( ! empty( $same_as ) ) {
+        // Ensure sameAs is an array of valid URLs
+        $same_as_urls = (array) $same_as;
+        $same_as_urls = array_filter( array_map( 'esc_url_raw', $same_as_urls ) );
+        if ( ! empty( $same_as_urls ) ) {
+            $org['sameAs'] = array_values( $same_as_urls );
+        }
+    }
 
     // ContactPoint
     if ( $contact_type || $contact_email || $contact_tel ) {
         $cp = [ "@type" => "ContactPoint" ];
-        if ( $contact_type )  { $cp['contactType'] = $contact_type; }
-        if ( $contact_email ) { $cp['email']       = $contact_email; }
-        if ( $contact_tel )   { $cp['telephone']   = $contact_tel; }
+        if ( $contact_type )  { $cp['contactType'] = sanitize_text_field( $contact_type ); }
+        if ( $contact_email ) { $cp['email']       = sanitize_email( $contact_email ); }
+        if ( $contact_tel )   { $cp['telephone']   = sanitize_text_field( $contact_tel ); }
         $org['contactPoint'] = $cp;
     }
 
     // Founder
     if ( $founder_id || $founder_url || $founder_name ) {
         $f = [ "@type" => "Person" ];
-        if ( $founder_id )   { $f['@id']  = $founder_id; }
-        if ( $founder_url )  { $f['url']  = $founder_url; }
-        if ( $founder_name ) { $f['name'] = $founder_name; }
+        if ( $founder_id )   { $f['@id']  = esc_url_raw( $founder_id ); }
+        if ( $founder_url )  { $f['url']  = esc_url_raw( $founder_url ); }
+        if ( $founder_name ) { $f['name'] = sanitize_text_field( $founder_name ); }
         $org['founder'] = $f;
     }
 
     // PostalAddress
     if ( $street_address || $address_locality || $address_region || $postal_code || $address_country ) {
         $addr = [ "@type" => "PostalAddress" ];
-        if ( $street_address )   { $addr['streetAddress']   = $street_address; }
-        if ( $address_locality ) { $addr['addressLocality']  = $address_locality; }
-        if ( $address_region )   { $addr['addressRegion']    = $address_region; }
-        if ( $postal_code )      { $addr['postalCode']       = $postal_code; }
-        if ( $address_country )  { $addr['addressCountry']   = $address_country; }
+        if ( $street_address )   { $addr['streetAddress']   = sanitize_text_field( $street_address ); }
+        if ( $address_locality ) { $addr['addressLocality']  = sanitize_text_field( $address_locality ); }
+        if ( $address_region )   { $addr['addressRegion']    = sanitize_text_field( $address_region ); }
+        if ( $postal_code )      { $addr['postalCode']       = sanitize_text_field( $postal_code ); }
+        if ( $address_country )  { $addr['addressCountry']   = sanitize_text_field( $address_country ); }
         $org['address'] = $addr;
     }
 
     $schema = $org;
 }
-
 
 
 
