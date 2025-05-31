@@ -102,166 +102,126 @@ if (!function_exists(__NAMESPACE__ . '\\inject_schema_on_single_profile')) {
         $schema = [];
       
 
-        if (in_array("person", $category_slugs)) {
-            $education_entries = get_field('personal_education', $post_id);
-            $alumniOf = [];
-            if ($education_entries) {
-                foreach ($education_entries as $entry) {
-                    $alumniOf[] = [
-                        "@type" => "EducationalOrganization",
-                        "name" => $entry['school'],
-                        "sameAs" => $entry['wikipedia_url']
-                    ];
-                }
-            }
 
-            $birthPlaceName = get_field('personal_location_born_name', $post_id);
-            $homeLocationName = get_field('personal_current_residence_name', $post_id);
-            $bio = get_field('short_description', $post_id);
 
-            $birthPlace = $birthPlaceName ? ["@type" => "Place", "name" => $birthPlaceName, "sameAs" => get_field('personal_location_born_wikipedia_url', $post_id)] : null;
-            $homeLocation = $homeLocationName ? ["@type" => "Place", "name" => $homeLocationName, "sameAs" => get_field('personal_current_residence_wikipedia_url', $post_id)] : null;
-/*
-            $schema = [
-                "@context" => "https://schema.org",
-                "@type" => "Person",
-                "@id" => get_the_permalink($post_id),
-                "url" => get_the_permalink($post_id),
-                "name" => get_the_title($post_id),
-                "image" => get_the_post_thumbnail_url($post_id),
-                "birthPlace" => $birthPlace,
-                "homeLocation" => $homeLocation,
-                "description" => $bio,
-                "gender" => get_field('personal_gender', $post_id),      
-                "alumniOf" => $alumniOf,
-                "sameAs" => array_values(array_filter([
-                    get_field('social_profiles_facebook', $post_id),
-                    get_field('social_profiles_twitter', $post_id),
-                    get_field('social_profiles_instagram', $post_id),
-                    get_field('social_profiles_linkedin', $post_id),
-                    get_field('social_profiles_tiktok', $post_id),
-                    get_field('social_profiles_wikipedia', $post_id),
-                    get_field('social_profiles_imdb', $post_id),
-                    get_field('social_profiles_muckrack_url', $post_id),
-                    get_field('social_profiles_soundcloud', $post_id),
-                    get_field('social_profiles_amazon_author', $post_id),
-                    get_field('social_profiles_audible', $post_id),
-                    get_field('social_profiles_github', $post_id),
-                    get_field('social_profiles_crunchbase', $post_id),
-                    get_field('social_profiles_f6s', $post_id),
-                    get_field('social_profiles_the_org', $post_id),
-                    get_field('social_profiles_threads', $post_id),
-                    get_field('social_profiles_linktree', $post_id),
-                    get_field('social_profiles_pinterest', $post_id),
-                    get_field('social_profiles_quora', $post_id),
-                    get_field('social_profiles_reddit', $post_id),
-                    get_field('social_profiles_youtube', $post_id),
-                    get_field('social_profiles_angel_list', $post_id)
-                ]))
-            ];
 
-            */
 
-       if($post_id == -1)
-$post_id       = get_the_ID();
 
-// Fetch ACF fields
-$birth_place   = get_field('personal_birth_place',   $post_id);
-$home_location = get_field('personal_home_location', $post_id);
-$alumni_of     = get_field('personal_alumni_of',     $post_id);
-$bio           = get_field('personal_bio',            $post_id);
-$gender        = get_field('personal_gender',         $post_id);
 
-// Collect and filter social profile URLs
-$social_profiles = array_filter([
-    get_field('social_profiles_facebook',     $post_id),
-    get_field('social_profiles_twitter',      $post_id),
-    get_field('social_profiles_instagram',    $post_id),
-    get_field('social_profiles_linkedin',     $post_id),
-    get_field('social_profiles_tiktok',       $post_id),
-    get_field('social_profiles_wikipedia',    $post_id),
-    get_field('social_profiles_imdb',         $post_id),
-    get_field('social_profiles_muckrack_url', $post_id),
-    get_field('social_profiles_soundcloud',   $post_id),
-    get_field('social_profiles_amazon_author',$post_id),
-    get_field('social_profiles_audible',      $post_id),
-    get_field('social_profiles_github',       $post_id),
-    get_field('social_profiles_crunchbase',   $post_id),
-    get_field('social_profiles_f6s',          $post_id),
-    get_field('social_profiles_the_org',      $post_id),
-    get_field('social_profiles_threads',      $post_id),
-    get_field('social_profiles_linktree',     $post_id),
-    get_field('social_profiles_pinterest',    $post_id),
-    get_field('social_profiles_quora',        $post_id),
-    get_field('social_profiles_reddit',       $post_id),
-    get_field('social_profiles_youtube',      $post_id),
-    get_field('social_profiles_angel_list',   $post_id),
-], function($url) {
-    return !empty($url);
-});
 
-// Prepare sameAs array
-$same_as_urls = array_values($social_profiles);
 
-// --- Person object with cleaned name & guarded image ---
-$person = [
-    "@type" => "Person",
-    "@id"   => get_permalink($post_id) . "#person",
-    "url"   => get_permalink($post_id),
-];
 
-// Clean up the title: decode entities + convert NBSP to normal space
-$title = html_entity_decode( get_the_title($post_id), ENT_QUOTES, 'UTF-8' );
-$title = preg_replace( '/\x{00A0}+/u', ' ', $title );
-$person['name'] = sanitize_text_field( $title );
 
-// Only include image if it’s a valid URL
-$thumb_url = get_the_post_thumbnail_url( $post_id );
-if ( $thumb_url && filter_var( $thumb_url, FILTER_VALIDATE_URL ) ) {
-    $person['image'] = esc_url_raw( $thumb_url );
-}
 
-if ($birth_place !== null && $birth_place !== '') {
-    $person['birthPlace'] = [
-        "@type" => "Place",
-        "name"  => $birth_place
+
+
+
+if ( in_array( "person", $category_slugs, true ) ) {
+    // Fetch ACF fields for Person
+    $birth_place     = get_field( 'personal_birth_place',   $post_id );
+    $home_location   = get_field( 'personal_home_location', $post_id );
+    $alumni_of       = get_field( 'personal_alumni_of',     $post_id );
+    $bio             = get_field( 'personal_bio',            $post_id );
+    $gender          = get_field( 'personal_gender',         $post_id );
+    $social_website  = get_field( 'social_website',          $post_id ); // <-- new ACF field
+
+    // Collect and filter social profile URLs
+    $social_profiles = array_filter( [
+        get_field( 'social_profiles_facebook',     $post_id ),
+        get_field( 'social_profiles_twitter',      $post_id ),
+        get_field( 'social_profiles_instagram',    $post_id ),
+        get_field( 'social_profiles_linkedin',     $post_id ),
+        get_field( 'social_profiles_tiktok',       $post_id ),
+        get_field( 'social_profiles_wikipedia',    $post_id ),
+        get_field( 'social_profiles_imdb',         $post_id ),
+        get_field( 'social_profiles_muckrack_url', $post_id ),
+        get_field( 'social_profiles_soundcloud',   $post_id ),
+        get_field( 'social_profiles_amazon_author',$post_id ),
+        get_field( 'social_profiles_audible',      $post_id ),
+        get_field( 'social_profiles_github',       $post_id ),
+        get_field( 'social_profiles_crunchbase',   $post_id ),
+        get_field( 'social_profiles_f6s',          $post_id ),
+        get_field( 'social_profiles_the_org',      $post_id ),
+        get_field( 'social_profiles_threads',      $post_id ),
+        get_field( 'social_profiles_linktree',     $post_id ),
+        get_field( 'social_profiles_pinterest',    $post_id ),
+        get_field( 'social_profiles_quora',        $post_id ),
+        get_field( 'social_profiles_reddit',       $post_id ),
+        get_field( 'social_profiles_youtube',      $post_id ),
+        get_field( 'social_profiles_angel_list',   $post_id ),
+    ], function( $url ) {
+        return ! empty( $url );
+    } );
+
+    // Prepare sameAs array
+    $same_as_urls = array_values( $social_profiles );
+
+    // --- Person object with cleaned name & guarded image ---
+    $person = [
+        "@type" => "Person",
+        "@id"   => get_permalink( $post_id ) . "#person",
+    ];
+
+    // If social_website exists and is a valid URL, use it as 'url'; otherwise fallback to permalink
+    if ( $social_website && filter_var( $social_website, FILTER_VALIDATE_URL ) ) {
+        $person['url'] = esc_url_raw( $social_website );
+    } else {
+        $person['url'] = get_permalink( $post_id );
+    }
+
+    // Clean up the title: decode entities + convert NBSP to normal space
+    $title = html_entity_decode( get_the_title( $post_id ), ENT_QUOTES, 'UTF-8' );
+    $title = preg_replace( '/\x{00A0}+/u', ' ', $title );
+    $person['name'] = sanitize_text_field( $title );
+
+    // Only include image if it’s a valid URL
+    $thumb_url = get_the_post_thumbnail_url( $post_id );
+    if ( $thumb_url && filter_var( $thumb_url, FILTER_VALIDATE_URL ) ) {
+        $person['image'] = esc_url_raw( $thumb_url );
+    }
+
+    if ( $birth_place !== null && $birth_place !== '' ) {
+        $person['birthPlace'] = [
+            "@type" => "Place",
+            "name"  => sanitize_text_field( $birth_place ),
+        ];
+    }
+
+    if ( $home_location !== null && $home_location !== '' ) {
+        $person['homeLocation'] = [
+            "@type" => "Place",
+            "name"  => sanitize_text_field( $home_location ),
+        ];
+    }
+
+    if ( $bio !== null && $bio !== '' ) {
+        $person['description'] = wp_kses_post( $bio );
+    }
+
+    if ( $gender !== null && $gender !== '' ) {
+        $person['gender'] = sanitize_text_field( $gender );
+    }
+
+    if ( $alumni_of !== null && $alumni_of !== '' ) {
+        $person['alumniOf'] = [
+            "@type" => "Organization",
+            "name"  => is_array( $alumni_of ) ? sanitize_text_field( $alumni_of['name'] ) : sanitize_text_field( $alumni_of ),
+        ];
+    }
+
+    if ( ! empty( $same_as_urls ) ) {
+        $person['sameAs'] = array_map( 'esc_url_raw', $same_as_urls );
+    }
+
+    // Build the ProfilePage wrapper
+    $schema = [
+        "@context"     => "https://schema.org",
+        "@type"        => "ProfilePage",
+        "dateCreated"  => get_post_time( 'c', true, $post_id ),
+        "dateModified" => get_post_modified_time( 'c', true, $post_id ),
+        "mainEntity"   => $person,
     ];
 }
-
-if ($home_location !== null && $home_location !== '') {
-    $person['homeLocation'] = [
-        "@type" => "Place",
-        "name"  => $home_location
-    ];
-}
-
-if ($bio !== null && $bio !== '') {
-    $person['description'] = $bio;
-}
-
-if ($gender !== null && $gender !== '') {
-    $person['gender'] = $gender;
-}
-
-if ($alumni_of !== null && $alumni_of !== '') {
-    $person['alumniOf'] = [
-        "@type" => "Organization",
-        "name"  => is_array($alumni_of) ? $alumni_of['name'] : $alumni_of
-    ];
-}
-
-if (!empty($same_as_urls)) {
-    $person['sameAs'] = $same_as_urls;
-}
-
-// Build the ProfilePage wrapper
-$schema = [
-    "@context"     => "https://schema.org",
-    "@type"        => "ProfilePage",
-    "dateCreated"  => get_post_time('c', true, $post_id),
-    "dateModified" => get_post_modified_time('c', true, $post_id),
-    "mainEntity"   => $person,
-];
 
 
 
@@ -285,21 +245,21 @@ $schema = [
 } elseif ( in_array( 'organization', $category_slugs, true ) ) {
     // Fetch ACF fields (adjust keys below if your ACF field names differ)
     $org_name            = get_field( 'organization_name', $post_id );
-    $org_url             = get_field( 'organization_url', $post_id );
-    $legal_name          = get_field( 'legal_name', $post_id );
-    $naics               = get_field( 'naics', $post_id );
-    $email               = get_field( 'email', $post_id );
-    $acf_description     = get_field( 'description', $post_id );      // ACF key “description”
-    $alternate_name      = get_field( 'alternate_name', $post_id );
-    $logo                = get_field( 'logo', $post_id );
-    $award               = get_field( 'award', $post_id );
-    $brand               = get_field( 'brand', $post_id );
-    $founder_id          = get_field( 'founder_id', $post_id );
-    $founder_url         = get_field( 'founder_url', $post_id );
-    $founder_name        = get_field( 'founder_name', $post_id );
-    $founding_date       = get_field( 'founding_date', $post_id );
-    $number_of_employees = get_field( 'number_of_employees', $post_id );
-    $seeks               = get_field( 'seeks', $post_id );
+    $social_website      = get_field( 'social_website',    $post_id );  // <-- Website URL
+    $legal_name          = get_field( 'legal_name',         $post_id );
+    $naics               = get_field( 'naics',              $post_id );
+    $email               = get_field( 'email',              $post_id );
+    $acf_description     = get_field( 'description',        $post_id );
+    $alternate_name      = get_field( 'alternate_name',     $post_id );
+    $logo                = get_field( 'logo',               $post_id );
+    $award               = get_field( 'award',              $post_id );
+    $brand               = get_field( 'brand',              $post_id );
+    $founder_id          = get_field( 'founder_id',         $post_id );
+    $founder_url         = get_field( 'founder_url',        $post_id );
+    $founder_name        = get_field( 'founder_name',       $post_id );
+    $founding_date       = get_field( 'founding_date',      $post_id );
+    $number_of_employees = get_field( 'number_of_employees',$post_id );
+    $seeks               = get_field( 'seeks',              $post_id );
 
     // Collect and filter social profile URLs for sameAs
     $social_profiles = array_filter([
@@ -330,16 +290,16 @@ $schema = [
     } );
 
     // ContactPoint fields
-    $contact_type        = get_field( 'contact_type', $post_id );
-    $contact_email       = get_field( 'contact_email', $post_id );
-    $contact_tel         = get_field( 'contact_telephone', $post_id );
+    $contact_type        = get_field( 'contact_type',     $post_id );
+    $contact_email       = get_field( 'contact_email',    $post_id );
+    $contact_tel         = get_field( 'contact_telephone',$post_id );
 
     // Address fields
-    $street_address      = get_field( 'street_address', $post_id );
+    $street_address      = get_field( 'street_address',   $post_id );
     $address_locality    = get_field( 'address_locality', $post_id );
-    $address_region      = get_field( 'address_region', $post_id );
-    $postal_code         = get_field( 'postal_code', $post_id );
-    $address_country     = get_field( 'address_country', $post_id );
+    $address_region      = get_field( 'address_region',   $post_id );
+    $postal_code         = get_field( 'postal_code',      $post_id );
+    $address_country     = get_field( 'address_country',   $post_id );
 
     // Featured image (if exists)
     $thumb_url = get_the_post_thumbnail_url( $post_id );
@@ -349,11 +309,11 @@ $schema = [
         $feature_image = null;
     }
 
-    // Fallbacks: if ACF “organization_name” is empty, use post_title
+    // Fallback for org_name: use post title if ACF is empty
     if ( empty( $org_name ) ) {
         $org_name = get_the_title( $post_id );
     }
-    // Fallback for description: if ACF “description” is empty, use post_excerpt or post_content
+    // Fallback for description: use excerpt or content if ACF description is empty
     if ( empty( $acf_description ) ) {
         $acf_description = get_the_excerpt( $post_id );
         if ( empty( $acf_description ) ) {
@@ -361,31 +321,36 @@ $schema = [
         }
     }
 
-    // Build Organization schema object, only adding non-empty values
+    // Build Organization schema object
     $org = [
         "@context" => "https://schema.org",
         "@type"    => "Organization",
-        "name"     => $org_name,
+        "name"     => sanitize_text_field( $org_name ),
     ];
-    if ( $org_url )               { $org['url']               = esc_url_raw( $org_url ); }
-    if ( $legal_name )            { $org['legalName']         = sanitize_text_field( $legal_name ); }
-    if ( $naics )                 { $org['naics']             = sanitize_text_field( $naics ); }
-    if ( $email )                 { $org['email']             = sanitize_email( $email ); }
-    if ( $acf_description )       { $org['description']       = wp_kses_post( $acf_description ); }
-    if ( $alternate_name )        { $org['alternateName']     = sanitize_text_field( $alternate_name ); }
+
+    // **Include website URL** if provided
+    if ( $social_website && filter_var( $social_website, FILTER_VALIDATE_URL ) ) {
+        $org['url'] = esc_url_raw( $social_website );
+    }
+
+    if ( $legal_name )          { $org['legalName']         = sanitize_text_field( $legal_name ); }
+    if ( $naics )               { $org['naics']             = sanitize_text_field( $naics ); }
+    if ( $email )               { $org['email']             = sanitize_email( $email ); }
+    if ( $acf_description )     { $org['description']       = wp_kses_post( $acf_description ); }
+    if ( $alternate_name )      { $org['alternateName']     = sanitize_text_field( $alternate_name ); }
     if ( $logo && filter_var( $logo, FILTER_VALIDATE_URL ) ) {
-        $org['logo']             = esc_url_raw( $logo );
+        $org['logo']           = esc_url_raw( $logo );
     }
-    if ( $award )                 { $org['award']             = sanitize_text_field( $award ); }
-    if ( $brand )                 { $org['brand']             = sanitize_text_field( $brand ); }
-    if ( $founding_date )         { $org['foundingDate']      = sanitize_text_field( $founding_date ); }
-    if ( $number_of_employees )   { $org['numberOfEmployees'] = intval( $number_of_employees ); }
-    if ( $seeks )                 {
-        $org['seeks']            = is_array( $seeks )
-                                        ? array_map( 'sanitize_text_field', $seeks )
-                                        : sanitize_text_field( $seeks );
+    if ( $award )               { $org['award']             = sanitize_text_field( $award ); }
+    if ( $brand )               { $org['brand']             = sanitize_text_field( $brand ); }
+    if ( $founding_date )       { $org['foundingDate']      = sanitize_text_field( $founding_date ); }
+    if ( $number_of_employees ) { $org['numberOfEmployees'] = intval( $number_of_employees ); }
+    if ( $seeks )               {
+        $org['seeks']          = is_array( $seeks )
+                                    ? array_map( 'sanitize_text_field', $seeks )
+                                    : sanitize_text_field( $seeks );
     }
-    if ( $feature_image )         { $org['image']             = $feature_image; }
+    if ( $feature_image )       { $org['image']             = $feature_image; }
 
     // sameAs (social profile URLs)
     if ( ! empty( $social_profiles ) ) {
