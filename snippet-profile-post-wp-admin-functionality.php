@@ -123,38 +123,38 @@ if ( in_array( "person", $category_slugs, true ) ) {
     $alumni_of       = get_field( 'personal_alumni_of',     $post_id );
     $bio             = get_field( 'personal_bio',            $post_id );
     $gender          = get_field( 'personal_gender',         $post_id );
-    $social_website  = get_field( 'social_website',          $post_id ); // <-- new ACF field
+    $url_website  = get_field( 'url_website',          $post_id ); // <-- new ACF field
 
-    // Collect and filter social profile URLs
-    $social_profiles = array_filter( [
-        get_field( 'social_profiles_facebook',     $post_id ),
-        get_field( 'social_profiles_twitter',      $post_id ),
-        get_field( 'social_profiles_instagram',    $post_id ),
-        get_field( 'social_profiles_linkedin',     $post_id ),
-        get_field( 'social_profiles_tiktok',       $post_id ),
-        get_field( 'social_profiles_wikipedia',    $post_id ),
-        get_field( 'social_profiles_imdb',         $post_id ),
-        get_field( 'social_profiles_muckrack_url', $post_id ),
-        get_field( 'social_profiles_soundcloud',   $post_id ),
-        get_field( 'social_profiles_amazon_author',$post_id ),
-        get_field( 'social_profiles_audible',      $post_id ),
-        get_field( 'social_profiles_github',       $post_id ),
-        get_field( 'social_profiles_crunchbase',   $post_id ),
-        get_field( 'social_profiles_f6s',          $post_id ),
-        get_field( 'social_profiles_the_org',      $post_id ),
-        get_field( 'social_profiles_threads',      $post_id ),
-        get_field( 'social_profiles_linktree',     $post_id ),
-        get_field( 'social_profiles_pinterest',    $post_id ),
-        get_field( 'social_profiles_quora',        $post_id ),
-        get_field( 'social_profiles_reddit',       $post_id ),
-        get_field( 'social_profiles_youtube',      $post_id ),
-        get_field( 'social_profiles_angel_list',   $post_id ),
+    // Collect and filter url profile URLs
+    $url_ = array_filter( [
+        get_field( 'url_facebook',     $post_id ),
+        get_field( 'url_twitter',      $post_id ),
+        get_field( 'url_instagram',    $post_id ),
+        get_field( 'url_linkedin',     $post_id ),
+        get_field( 'url_tiktok',       $post_id ),
+        get_field( 'url_wikipedia',    $post_id ),
+        get_field( 'url_imdb',         $post_id ),
+        get_field( 'url_muckrack_url', $post_id ),
+        get_field( 'url_soundcloud',   $post_id ),
+        get_field( 'url_amazon_author',$post_id ),
+        get_field( 'url_audible',      $post_id ),
+        get_field( 'url_github',       $post_id ),
+        get_field( 'url_crunchbase',   $post_id ),
+        get_field( 'url_f6s',          $post_id ),
+        get_field( 'url_the_org',      $post_id ),
+        get_field( 'url_threads',      $post_id ),
+        get_field( 'url_linktree',     $post_id ),
+        get_field( 'url_pinterest',    $post_id ),
+        get_field( 'url_quora',        $post_id ),
+        get_field( 'url_reddit',       $post_id ),
+        get_field( 'url_youtube',      $post_id ),
+        get_field( 'url_angel_list',   $post_id ),
     ], function( $url ) {
         return ! empty( $url );
     } );
 
     // Prepare sameAs array
-    $same_as_urls = array_values( $social_profiles );
+    $same_as_urls = array_values( $url_ );
 
     // --- Person object with cleaned name & guarded image ---
     $person = [
@@ -162,9 +162,9 @@ if ( in_array( "person", $category_slugs, true ) ) {
         "@id"   => get_permalink( $post_id ) . "#person",
     ];
 
-    // If social_website exists and is a valid URL, use it as 'url'; otherwise fallback to permalink
-    if ( $social_website && filter_var( $social_website, FILTER_VALIDATE_URL ) ) {
-        $person['url'] = esc_url_raw( $social_website );
+    // If url_website exists and is a valid URL, use it as 'url'; otherwise fallback to permalink
+    if ( $url_website && filter_var( $url_website, FILTER_VALIDATE_URL ) ) {
+        $person['url'] = esc_url_raw( $url_website );
     } else {
         $person['url'] = get_permalink( $post_id );
     }
@@ -245,7 +245,7 @@ if ( in_array( "person", $category_slugs, true ) ) {
  elseif ( in_array( 'organization', $category_slugs, true ) ) {
     // Fetch ACF fields (adjust keys below if your ACF field names differ)
     $org_name            = get_field( 'organization_name', $post_id );
-    $social_website      = get_field( 'social_website',    $post_id );  // <-- Website URL
+    $url_website      = get_field( 'url_website',    $post_id );  // <-- Website URL
     $legal_name          = get_field( 'legal_name',         $post_id );
     $naics               = get_field( 'naics',              $post_id );
     $email               = get_field( 'email',              $post_id );
@@ -261,30 +261,30 @@ if ( in_array( "person", $category_slugs, true ) ) {
     $number_of_employees = get_field( 'number_of_employees',$post_id );
     $seeks               = get_field( 'seeks',              $post_id );
 
-    // Collect and filter social profile URLs for sameAs
-    $social_profiles = array_filter([
-        get_field( 'social_profiles_facebook',     $post_id ),
-        get_field( 'social_profiles_twitter',      $post_id ),
-        get_field( 'social_profiles_instagram',    $post_id ),
-        get_field( 'social_profiles_linkedin',     $post_id ),
-        get_field( 'social_profiles_tiktok',       $post_id ),
-        get_field( 'social_profiles_wikipedia',    $post_id ),
-        get_field( 'social_profiles_imdb',         $post_id ),
-        get_field( 'social_profiles_muckrack_url', $post_id ),
-        get_field( 'social_profiles_soundcloud',   $post_id ),
-        get_field( 'social_profiles_amazon_author',$post_id ),
-        get_field( 'social_profiles_audible',      $post_id ),
-        get_field( 'social_profiles_github',       $post_id ),
-        get_field( 'social_profiles_crunchbase',   $post_id ),
-        get_field( 'social_profiles_f6s',          $post_id ),
-        get_field( 'social_profiles_the_org',      $post_id ),
-        get_field( 'social_profiles_threads',      $post_id ),
-        get_field( 'social_profiles_linktree',     $post_id ),
-        get_field( 'social_profiles_pinterest',    $post_id ),
-        get_field( 'social_profiles_quora',        $post_id ),
-        get_field( 'social_profiles_reddit',       $post_id ),
-        get_field( 'social_profiles_youtube',      $post_id ),
-        get_field( 'social_profiles_angel_list',   $post_id ),
+    // Collect and filter url profile URLs for sameAs
+    $url_ = array_filter([
+        get_field( 'url_facebook',     $post_id ),
+        get_field( 'url_twitter',      $post_id ),
+        get_field( 'url_instagram',    $post_id ),
+        get_field( 'url_linkedin',     $post_id ),
+        get_field( 'url_tiktok',       $post_id ),
+        get_field( 'url_wikipedia',    $post_id ),
+        get_field( 'url_imdb',         $post_id ),
+        get_field( 'url_muckrack_url', $post_id ),
+        get_field( 'url_soundcloud',   $post_id ),
+        get_field( 'url_amazon_author',$post_id ),
+        get_field( 'url_audible',      $post_id ),
+        get_field( 'url_github',       $post_id ),
+        get_field( 'url_crunchbase',   $post_id ),
+        get_field( 'url_f6s',          $post_id ),
+        get_field( 'url_the_org',      $post_id ),
+        get_field( 'url_threads',      $post_id ),
+        get_field( 'url_linktree',     $post_id ),
+        get_field( 'url_pinterest',    $post_id ),
+        get_field( 'url_quora',        $post_id ),
+        get_field( 'url_reddit',       $post_id ),
+        get_field( 'url_youtube',      $post_id ),
+        get_field( 'url_angel_list',   $post_id ),
     ], function ( $url ) {
         return ! empty( $url );
     } );
@@ -329,8 +329,8 @@ if ( in_array( "person", $category_slugs, true ) ) {
     ];
 
     // **Include website URL** if provided
-    if ( $social_website && filter_var( $social_website, FILTER_VALIDATE_URL ) ) {
-        $org['url'] = esc_url_raw( $social_website );
+    if ( $url_website && filter_var( $url_website, FILTER_VALIDATE_URL ) ) {
+        $org['url'] = esc_url_raw( $url_website );
     }
 
     if ( $legal_name )          { $org['legalName']         = sanitize_text_field( $legal_name ); }
@@ -352,9 +352,9 @@ if ( in_array( "person", $category_slugs, true ) ) {
     }
     if ( $feature_image )       { $org['image']             = $feature_image; }
 
-    // sameAs (social profile URLs)
-    if ( ! empty( $social_profiles ) ) {
-        $same_as_urls = array_map( 'esc_url_raw', $social_profiles );
+    // sameAs (url profile URLs)
+    if ( ! empty( $url_ ) ) {
+        $same_as_urls = array_map( 'esc_url_raw', $url_ );
         $org['sameAs'] = array_values( $same_as_urls );
     }
 
