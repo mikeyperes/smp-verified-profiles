@@ -180,62 +180,62 @@ $(document).ready(function($) {
 
 
 
+  // 1) Define your namespace string once
+  var ns = 'smp_verified_profiles';
 
+  // 2) Ensure the global namespace object exists
+  window[ns] = window[ns] || {};
 
-function toggleSnippet(snippetId) {
-        var isChecked = jQuery('#' + snippetId).prop('checked');
+  // 3) Define toggleSnippet under that namespace
+  window[ns].toggleSnippet = function(snippetId) {
+    var isChecked = jQuery('#' + snippetId).prop('checked');
 
-        // Make an AJAX call to toggle the snippet
-        jQuery.ajax({
-            url: ajaxurl,  // Ensure ajaxurl is set correctly
-            type: 'post',
-            data: {
-                action: '<?php echo __NAMESPACE__; ?>_toggle_snippet',
-                snippet_id: snippetId,
-                enable: isChecked
-            },
-            success: function(response) {
-                if(response.success) { 
-                    alert(response.data);
-                } else {
-                    alert('Error: ' + response.data);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.log('AJAX Error:', textStatus, errorThrown, jqXHR.responseText);
-                alert('An AJAX error occurred: ' + textStatus + ' - ' + errorThrown);
-            }
-        });
-    }
-  
-    jQuery(document).ready(function($) {
-
-
-          // Handle "Toggle Auto Updates" button click
-    // Handle "Toggle Auto Updates" button click
-    $("#<?php echo __NAMESPACE__; ?> .modify-snippet-via-button").on('click', function() {
-        var snippetId = $(this).data('snippet-id');
-        var action = $(this).data('action');
-        
-     
-        // Now you can directly use snippetId without conditional checks
-        alert("Action: " + action + " | Snippet ID: " + snippetId);
-  
-
-        // Do nothing if snippetId is not set (invalid constant)
-        if (snippetId === null) {
-            return;
+    jQuery.ajax({
+      url: ajaxurl,
+      type: 'POST',
+      data: {
+        action: ns + '_toggle_snippet',
+        snippet_id: snippetId,
+        enable: isChecked
+      },
+      success: function(response) {
+        if (response.success) {
+          alert(response.data);
+        } else {
+          alert('Error: ' + response.data);
         }
-
-        // Toggle the checkbox state based on the action (enable or disable)
-        var checkbox = $('#' + snippetId);
-        var isChecked = (action === 'enable');
-        checkbox.prop('checked', isChecked);
-
-        // Trigger the toggleSnippet function to update the setting
-        toggleSnippet(snippetId);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.error('AJAX Error:', textStatus, errorThrown, jqXHR.responseText);
+        alert('An AJAX error occurred: ' + textStatus + ' - ' + errorThrown);
+      }
     });
-});
+  };
+
+  // 4) On document ready, bind clicks to call your namespaced function
+  jQuery(document).ready(function() {
+    jQuery('#<?php echo __NAMESPACE__; ?> .modify-snippet-via-button').on('click', function(e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      var snippetId = jQuery(this).data('snippet-id');
+      var action    = jQuery(this).data('action'); // "enable" or "disable"
+      alert("Action: " + action + " | Snippet ID: " + snippetId);
+
+      if (!snippetId) {
+        return;
+      }
+
+      // Toggle hidden checkbox state if needed
+      var shouldEnable = (action === 'enable');
+      jQuery('#' + snippetId).prop('checked', shouldEnable);
+
+      // Call the function under our namespace
+      window[ns].toggleSnippet(snippetId);
+    });
+  });
+
+
 
 </script>
 

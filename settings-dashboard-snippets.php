@@ -128,13 +128,18 @@ foreach ($settings_snippets as $snippet) {
 
     // Display the checkbox and label with the info field included
     echo "<div style='color: #555; margin-bottom: 10px;'>
-            <input type='checkbox' id='{$snippet['id']}' onclick='toggleSnippet(\"{$snippet['id']}\")' $checked>
-            <label for='{$snippet['id']}'>
-                {$snippet['name']} - <em>{$snippet['description']}</em>
-                <br>
-                <small><strong>Details:</strong><br>{$snippet['info']}</small>
-            </label>
-          </div>";
+    <input 
+        type='checkbox' 
+        id='{$snippet['id']}' 
+        onclick='window." . __NAMESPACE__ . ".toggleSnippet(\"{$snippet['id']}\")' 
+        {$checked}
+    >
+    <label for='{$snippet['id']}'>
+        {$snippet['name']} – <em>{$snippet['description']}</em><br>
+        <small><strong>Details:</strong><br>{$snippet['info']}</small>
+    </label>
+  </div>";
+
 }
 
                         ?>
