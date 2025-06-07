@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 3.2.6
+Version: 3.4
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -122,6 +122,7 @@ function get_settings_snippets()
 {
 
 
+    $_verified_profile_settings    = get_verified_profile_settings();
 
     $settings_snippets = [
 
@@ -130,8 +131,9 @@ function get_settings_snippets()
             'id' => 'add_wp_admin_add_featured_image_to_events',
             'name' => 'add_wp_admin_add_featured_image_to_events',
             'description' => '',
-            'info' => '',
-            'function' => 'add_wp_admin_add_featured_image_to_events'
+
+            'function' => 'add_wp_admin_add_featured_image_to_events',
+       
         ],
 
         
@@ -140,14 +142,14 @@ function get_settings_snippets()
             'id' => 'register_profile_custom_post_type',
             'name' => 'register_profile_custom_post_type',
             'description' => '',
-            'info' => '',
+            'info' => display_cpt_structure($_verified_profile_settings['slug']),
             'function' => 'register_profile_custom_post_type'
         ],
 
         [
             'id' => 'register_profile_general_acf_fields',
             'name' => 'register_profile_acf_fields',
-            'description' => display_acf_structures(
+            'description' => display_acf_structure(
                 [
                     'group_66b7bdf713e77',  // Post - Verified Profile - Admin
                     'group_656ea6b4d7088',  // Profile - Admin
@@ -163,7 +165,7 @@ function get_settings_snippets()
         [
             'id' => 'register_verified_profile_custom_fields',
             'name' => 'register_verified_profile_custom_fields',
-            'description' => display_acf_structures(["group_67e39e4171b16"]),
+            'description' => display_acf_structure(["group_67e39e4171b16"]),
             'info' => '',
             'function' => 'register_verified_profile_custom_fields'
          ],  
@@ -177,7 +179,7 @@ function get_settings_snippets()
              [
             'id' => 'register_user_custom_fields',
             'name' => 'register_user_custom_fields',
-            'description' => display_acf_structures("group_verified_profiles_settings"),
+            'description' => display_acf_structure("group_verified_profiles_settings"),
             'info' => '',
             'function' => 'register_user_custom_fields'
         ],  
@@ -187,7 +189,7 @@ function get_settings_snippets()
         [
             'id' => 'register_verified_profile_pages_custom_fields',
             'name' => 'register_verified_profile_pages_custom_fields',
-            'description' => display_acf_structures("group_verified_profiles_settings"),
+            'description' => display_acf_structure("group_verified_profiles_settings"),
             'info' => '',
             'function' => 'register_verified_profile_pages_custom_fields'
         ],  
