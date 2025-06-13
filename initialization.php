@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 3.4.3
+Version: 3.4.4
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -61,6 +61,13 @@ class Config {
 //if ( ! is_admin() )return;
 
 
+// Always loaded on every admin page:
+if ( is_admin() ) {
+    // Only remove the shutdown hook on our settings page:
+    if ( isset( $_GET['page'] ) && $_GET['page'] === Config::$settings_page_slug ) {
+        remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
+    }
+}
 
 
 
