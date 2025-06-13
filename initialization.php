@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 3.4
+Version: 3.4.1
 Author URI: https://michaelperes.com
 GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 GitHub Branch: main
@@ -67,25 +67,21 @@ class Config {
 // Include the GitHub Updater class
 include_once("GitHub_Updater.php");
 
-// Use the WP_GitHub_Updater class
-use smp_verified_profiles\WP_GitHub_Updater;
-$config = null;
-// Initialize the updater
-if (is_admin()) { // Ensure this runs only in the admin area
- $updater = new WP_GitHub_Updater(Config::get_github_config());
-    // Trigger an update check for debugging
-    add_action('init', function() {
-        if (is_admin() && isset($_GET['force-update-check'])) {
-            // Force WordPress to check for plugin updates
-            wp_clean_update_cache();
-            set_site_transient('update_plugins', null);
-            wp_update_plugins();
 
-            // Log to confirm the check has been triggered
-            error_log('WP_GitHub_Updater: Forced plugin update check triggered.');
-        }
-    });
-}
+/**
+ * Initialize GitHub Updater only after plugins have loaded and i18n is ready.
+ */
+add_action( 'admin_init', function() {
+    $updater = new WP_GitHub_Updater( Config::get_github_config() );
+
+    // if you still want your “force‐update‐check” debug hook:
+    if ( isset( $_GET['force-update-check'] ) ) {
+        wp_clean_update_cache();
+        set_site_transient( 'update_plugins', null );
+        wp_update_plugins();
+        error_log( 'WP_GitHub_Updater: Forced plugin update check triggered.' );
+    }
+} );
 
 
 
