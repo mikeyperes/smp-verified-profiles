@@ -119,6 +119,7 @@ use function smp_verified_profiles\get_settings_snippets;
 foreach ($settings_snippets as $snippet) {
     // Get the current state of the option from the database
     $is_enabled = get_option($snippet['id'], false);
+    $info_html = isset($snippet['info']) ? $snippet['info'] : '';
 
     // Debug printout to screen
   //  echo "<pre>Debug: Option '{$snippet['id']}' current value: " . var_export($is_enabled, true) . "</pre>";
@@ -136,7 +137,7 @@ foreach ($settings_snippets as $snippet) {
     >
     <label for='{$snippet['id']}'>
         {$snippet['name']} – <em>{$snippet['description']}</em><br>
-        <small><strong>Details:</strong><br>{$snippet['info']}</small>
+        <small><strong>Details:</strong><br>{$info_html}</small>
     </label>
   </div>";
 
