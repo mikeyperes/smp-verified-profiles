@@ -169,6 +169,6 @@ render_reprocess_profile_schema_page();
 </div>
 <?php
   // Get the buffer contents and clean (erase) the output buffer
-  if (ob_get_level() != 0) echo ob_get_clean();
+  //if (ob_get_level() != 0) echo ob_get_clean();
 }
 ?>
