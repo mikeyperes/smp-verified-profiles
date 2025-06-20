@@ -1,6 +1,8 @@
 <?php namespace smp_verified_profiles;
 
 
+
+
 /**
  * Fetch and sanitize Verified Profile settings from ACF options
  *
@@ -12,14 +14,13 @@ function get_verified_profile_settings(): array {
     if ( isset( $my_verified_profile_settings_cache ) ) {
         return $my_verified_profile_settings_cache;
     }
-    // If we’re in an ACF field lookup, just return a default (or false):
+
+    // If we’re in an ACF field lookup, just return an empty array
     if ( is_admin() && did_action('acf/fields_loaded') ) {
-        return []; 
+        return [];
     }
 
-    
     // default fallbacks
-    //DELETE SOON as ACF has default values
     $defaults = [
         'singular' => 'Verified Profile',
         'plural'   => 'Verified Profiles',
@@ -31,17 +32,22 @@ function get_verified_profile_settings(): array {
         return $defaults;
     }
 
-    // pull values from ACF options, falling back to defaults if empty
-    $raw_singular = get_field('verified_profile_cpt_singular_name', 'option');
-    $raw_plural   = get_field('verified_profile_cpt_plural_name',  'option');
-    $raw_slug     = get_field('verified_profile_cpt_slug',         'option');
+    // pull the general_settings group from ACF options
+    $settings       = get_field('general_settings', 'option') ?: [];
+    $raw_plural     = $settings['cpt_plural_name']   ?? '';
+    $raw_singular   = $settings['cpt_singular_name'] ?? '';
+    $raw_slug       = $settings['cpt_slug']          ?? '';
 
-    return [
+    $sanitized = [
         'singular' => sanitize_text_field( $raw_singular ?: $defaults['singular'] ),
         'plural'   => sanitize_text_field( $raw_plural   ?: $defaults['plural']   ),
-        'slug'     => sanitize_title( $raw_slug        ?: $defaults['slug']     ),
+        'slug'     => sanitize_title(    $raw_slug      ?: $defaults['slug']     ),
     ];
+
+    $my_verified_profile_settings_cache = $sanitized;
+    return $sanitized;
 }
+
 
 
 // Define the write_log function only if it isn't already defined
@@ -1020,6 +1026,41 @@ function display_cpt_structure( string $cpt_slug ): string {
 
     return $output;
 }
+
+
+
+
+
+
+
+
+/**
+ * Generic function to get the list of shortcodes formatted properly.
+ *
+ * @param callable $get_shortcode_list_function A callback function that returns an associative array of shortcodes.
+ * @return string The formatted list of shortcodes.
+ */
+function get_formatted_shortcode_list($get_shortcode_list_function) {
+    // Ensure the provided argument is a callable function.
+    if (!is_callable($get_shortcode_list_function)) {
+        return "Error: Provided argument is not a valid function.";
+    }
+
+    // Get the array of shortcodes from the provided function.
+    $shortcodes = array_keys(call_user_func($get_shortcode_list_function));
+    
+    // Format the shortcodes.
+    $shortcode_list = array_map(function($shortcode) {
+        return "[$shortcode]";
+    }, $shortcodes);
+
+    // Combine and return the formatted shortcodes.
+    return "<br />" . implode("<br />", $shortcode_list);
+}
+
+
+
+
 
 
 

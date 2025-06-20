@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 3.5
+Version: 4.0
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -17,12 +17,9 @@ namespace smp_verified_profiles;
 // Ensure this file is being included by a parent file
 defined('ABSPATH') or die('No script kiddies please!');
 
-
-
 // Generic functions import 
 include_once("generic-functions.php");
  
-// Define constants
 // Define constants
 class Config {
     public static $plugin_name = "Scale My Publication - Verified Profiles";
@@ -136,10 +133,24 @@ function get_settings_snippets()
             'id' => 'add_wp_admin_add_featured_image_to_events',
             'name' => 'add_wp_admin_add_featured_image_to_events',
             'description' => '',
+            'info' => '',
 
             'function' => 'add_wp_admin_add_featured_image_to_events',
        
         ],
+
+        [
+            'id' => 'enable_acf_theme_options',
+            'name' => 'enable_acf_theme_options',
+            'description' => '',
+            'info' => display_acf_structure(["group_6850930366d8f"]),
+
+            'function' => 'enable_acf_theme_options',
+       
+        ],
+
+
+        
 
         
      
@@ -334,16 +345,17 @@ add_action('acf/init', function() {
 
   //  if (is_admin()) {
     include_once("register-acf-structures.php");
+    include_once("register-acf-structure-theme-options.php");
     include_once("register-acf-user-profile.php");
     include_once("register-acf-verified-profile.php");
-    
+
     //register_verified_profile_custom_fields();
  //   }
     
     
 
 
-
+ if (is_admin()) {
 include_once("snippet-adjust-profiles-category-meta-box.php");
     include_once("snippet-adjust-wp-admin-for-profile-managers.php");
     include_once("snippet-wp-admin-user-page-functionality.php");
@@ -357,15 +369,13 @@ include_once("snippet-adjust-profiles-category-meta-box.php");
     include_once("snippet-wp-admin-user-page-optional-functionality.php");
     include_once("snippet-muckrack-functionality.php");
     include_once("snippet-disable-password-reset.php");
-    include_once("snippet-verified-profile-shortcodes.php");
+
     include_once("snippet-wp-admin-add-featured-image-to-events.php");
     include_once("snippet-wp-admin-filter-featured-profiles.php");
+ }
+    
 
-    
-    include_once("snippet-shortcodes-entities.php");
-    
-    
-    
+
 
 
 
@@ -376,7 +386,7 @@ if (is_admin()) {
     include_once("settings-dashboard-define-pages-and-listing-grids.php");
     
    
-    include_once("settings-dashboard-snippets.php");
+   
     include_once("settings-dashboard-system-checks.php");
     include_once("settings-dashboard-plugin-info.php");
     include_once("settings-dashboard-plugin-checks.php");
@@ -390,7 +400,19 @@ if (is_admin()) {
 }
 
 
-    include_once("activate-snippets.php");
+
+
+
+
+include_once("settings-dashboard-snippets.php");
+
+    include_once("shortcodes.php");
+include_once("snippet-shortcodes-entities.php");
+
+
+
+include_once("activate-snippets.php");
+
 /*
     // Register ACF Fields
     include_once("register-acf-press-release.php");

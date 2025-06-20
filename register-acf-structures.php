@@ -110,198 +110,194 @@ function register_profile_general_acf_fields() {
     $plural   = $settings['plural'];
     $slug     = $settings['slug'];
 
-    $groups = [
-        // 1) Post - Verified Profile - Admin
-        [
-            'key'      => 'group_post_' . $slug . '_admin',
-            'title'    => "Post - {$singular} - Admin",
-            'fields'   => [
-                [
-                    'key'           => 'field_profile_profiles',
-                    'label'         => $plural,
-                    'name'          => 'profiles',
-                    'type'          => 'repeater',
-                    'layout'        => 'row',
-                    'button_label'  => 'Add Row',
-                    'rows_per_page' => 20,
-                    'sub_fields'    => [
-                        [
-                            'key'           => 'field_profile_profile',
-                            'label'         => $singular,
-                            'name'          => 'profile',
-                            'type'          => 'post_object',
-                            'post_type'     => [$slug],
-                            'return_format' => 'id',
-                            'ui'            => 1,
-                        ],
-                    ],
-                ],
-                [
-                    'key'           => 'field_profile_pending_profiles',
-                    'label'         => 'Pending ' . $plural,
-                    'name'          => 'pending_profiles',
-                    'type'          => 'repeater',
-                    'layout'        => 'table',
-                    'button_label'  => 'Add Row',
-                    'rows_per_page' => 20,
-                    'sub_fields'    => [
-                        ['key'=>'field_pending_name','label'=>'Name','name'=>'name','type'=>'text'],
-                        ['key'=>'field_pending_type','label'=>'Profile Type','name'=>'type','type'=>'select','choices'=>['person'=>'Person','organization'=>'Organization']],
-                        ['key'=>'field_pending_url','label'=>'URL','name'=>'url','type'=>'text'],
-                    ],
-                ],
-            ],
-            'location' => [
-                [['param'=>'post_type','operator'=>'==','value'=>'post']],
-                [['param'=>'current_user_role','operator'=>'==','value'=>'administrator']],
-            ],
-        ],
-
-        // 2) Profile - Admin
-        [
-            'key'      => 'group_' . $slug . '_admin',
-            'title'    => "{$singular} - Admin",
-            'fields'   => [
-                ['key'=>'field_contributor_profile','label'=>'Contributor Profile','name'=>'contributor_profile','type'=>'user','return_format'=>'id'],
-                ['key'=>'field_schema_markup','label'=>'Schema Markup','name'=>'schema_markup','type'=>'textarea'],
-                ['key'=>'field_post_id','label'=>'Post ID','name'=>'post_id','type'=>'text'],
-                ['key'=>'field_google_knowledge_graph_id','label'=>'Google Knowledge Graph ID','name'=>'google_knowledge_graph_id','type'=>'text'],
-                ['key'=>'field_is_council_member','label'=>'Is Council Member','name'=>'is_council_member','type'=>'true_false'],
-                ['key'=>'field_is_contributor','label'=>'Is Contributor','name'=>'is_contributor','type'=>'true_false'],
-                ['key'=>'field_external_id','label'=>'External ID','name'=>'external_id','type'=>'text'],
-            ],
-            'location' => [[['param'=>'post_type','operator'=>'==','value'=>$slug],['param'=>'current_user_role','operator'=>'==','value'=>'administrator']]],
-        ],
-
-        // 3) Profile - Person - Public
-        [
-            'key'      => 'group_' . $slug . '_person_public',
-            'title'    => "{$singular} - Person - Public",
-            'fields'   => [
-                [
-                    'key'          => 'field_organizations_founded',
-                    'label'        => 'Organizations Founded',
-                    'name'         => 'organizations_founded',
-                    'type'         => 'repeater',
-                    'instructions' => sprintf('Select a %s. Contact <a href="mailto:verified@%1$s">verified@%1$s</a> if you don\'t see your organization.', parse_url(home_url(), PHP_URL_HOST)),
-                    'layout'       => 'table',
-                    'button_label' => 'Add Row',
-                    'rows_per_page'=> 20,
-                    'sub_fields'   => [
-                        [
-                            'key'           => 'field_organization',
-                            'label'         => 'Organization',
-                            'name'          => 'organization',
-                            'type'          => 'post_object',
-                            'post_type'     => [$slug],
-                            'post_status'   => ['publish'],
-                            'return_format' => 'object',
-                            'ui'            => 1,
-                        ],
-                    ],
-                ],
-                [
-                    'key'           => 'field_books',
-                    'label'         => 'Books',
-                    'name'          => 'books',
-                    'type'          => 'repeater',
-                    'layout'        => 'table',
-                    'button_label'  => 'Add Row',
-                    'rows_per_page' => 20,
-                    'sub_fields'    => [
-                        ['key'=>'field_book_title','label'=>'Title','name'=>'title','type'=>'text'],
-                        ['key'=>'field_book_cover','label'=>'Cover','name'=>'cover','type'=>'image','return_format'=>'array','preview_size'=>'medium'],
-                    ],
-                ],
-
-                // Personal Information group
-                [
-                    'key'          => 'field_personal_info',
-                    'label'        => 'Personal Information',
-                    'name'         => 'personal',
-                    'type'         => 'group',
-                    'layout'       => 'block',
-                    'sub_fields'   => [
-                        // Location Born
-                        [
-                            'key'          => 'field_location_born',
-                            'label'        => 'Location Born',
-                            'name'         => 'location_born',
-                            'type'         => 'group',
-                            'layout'       => 'block',
-                            'sub_fields'   => [
-                                ['key'=>'field_location_name_born','label'=>'Name','name'=>'name','type'=>'text'],
-                                ['key'=>'field_location_wikipedia_born','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
-                            ],
-                        ],
-
-                        // Current Residence
-                        [
-                            'key'          => 'field_current_residence',
-                            'label'        => 'Current Residence',
-                            'name'         => 'current_residence',
-                            'type'         => 'group',
-                            'layout'       => 'block',
-                            'sub_fields'   => [
-                                ['key'=>'field_residence_name','label'=>'Name','name'=>'name','type'=>'text'],
-                                ['key'=>'field_residence_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text'],
-                            ],
-                        ],
-
-                        ['key'=>'field_marital_status','label'=>'Marital Status','name'=>'marital_status','type'=>'select','choices'=>['single'=>'Single','married'=>'Married','divorced'=>'Divorced','other'=>'Other']],
-                        ['key'=>'field_children','label'=>'Children','name'=>'children','type'=>'text','instructions'=>'Leave empty to hide from profile.'],
-
-                        // Education repeater
-                        [
-                            'key'          => 'field_education',
-                            'label'        => 'Education',
-                            'name'         => 'education',
-                            'type'         => 'repeater',
-                            'layout'       => 'table',
-                            'button_label' => 'Add Row',
-                            'rows_per_page'=> 20,
-                            'sub_fields'   => [
-                                ['key'=>'field_school','label'=>'School','name'=>'school','type'=>'text','instructions'=>'School name (ex: University of Miami)'],
-                                ['key'=>'field_degree','label'=>'Degree','name'=>'degree','type'=>'text','instructions'=>'Degree type (ex: BS)'],
-                                ['key'=>'field_education_wikipedia','label'=>'Wikipedia URL','name'=>'wikipedia_url','type'=>'text','instructions'=>'Wikipedia url of the school'],
-                            ],
-                        ],
-
-                        // **Updated Gender field – allow_null => 1, no default_value**
-                        [
-                            'key'           => 'field_gender',
-                            'label'         => 'Gender',
-                            'name'          => 'gender',
-                            'type'          => 'select',
-                            'choices'       => [
-                                'female' => 'Female',
-                                'male'   => 'Male',
-                                'other'  => 'Other',
-                                'na'     => 'Do Not Show Publicly',
-                            ],
-                            'allow_null'    => 1,          // <-- This lets you save with no selection
-                            // 'default_value' => '',     // <-- Make sure there's no default here
-                        ],
-                    ],
-                ],
-            ],
-            'location' => [
-                [
-                    ['param'=>'post_type','operator'=>'==','value'=>$slug],
-                    ['param'=>'post_category','operator'=>'==','value'=>'category:person']
-                ]
-            ],
-        ],
-    ];
-
-    foreach ( $groups as $grp ) {
-        acf_add_local_field_group( $grp );
-    }
+        if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+            return;
+        }
+    
+        acf_add_local_field_group( array(
+        'key' => 'group_66b7bdf713e77',
+        'title' => 'Post - Verified Profile - Admin',
+        'fields' => array(
+            array(
+                'key' => 'field_656c17469ad33',
+                'label' => 'Profiles',
+                'name' => 'profiles',
+                'aria-label' => '',
+                'type' => 'repeater',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'layout' => 'row',
+                'pagination' => 0,
+                'min' => 0,
+                'max' => 0,
+                'collapsed' => '',
+                'button_label' => 'Add Row',
+                'rows_per_page' => 20,
+                'sub_fields' => array(
+                    array(
+                        'key' => 'field_656c17629ad34',
+                        'label' => 'Profile',
+                        'name' => 'profile',
+                        'aria-label' => '',
+                        'type' => 'post_object',
+                        'instructions' => '',
+                        'required' => 0,
+                        'conditional_logic' => 0,
+                        'wrapper' => array(
+                            'width' => '',
+                            'class' => '',
+                            'id' => '',
+                        ),
+                        'post_type' => array(
+                            0 => 'profile',
+                        ),
+                        'post_status' => '',
+                        'taxonomy' => '',
+                        'return_format' => 'id',
+                        'multiple' => 0,
+                        'allow_null' => 0,
+                        'bidirectional' => 0,
+                        'ui' => 1,
+                        'bidirectional_target' => array(
+                        ),
+                        'parent_repeater' => 'field_656c17469ad33',
+                    ),
+                ),
+            ),
+            array(
+                'key' => 'field_65852128a382d',
+                'label' => 'Pending Profiles',
+                'name' => 'pending_profiles',
+                'aria-label' => '',
+                'type' => 'repeater',
+                'instructions' => '',
+                'required' => 0,
+                'conditional_logic' => 0,
+                'wrapper' => array(
+                    'width' => '',
+                    'class' => '',
+                    'id' => '',
+                ),
+                'layout' => 'table',
+                'pagination' => 0,
+                'min' => 0,
+                'max' => 0,
+                'collapsed' => '',
+                'button_label' => 'Add Row',
+                'rows_per_page' => 20,
+                'sub_fields' => array(
+                    array(
+                        'key' => 'field_658521e7a382e',
+                        'label' => 'Name',
+                        'name' => 'name',
+                        'aria-label' => '',
+                        'type' => 'text',
+                        'instructions' => '',
+                        'required' => 0,
+                        'conditional_logic' => 0,
+                        'wrapper' => array(
+                            'width' => '',
+                            'class' => '',
+                            'id' => '',
+                        ),
+                        'default_value' => '',
+                        'maxlength' => '',
+                        'placeholder' => '',
+                        'prepend' => '',
+                        'append' => '',
+                        'parent_repeater' => 'field_65852128a382d',
+                    ),
+                    array(
+                        'key' => 'field_658521f3a382f',
+                        'label' => 'Profile Type',
+                        'name' => 'type',
+                        'aria-label' => '',
+                        'type' => 'select',
+                        'instructions' => '',
+                        'required' => 0,
+                        'conditional_logic' => 0,
+                        'wrapper' => array(
+                            'width' => '',
+                            'class' => '',
+                            'id' => '',
+                        ),
+                        'choices' => array(
+                            'person' => 'Person',
+                            'organization' => 'Organization',
+                        ),
+                        'default_value' => false,
+                        'return_format' => 'value',
+                        'multiple' => 0,
+                        'allow_null' => 0,
+                        'ui' => 0,
+                        'ajax' => 0,
+                        'placeholder' => '',
+                        'parent_repeater' => 'field_65852128a382d',
+                    ),
+                    array(
+                        'key' => 'field_6585224da3830',
+                        'label' => 'URL',
+                        'name' => 'url',
+                        'aria-label' => '',
+                        'type' => 'text',
+                        'instructions' => '',
+                        'required' => 0,
+                        'conditional_logic' => 0,
+                        'wrapper' => array(
+                            'width' => '',
+                            'class' => '',
+                            'id' => '',
+                        ),
+                        'default_value' => '',
+                        'maxlength' => '',
+                        'placeholder' => '',
+                        'prepend' => '',
+                        'append' => '',
+                        'parent_repeater' => 'field_65852128a382d',
+                    ),
+                ),
+            ),
+        ),
+  'location'          => array(
+            // Single rule-group: BOTH must match
+            array(
+                array(
+                    'param'    => 'post_type',
+                    'operator' => '==',
+                    'value'    => 'post',
+                ),
+                array(
+                    'param'    => 'current_user_role',
+                    'operator' => '==',
+                    'value'    => 'administrator',
+                ),
+            ),
+        ),
+        'menu_order' => 0,
+        'position' => 'normal',
+        'style' => 'default',
+        'label_placement' => 'top',
+        'instruction_placement' => 'label',
+        'hide_on_screen' => '',
+        'active' => true,
+        'description' => '',
+        'show_in_rest' => 0,
+    ) );
+ 
+    
+    
 }
 
 
 
 function register_verified_profile_pages_custom_fields() {
+    return;
     if ( ! function_exists('acf_add_local_field_group') ) {
         return;
     }
