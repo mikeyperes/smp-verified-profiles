@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 4.5
+Version: 4.6
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -54,8 +54,10 @@ class Config {
 }
 
 
-// don’t load anything on the front-end
-//if ( ! is_admin() )return;
+
+
+add_action('init', function() { 
+
 
 
 // Always loaded on every admin page:
@@ -120,6 +122,88 @@ if (!$acf_active) {
 
 
 
+
+// Hook to acf/init to ensure ACF is initialized before running any ACF-related code
+add_action('acf/init', function() {
+
+
+  //  if (is_admin()) {
+    include_once("register-acf-structure-theme-options.php");
+    include_once("register-acf-structures.php");
+
+    include_once("register-acf-user-profile.php");
+    include_once("register-acf-verified-profile.php");
+
+    //register_verified_profile_custom_fields();
+ //   }
+     
+    
+
+
+ if(is_admin()) {
+include_once("snippet-adjust-profiles-category-meta-box.php");
+    include_once("snippet-adjust-wp-admin-for-profile-managers.php");
+    include_once("snippet-wp-admin-user-page-functionality.php");
+    include_once("snippet-post-functionality.php");
+    include_once("snippet-faviconn-for-verified-pages.php");
+   // include_once("snippet-wp-admin-adjust-table-for-unclaimed-profiles.php");
+   //include_once("snippet-woocommerce-base.php");
+    //include_once("snippet-woocommerce-stripe-integration.php");
+    include_once("snippet-claim-profile-functionality.php");
+    include_once("snippet-profile-post-wp-admin-functionality.php");
+    include_once("snippet-wp-admin-user-page-optional-functionality.php");
+    include_once("snippet-muckrack-functionality.php");
+    include_once("snippet-disable-password-reset.php");
+
+    include_once("snippet-wp-admin-add-featured-image-to-events.php");
+    include_once("snippet-wp-admin-filter-featured-profiles.php");
+}
+    
+
+
+
+
+
+    // don’t load anything on the front-end
+if (is_admin()) {
+
+    include_once("profile-manager-dashboard.php");
+    include_once("settings-dashboard-define-pages-and-listing-grids.php");
+
+    include_once("settings-dashboard-system-checks.php");
+    include_once("settings-dashboard-plugin-info.php");
+    include_once("settings-dashboard-plugin-checks.php");
+    include_once("settings-event-handling.php");
+    include_once("setting-dashboard-process-schema-objects.php");
+
+
+    include_once("settings-dashboard.php");
+
+    
+}
+
+
+include_once("settings-dashboard-snippets.php");
+include_once("shortcodes.php");
+include_once("snippet-shortcodes-entities.php");
+include_once("activate-snippets.php");
+
+}, 11 );
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 function get_settings_snippets()
 {
 
@@ -136,6 +220,7 @@ function get_settings_snippets()
             'info' => '',
 
             'function' => 'add_wp_admin_add_featured_image_to_events',
+            'scope_admin_only' => true
        
         ],
 
@@ -146,6 +231,7 @@ function get_settings_snippets()
             'info' => display_acf_structure(["group_6850930366d8f"]),
 
             'function' => 'enable_acf_theme_options',
+            'scope_admin_only' => false
        
         ],
 
@@ -209,8 +295,8 @@ function get_settings_snippets()
             'description' => display_acf_structure("group_verified_profiles_settings"),
             'info' => '',
             'function' => 'register_verified_profile_pages_custom_fields'
-        ],  
-
+        ],   
+/* do later
         [
             'id' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
             'name' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
@@ -218,6 +304,7 @@ function get_settings_snippets()
             'info' => '',
             'function' => 'enable_snippet_adjust_wp_admin_for_profile_managers'
         ],  
+        */
 
         [
             'id' => 'enable_snippet_wp_admin_user_page_functionality',
@@ -233,6 +320,7 @@ function get_settings_snippets()
                 'info' => '',
                 'function' => 'enable_snippet_adjust_profiles_category_meta_box'
             ],
+            /* do later
             [
                 'id' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
                 'name' => 'enable_snippet_adjust_wp_admin_for_profile_managers',
@@ -240,6 +328,7 @@ function get_settings_snippets()
                 'info' => '',
                 'function' => 'enable_snippet_adjust_wp_admin_for_profile_managers'
             ],
+            */
             [
                 'id' => 'enable_snippet_wp_admin_user_page_functionality',
                 'name' => 'enable_snippet_wp_admin_user_page_functionality',
@@ -261,6 +350,7 @@ function get_settings_snippets()
                 'info' => '',
                 'function' => 'enable_snippet_faviconn_for_verified_pages'
             ],
+            /* do later
             [
                 'id' => 'enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles',
                 'name' => 'enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles',
@@ -282,6 +372,7 @@ function get_settings_snippets()
                 'info' => '',
                 'function' => 'enable_snippet_woocommerce_stripe_integration'
             ],
+            */
             [
                 'id' => 'enable_snippet_claim_profile_functionality',
                 'name' => 'enable_snippet_claim_profile_functionality',
@@ -340,100 +431,4 @@ function get_settings_snippets()
 }
 
 
-// Hook to acf/init to ensure ACF is initialized before running any ACF-related code
-add_action('acf/init', function() {
-
-
-  //  if (is_admin()) {
-    include_once("register-acf-structure-theme-options.php");
-    include_once("register-acf-structures.php");
-
-    include_once("register-acf-user-profile.php");
-    include_once("register-acf-verified-profile.php");
-
-    //register_verified_profile_custom_fields();
- //   }
-    
-    
-
-
- if (is_admin()) {
-include_once("snippet-adjust-profiles-category-meta-box.php");
-    include_once("snippet-adjust-wp-admin-for-profile-managers.php");
-    include_once("snippet-wp-admin-user-page-functionality.php");
-    include_once("snippet-post-functionality.php");
-    include_once("snippet-faviconn-for-verified-pages.php");
-    include_once("snippet-wp-admin-adjust-table-for-unclaimed-profiles.php");
-   include_once("snippet-woocommerce-base.php");
-    include_once("snippet-woocommerce-stripe-integration.php");
-    include_once("snippet-claim-profile-functionality.php");
-    include_once("snippet-profile-post-wp-admin-functionality.php");
-    include_once("snippet-wp-admin-user-page-optional-functionality.php");
-    include_once("snippet-muckrack-functionality.php");
-    include_once("snippet-disable-password-reset.php");
-
-    include_once("snippet-wp-admin-add-featured-image-to-events.php");
-    include_once("snippet-wp-admin-filter-featured-profiles.php");
- }
-    
-
-
-
-
-
-    // don’t load anything on the front-end
-if (is_admin()) {
-
-    include_once("profile-manager-dashboard.php");
-    include_once("settings-dashboard-define-pages-and-listing-grids.php");
-    
-   
-   
-    include_once("settings-dashboard-system-checks.php");
-    include_once("settings-dashboard-plugin-info.php");
-    include_once("settings-dashboard-plugin-checks.php");
-    include_once("settings-event-handling.php");
-    include_once("setting-dashboard-process-schema-objects.php");
-
-
-    include_once("settings-dashboard.php");
-
-    
-}
-
-
-
-
-
-
-include_once("settings-dashboard-snippets.php");
-
-    include_once("shortcodes.php");
-include_once("snippet-shortcodes-entities.php");
-
-
-
-include_once("activate-snippets.php");
-
-/*
-    // Register ACF Fields
-    include_once("register-acf-press-release.php");
-    include_once("register-acf-user.php");
-    // Import Snippets 
-    
-    include_once("snippet-add-press-release-post-to-author.php");
-    include_once("snippet-auto-delete.php");
-    // Build Dashboards
-    include_once("settings-dashboard-overview.php");
-   
-
-
-
-
-    
-   include_once("settings-action-create-hexa-pr-wire-user.php");
-   
-
-   */
-}, 11 );
 ?>

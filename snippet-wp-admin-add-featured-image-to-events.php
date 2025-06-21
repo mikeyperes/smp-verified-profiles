@@ -4,6 +4,7 @@ function add_wp_admin_add_featured_image_to_events(){
 // Add our custom column only for the 'profile' post type.
 add_filter( 'manage_edit-profile_columns', __NAMESPACE__ . '\\add_profile_featured_image_column' );
 add_action( 'manage_profile_posts_custom_column', __NAMESPACE__ . '\\display_profile_featured_image_column', 10, 2 );
+add_filter( 'pre_get_posts', __NAMESPACE__ . '\\jpn_structure_filter_profiles_by_featured' );
 
 // Add "Filter by Featured Profiles" link to the profile listing page.
 add_filter( 'views_edit-profile', __NAMESPACE__ . '\\add_featured_profile_filter_link' );
@@ -33,7 +34,6 @@ function display_profile_featured_image_column( $column, $post_id ) {
 
 
 
-add_filter( 'pre_get_posts', __NAMESPACE__ . '\\jpn_structure_filter_profiles_by_featured' );
 // Filter the admin query for the 'profile' post type based on a URL parameter
 function jpn_structure_filter_profiles_by_featured( $query ) {
 
