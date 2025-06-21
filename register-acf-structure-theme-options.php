@@ -1,6 +1,8 @@
 <?php namespace smp_verified_profiles;
 
 function enable_acf_theme_options() {
+    write_log("😍 ENABLE ACF",true);
+
     if ( ! function_exists( 'acf_add_local_field_group' ) ) {
         return;
     }

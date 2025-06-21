@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 4.0
+Version: 4.1
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -124,7 +124,7 @@ function get_settings_snippets()
 {
 
 
-    $_verified_profile_settings    = get_verified_profile_settings();
+  //  $_verified_profile_settings    = get_verified_profile_settings();
 
     $settings_snippets = [
 
@@ -158,7 +158,8 @@ function get_settings_snippets()
             'id' => 'register_profile_custom_post_type',
             'name' => 'register_profile_custom_post_type',
             'description' => '',
-            'info' => display_cpt_structure($_verified_profile_settings['slug']),
+            'info' => '',
+           // 'info' => display_cpt_structure($_verified_profile_settings['slug']),
             'function' => 'register_profile_custom_post_type'
         ],
 
@@ -344,8 +345,9 @@ add_action('acf/init', function() {
 
 
   //  if (is_admin()) {
-    include_once("register-acf-structures.php");
     include_once("register-acf-structure-theme-options.php");
+    include_once("register-acf-structures.php");
+
     include_once("register-acf-user-profile.php");
     include_once("register-acf-verified-profile.php");
 

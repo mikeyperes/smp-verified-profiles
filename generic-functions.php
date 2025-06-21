@@ -9,15 +9,10 @@
  * @return array{singular:string,plural:string,slug:string}
  */
 function get_verified_profile_settings(): array {
-
-    global $my_verified_profile_settings_cache;
-    if ( isset( $my_verified_profile_settings_cache ) ) {
-        return $my_verified_profile_settings_cache;
-    }
-
-    // If we’re in an ACF field lookup, just return an empty array
-    if ( is_admin() && did_action('acf/fields_loaded') ) {
-        return [];
+    write_log("😍 Inside",true);
+    static $cache = null;
+    if ( $cache !== null ) {
+        return $cache;
     }
 
     // default fallbacks
@@ -29,25 +24,24 @@ function get_verified_profile_settings(): array {
 
     // if ACF isn't active, return defaults
     if ( ! function_exists('get_field') ) {
-        return $defaults;
+        return $cache = $defaults;
     }
 
     // pull the general_settings group from ACF options
-    $settings       = get_field('general_settings', 'option') ?: [];
-    $raw_plural     = $settings['cpt_plural_name']   ?? '';
-    $raw_singular   = $settings['cpt_singular_name'] ?? '';
-    $raw_slug       = $settings['cpt_slug']          ?? '';
+    $settings     = get_field('general_settings', 'option');
+    $settings     = is_array($settings) ? $settings : [];
+    $raw_plural   = $settings['cpt_plural_name']   ?? '';
+    $raw_singular = $settings['cpt_singular_name'] ?? '';
+    $raw_slug     = $settings['cpt_slug']          ?? '';
 
-    $sanitized = [
+    $cache = [
         'singular' => sanitize_text_field( $raw_singular ?: $defaults['singular'] ),
         'plural'   => sanitize_text_field( $raw_plural   ?: $defaults['plural']   ),
         'slug'     => sanitize_title(    $raw_slug      ?: $defaults['slug']     ),
     ];
 
-    $my_verified_profile_settings_cache = $sanitized;
-    return $sanitized;
+    return $cache;
 }
-
 
 
 // Define the write_log function only if it isn't already defined

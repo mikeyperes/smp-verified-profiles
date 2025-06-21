@@ -1243,83 +1243,65 @@ function find_posts_with_profile($profile_id) {
  *   [contributor_network field="pages.verified_profiles_welcome"]
  */
 function contributor_network_shortcode( $atts ) {
-    write_log( 'contributor_network_shortcode raw $atts: ' . var_export( $atts, true ), true );
 
     $atts  = shortcode_atts([
         'field' => '',
         'size'  => 'thumbnail',
     ], $atts, 'contributor_network');
-    write_log( 'contributor_network_shortcode parsed $atts: ' . var_export( $atts, true ), true );
 
     $field = sanitize_text_field( $atts['field'] );
     $size  = sanitize_key(       $atts['size'] );
-    write_log( "contributor_network_shortcode sanitized field={$field}, size={$size}", true );
     if ( ! $field ) {
-        write_log( 'contributor_network_shortcode: no field, returning empty', true );
         return '';
     }
 
     $group = get_field( 'contributor_network', 'option' );
-    write_log( 'contributor_network group loaded: ' . var_export( $group, true ), true );
     if ( ! is_array( $group ) ) {
-        write_log( 'contributor_network: group not array, returning empty', true );
         return '';
     }
 
     $parts = explode( '.', $field, 2 );
-    write_log( 'contributor_network parts: ' . var_export( $parts, true ), true );
 
     // top-level
     if ( count( $parts ) === 1 ) {
         $key = $parts[0];
-        write_log( "contributor_network handling top-level key={$key}", true );
         if ( empty( $group[ $key ] ) ) {
-            write_log( "contributor_network key {$key} empty, returning empty", true );
             return '';
         }
         if ( $key === 'logo' ) {
             $url = wp_get_attachment_image_url( $group['logo'], $size );
-            write_log( "contributor_network logo URL={$url}", true );
             return $url ?: '';
         }
-        write_log( "contributor_network returning {$group[$key]}", true );
         return esc_html( $group[ $key ] );
     }
 
     // nested
     list( $parent, $child ) = $parts;
-    write_log( "contributor_network nested parent={$parent}, child={$child}", true );
 
     // new key?
     if ( isset( $group[ $parent ][ $child ] ) && $group[ $parent ][ $child ] !== '' ) {
         $val = $group[ $parent ][ $child ];
-        write_log( "contributor_network found {$parent}.{$child} => " . var_export( $val, true ), true );
     }
     // fallback old page_ prefix for pages
     elseif ( $parent === 'pages' && isset( $group[ $parent ]['page_' . $child] ) && $group[ $parent ]['page_' . $child ] !== '' ) {
         $val = $group[ $parent ]['page_' . $child];
-        write_log( "contributor_network fallback pages.page_{$child} => " . var_export( $val, true ), true );
     }
     else {
-        write_log( "contributor_network nested {$parent}.{$child} empty, returning empty", true );
         return '';
     }
 
     // pages → return page ID
     if ( $parent === 'pages' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        write_log( "contributor_network returning page ID={$post_id}", true );
         return (string) $post_id;
     }
 
     // loop_items → return ID
     if ( $parent === 'loop_items' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        write_log( "contributor_network returning loop_items ID={$post_id}", true );
         return (string) $post_id;
     }
 
-    write_log( "contributor_network returning fallback " . esc_html( $val ), true );
     return esc_html( $val );
 }
 
@@ -1345,79 +1327,79 @@ function contributor_network_shortcode( $atts ) {
  *   [verified_profile field="pages.verified_profiles_apply"]
  */
 function verified_profile_shortcode( $atts ) {
-    write_log( 'verified_profile_shortcode raw $atts: ' . var_export( $atts, true ), true );
+   // write_log( 'verified_profile_shortcode raw $atts: ' . var_export( $atts, true ), true );
 
     $atts  = shortcode_atts([
         'field' => '',
         'size'  => 'thumbnail',
     ], $atts, 'verified_profile');
-    write_log( 'verified_profile_shortcode parsed $atts: ' . var_export( $atts, true ), true );
+    //write_log( 'verified_profile_shortcode parsed $atts: ' . var_export( $atts, true ), true );
 
     $field = sanitize_text_field( $atts['field'] );
     $size  = sanitize_key(       $atts['size'] );
-    write_log( "verified_profile_shortcode sanitized field={$field}, size={$size}", true );
+    //write_log( "verified_profile_shortcode sanitized field={$field}, size={$size}", true );
     if ( ! $field ) {
-        write_log( 'verified_profile_shortcode: no field, returning empty', true );
+    //   write_log( 'verified_profile_shortcode: no field, returning empty', true );
         return '';
     }
 
     $group = get_field( 'verified_profile', 'option' );
-    write_log( 'verified_profile group loaded: ' . var_export( $group, true ), true );
+   // write_log( 'verified_profile group loaded: ' . var_export( $group, true ), true );
     if ( ! is_array( $group ) ) {
-        write_log( 'verified_profile: group not array, returning empty', true );
+      //  write_log( 'verified_profile: group not array, returning empty', true );
         return '';
     }
 
     $parts = explode( '.', $field, 2 );
-    write_log( 'verified_profile parts: ' . var_export( $parts, true ), true );
+   // write_log( 'verified_profile parts: ' . var_export( $parts, true ), true );
 
     // top-level
     if ( count( $parts ) === 1 ) {
         $key = $parts[0];
-        write_log( "verified_profile handling top-level key={$key}", true );
+      //  write_log( "verified_profile handling top-level key={$key}", true );
         if ( empty( $group[ $key ] ) ) {
-            write_log( "verified_profile key {$key} empty, returning empty", true );
+         //   write_log( "verified_profile key {$key} empty, returning empty", true );
             return '';
         }
         if ( $key === 'logo' ) {
             $url = wp_get_attachment_image_url( $group['logo'], $size );
-            write_log( "verified_profile logo URL={$url}", true );
+           // write_log( "verified_profile logo URL={$url}", true );
             return $url ?: '';
         }
-        write_log( "verified_profile returning {$group[$key]}", true );
+      //  write_log( "verified_profile returning {$group[$key]}", true );
         return esc_html( $group[ $key ] );
     }
 
     // nested
     list( $parent, $child ) = $parts;
-    write_log( "verified_profile nested parent={$parent}, child={$child}", true );
+   // write_log( "verified_profile nested parent={$parent}, child={$child}", true );
 
     // new key?
     if ( isset( $group[ $parent ][ $child ] ) && $group[ $parent ][ $child ] !== '' ) {
         $val = $group[ $parent ][ $child ];
-        write_log( "verified_profile found {$parent}.{$child} => " . var_export( $val, true ), true );
+       // write_log( "verified_profile found {$parent}.{$child} => " . var_export( $val, true ), true );
     }
     // fallback old page_ prefix
     elseif ( $parent === 'pages' && isset( $group[ $parent ]['page_' . $child] ) && $group[ $parent ]['page_' . $child ] !== '' ) {
         $val = $group[ $parent ]['page_' . $child];
-        write_log( "verified_profile fallback pages.page_{$child} => " . var_export( $val, true ), true );
+       // write_log( "verified_profile fallback pages.page_{$child} => " . var_export( $val, true ), true );
     }
     else {
-        write_log( "verified_profile nested {$parent}.{$child} empty, returning empty", true );
+       // write_log( "verified_profile nested {$parent}.{$child} empty, returning empty", true );
         return '';
     }
 
     // pages → return permalink
     if ( $parent === 'pages' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        write_log( "verified_profile returning permalink for page ID={$post_id}", true );
+       // write_log( "verified_profile returning permalink for page ID={$post_id}", true );
         return get_permalink( $post_id );
     }
 
     // loop_items → return ID
     if ( $parent === 'loop_items' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        write_log( "verified_profile returning loop_items ID={$post_id}", true );
+      //  write_log( "verified_profile returning loop_items ID={$post_id}", true );
         return (string) $post_id;
     }
 
