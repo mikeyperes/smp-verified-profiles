@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 4.3
+Version: 4.5
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -68,13 +68,14 @@ if ( is_admin() ) {
 
 
 
+hws_import_tool('GitHub_Updater.php', 'WP_GitHub_Updater');
+// Automatically imports the class into your current namespace
+//hws_alias_namespace_functions('hws_base_tools', 'smp_core_podcast_functionality');
 
 
-// Include the GitHub Updater class
-include_once("GitHub_Updater.php");
 
 
-/**
+    /**
  * Initialize GitHub Updater only after plugins have loaded and i18n is ready.
  */
 add_action( 'admin_init', function() {
@@ -88,7 +89,6 @@ add_action( 'admin_init', function() {
         error_log( 'WP_GitHub_Updater: Forced plugin update check triggered.' );
     }
 } );
-
 
 
 

@@ -3,6 +3,55 @@
 
 
 
+function hws_import_tool($relative_path, $alias_classes = []) {
+    $base_path = WP_PLUGIN_DIR . '/hws-base-tools/';
+    $full_path = $base_path . ltrim($relative_path, '/');
+
+    if (!file_exists($full_path)) {
+        add_action('admin_notices', function () use ($relative_path) {
+            echo '<div class="notice notice-error"><p><strong>Scale My Podcast - Core Functionality</strong>: Required file <code>' . esc_html($relative_path) . '</code> is missing from <code>hws-base-tools</code>.</p></div>';
+        });
+        return false;
+    }
+
+    require_once $full_path; 
+
+    // Automatically alias any provided class names into current namespace
+    foreach ((array) $alias_classes as $class_name) {
+        $from = 'hws_base_tools\\' . $class_name;
+        $to   = __NAMESPACE__ . '\\' . $class_name;
+
+        if (class_exists($from) && !class_exists($to)) {
+            class_alias($from, $to);
+        }
+    }
+
+    return true;
+}
+
+function hws_alias_namespace_functions($from_namespace, $to_namespace = __NAMESPACE__) {
+    $user_functions = get_defined_functions()['user'];
+    $from_prefix = $from_namespace . '\\';
+
+    foreach ($user_functions as $fn) {
+        if (strpos($fn, $from_prefix) === 0) {
+            $fn_name = substr($fn, strlen($from_prefix));
+            $alias   = $to_namespace . '\\' . $fn_name;
+
+            if (!function_exists($alias)) {
+                eval("namespace $to_namespace; function $fn_name() { return \\" . $fn . "(...func_get_args()); }");
+            }
+        }
+    }
+}
+
+
+
+
+
+/* END OF GENERIC FUNCTION */
+
+
 /**
  * Fetch and sanitize Verified Profile settings from ACF options
  *
