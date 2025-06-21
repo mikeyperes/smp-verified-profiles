@@ -9,7 +9,7 @@
  * @return array{singular:string,plural:string,slug:string}
  */
 function get_verified_profile_settings(): array {
-    write_log("😍 Inside",true);
+  
     static $cache = null;
     if ( $cache !== null ) {
         return $cache;

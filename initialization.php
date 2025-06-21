@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 4.1
+Version: 4.3
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
