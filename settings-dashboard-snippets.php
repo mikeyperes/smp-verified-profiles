@@ -89,6 +89,11 @@ use function smp_verified_profiles\toggle_snippet;
                     $active_snippets = [];
                   // $settings_snippets = get_settings_snippets();
                   $settings_snippets=[];
+                  $snippets_acf = get_snippets("acf");
+                  $snippets_admin = get_snippets("admin");
+                  $snippets_non_admin = get_snippets("non_admin");
+
+
                     // Iterate through the snippets and check which ones are active
                     foreach ($settings_snippets as $snippet) {
                         $is_enabled = get_option($snippet['id'], false);
@@ -115,33 +120,34 @@ use function smp_verified_profiles\toggle_snippet;
                     <h3>Available Snippets:</h3>
                     <div style="margin-left: 15px;">
                         <?php
-// Loop through all snippets and display them with a checkbox
-foreach ($settings_snippets as $snippet) {
+
+
+// Merge all three arrays into one
+$all_snippets = array_merge($snippets_acf, $snippets_admin, $snippets_non_admin);
+
+// Loop through every snippet and render its checkbox
+foreach ($all_snippets as $snippet) {
     // Get the current state of the option from the database
     $is_enabled = get_option($snippet['id'], false);
-    $info_html = isset($snippet['info']) ? $snippet['info'] : '';
-
-    // Debug printout to screen
-  //  echo "<pre>Debug: Option '{$snippet['id']}' current value: " . var_export($is_enabled, true) . "</pre>";
+    $info_html  = isset($snippet['info']) ? $snippet['info'] : '';
 
     // Determine if the checkbox should be checked
     $checked = $is_enabled ? 'checked' : '';
 
-    // Display the checkbox and label with the info field included
+    // Output the checkbox, label, and details
     echo "<div style='color: #555; margin-bottom: 10px;'>
-    <input 
-        type='checkbox' 
-        id='{$snippet['id']}' 
-        onclick='window." . __NAMESPACE__ . ".toggleSnippet(\"{$snippet['id']}\")' 
+    <input
+        type='checkbox'
+        id='{$snippet['id']}'
+        onclick='window." . __NAMESPACE__ . ".toggleSnippet(\"{$snippet['id']}\")'
         {$checked}
     >
     <label for='{$snippet['id']}'>
         {$snippet['name']} – <em>{$snippet['description']}</em><br>
         <small><strong>Details:</strong><br>{$info_html}</small>
     </label>
-  </div>";
-
-}
+  </div>";}
+  
 
                         ?>
                     </div>

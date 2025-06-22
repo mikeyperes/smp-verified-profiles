@@ -247,6 +247,16 @@ if (!function_exists('smp_verified_profiles\toggle_snippet')) {
     function toggle_snippet() {
        // $settings_snippets = get_settings_snippets();
        $settings_snippets = [];
+
+       $snippets_acf = get_snippets("acf");
+       $snippets_admin = get_snippets("admin");
+       $snippets_non_admin = get_snippets("non_admin");
+
+
+// Merge all three arrays into one
+$all_snippets = array_merge($snippets_acf, $snippets_admin, $snippets_non_admin);
+
+
         // Retrieve the snippet ID and the enable/disable state from the AJAX request
         $snippet_id = sanitize_text_field($_POST['snippet_id']);
         $enable = filter_var($_POST['enable'], FILTER_VALIDATE_BOOLEAN);
@@ -254,7 +264,7 @@ if (!function_exists('smp_verified_profiles\toggle_snippet')) {
         write_log("Toggle snippet called with ID: {$snippet_id}, enable: " . ($enable ? 'true' : 'false'));
 
         // Find the corresponding snippet and function
-        foreach ($settings_snippets as $snippet) {
+        foreach ($all_snippets as $snippet) {
             if ($snippet['id'] === $snippet_id) {
                 // Get the current value from the database
                 $current_value = get_option($snippet_id);
