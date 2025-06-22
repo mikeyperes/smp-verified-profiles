@@ -5,7 +5,9 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 5.1
+Version: 5.2
+
+
 Text Domain: smp-verified-profiles
 Domain Path: /languages
 Author URI: https://michaelperes.com
@@ -145,11 +147,11 @@ include_once("snippet-adjust-profiles-category-meta-box.php");
     include_once("snippet-adjust-wp-admin-for-profile-managers.php");
     include_once("snippet-wp-admin-user-page-functionality.php");
     include_once("snippet-post-functionality.php");
-    include_once("snippet-faviconn-for-verified-pages.php");
+
    // include_once("snippet-wp-admin-adjust-table-for-unclaimed-profiles.php");
    //include_once("snippet-woocommerce-base.php");
     //include_once("snippet-woocommerce-stripe-integration.php");
-    include_once("snippet-claim-profile-functionality.php");
+
     include_once("snippet-profile-post-wp-admin-functionality.php");
     include_once("snippet-wp-admin-user-page-optional-functionality.php");
     include_once("snippet-disable-password-reset.php");
@@ -176,8 +178,8 @@ include_once("snippet-adjust-profiles-category-meta-box.php");
     activate_snippets("admin");
     }
 
- 
-
+    include_once("snippet-claim-profile-functionality.php");
+    include_once("snippet-faviconn-for-verified-pages.php");
 include_once("snippet-muckrack-functionality.php");
 include_once("settings-dashboard-snippets.php");
 include_once("shortcodes.php");
@@ -254,20 +256,6 @@ function get_snippets($type = "")
             'description' => display_acf_structure("group_verified_profiles_settings"),
             'info'        => '',
             'function'    => 'register_verified_profile_pages_custom_fields'
-        ],
-        [
-            'id'          => 'enable_snippet_wp_admin_user_page_functionality',
-            'name'        => 'enable_snippet_wp_admin_user_page_functionality',
-            'description' => '',
-            'info'        => '',
-            'function'    => 'enable_snippet_wp_admin_user_page_functionality'
-        ],
-        [
-            'id'          => 'enable_snippet_verified_profile_shortcodes',
-            'name'        => 'enable_snippet_verified_profile_shortcodes',
-            'description' => get_formatted_shortcode_list(__NAMESPACE__."\get_verified_profile_shortcodes"),
-            'info'        => '',
-            'function'    => 'enable_snippet_verified_profile_shortcodes'
         ]
     ];
 
@@ -294,6 +282,14 @@ function get_snippets($type = "")
             'info'        => '',
             'function'    => 'enable_snippet_muckrack_functionality'
         ],
+
+        [
+            'id'          => 'enable_snippet_verified_profile_shortcodes',
+            'name'        => 'enable_snippet_verified_profile_shortcodes',
+            'description' => get_formatted_shortcode_list(__NAMESPACE__."\get_verified_profile_shortcodes"),
+            'info'        => '',
+            'function'    => 'enable_snippet_verified_profile_shortcodes'
+        ]
     ];
   //  $_verified_profile_settings    = get_verified_profile_settings();
 
@@ -354,6 +350,13 @@ function get_snippets($type = "")
             'description' => '',
             'info'        => '',
             'function'    => 'enable_snippet_disable_password_reset'
+        ],
+        [
+            'id'          => 'enable_snippet_wp_admin_user_page_functionality',
+            'name'        => 'enable_snippet_wp_admin_user_page_functionality',
+            'description' => '',
+            'info'        => '',
+            'function'    => 'enable_snippet_wp_admin_user_page_functionality'
         ],
 
     ];
