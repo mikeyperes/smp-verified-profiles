@@ -245,8 +245,8 @@ $(document).ready(function($) {
 
 if (!function_exists('smp_verified_profiles\toggle_snippet')) {
     function toggle_snippet() {
-        $settings_snippets = get_settings_snippets();
-
+       // $settings_snippets = get_settings_snippets();
+       $settings_snippets = [];
         // Retrieve the snippet ID and the enable/disable state from the AJAX request
         $snippet_id = sanitize_text_field($_POST['snippet_id']);
         $enable = filter_var($_POST['enable'], FILTER_VALIDATE_BOOLEAN);

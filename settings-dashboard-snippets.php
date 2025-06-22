@@ -8,7 +8,7 @@ use function smp_verified_profiles\disable_litespeed_js_combine;
 use function smp_verified_profiles\hws_ct_snippets_activate_author_social_acfs;
 use function smp_verified_profiles\write_log;
 use function smp_verified_profiles\toggle_snippet;
-use function smp_verified_profiles\get_settings_snippets;
+
  
 
     function display_settings_snippets() {
@@ -87,8 +87,8 @@ use function smp_verified_profiles\get_settings_snippets;
                     <?php
                     // Initialize an array to store active snippets
                     $active_snippets = [];
-                    $settings_snippets = get_settings_snippets();
-    
+                  // $settings_snippets = get_settings_snippets();
+                  $settings_snippets=[];
                     // Iterate through the snippets and check which ones are active
                     foreach ($settings_snippets as $snippet) {
                         $is_enabled = get_option($snippet['id'], false);

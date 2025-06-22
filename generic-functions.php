@@ -2,6 +2,54 @@
 
 
 
+function activate_snippets($type="") {
+
+    $settings_snippets = get_snippets($type);
+    foreach ($settings_snippets as $snippet) {
+        $snippet_id = $snippet['id'];
+        $function_to_call = $snippet['function'];
+
+        // Check if the snippet is enabled
+        $is_enabled = get_option($snippet_id, false);
+ 
+        // Log snippet information
+        write_log("Processing snippet: {$snippet['name']} (ID: $snippet_id)", false);
+
+        if ($is_enabled) {
+            write_log("Snippet $snippet_id is enabled. Preparing to activate.");
+            
+            // Adjust function name for correct namespace
+            $function_to_call = '\\' . __NAMESPACE__ . '\\' . $function_to_call;
+            
+            if (function_exists($function_to_call)) {
+                // Call the function to activate the snippet
+                call_user_func($function_to_call);
+                write_log("✅ Snippet $snippet_id activated by calling $function_to_call.", false);
+            } else {
+                write_log("🚫 Function $function_to_call does not exist for snippet $snippet_id.", true);
+            }
+        } else {
+            write_log("🚫 Snippet $snippet_id is not enabled.", false);
+        }
+    }
+}
+
+function hws_alias_namespace_functions($from_namespace, $to_namespace = __NAMESPACE__) {
+    $user_functions = get_defined_functions()['user'];
+    $from_prefix = $from_namespace . '\\';
+
+    foreach ($user_functions as $fn) {
+        if (strpos($fn, $from_prefix) === 0) {
+            $fn_name = substr($fn, strlen($from_prefix));
+            $alias   = $to_namespace . '\\' . $fn_name;
+
+            if (!function_exists($alias)) {
+                eval("namespace $to_namespace; function $fn_name() { return \\" . $fn . "(...func_get_args()); }");
+            }
+        }
+    }
+}
+
 
 function hws_import_tool($relative_path, $alias_classes = []) {
     $base_path = WP_PLUGIN_DIR . '/hws-base-tools/';
@@ -29,21 +77,13 @@ function hws_import_tool($relative_path, $alias_classes = []) {
     return true;
 }
 
-function hws_alias_namespace_functions($from_namespace, $to_namespace = __NAMESPACE__) {
-    $user_functions = get_defined_functions()['user'];
-    $from_prefix = $from_namespace . '\\';
 
-    foreach ($user_functions as $fn) {
-        if (strpos($fn, $from_prefix) === 0) {
-            $fn_name = substr($fn, strlen($from_prefix));
-            $alias   = $to_namespace . '\\' . $fn_name;
 
-            if (!function_exists($alias)) {
-                eval("namespace $to_namespace; function $fn_name() { return \\" . $fn . "(...func_get_args()); }");
-            }
-        }
-    }
-}
+
+
+
+
+
 
 
 
@@ -91,31 +131,6 @@ function get_verified_profile_settings(): array {
 
     return $cache;
 }
-
-
-// Define the write_log function only if it isn't already defined
-if (!function_exists(__NAMESPACE__ . '\\write_log')) {
-    function write_log($log, $full_debug = false) {
-        if (WP_DEBUG && WP_DEBUG_LOG && $full_debug) {
-            // Get the backtrace
-            $backtrace = debug_backtrace();
-            
-            // Extract the last function that called this one
-            $caller = isset($backtrace[1]['function']) ? $backtrace[1]['function'] : 'N/A';
-            
-            // Extract the file and line number where the caller is located
-            $caller_file = isset($backtrace[0]['file']) ? $backtrace[0]['file'] : 'N/A';
-            $caller_line = isset($backtrace[0]['line']) ? $backtrace[0]['line'] : 'N/A';
-            
-            // Prepare the log message
-            $log_message = is_array($log) || is_object($log) ? print_r($log, true) : $log;
-            $log_message .= "\n\n[Called by: $caller]\n[In file: $caller_file at line $caller_line]\n\n---\n";
-            
-            // Write to the log
-            error_log($log_message);
-        }
-    }
-} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\write_log function is already declared", true);
 
 
 
