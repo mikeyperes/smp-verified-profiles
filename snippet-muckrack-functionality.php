@@ -27,7 +27,7 @@ function enable_snippet_muckrack_functionality(){
 // Shortcode for Muckrack verification on single profile page
 if (!function_exists(__NAMESPACE__ . '\\muckrack_single')) {
     function muckrack_single() {
-        if (!check_plugin_acf()) return;
+    //    if (!check_plugin_acf()) return;
 
         global $post;
         $author_id = $post->post_author;
@@ -45,7 +45,7 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_single')) {
 // Shortcode for Muckrack verification by author nicename
 if (!function_exists(__NAMESPACE__ . '\\muckrack_author')) {
     function muckrack_author($atts) {
-        if (!check_plugin_acf()) return;
+///        if (!check_plugin_acf()) return;
 
         global $wpdb;
         $pageURL = $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
@@ -65,7 +65,7 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_author')) {
 // Shortcode for displaying verified icon on a single profile page
 if (!function_exists(__NAMESPACE__ . '\\verified_icon_single')) {
     function verified_icon_single() {
-        if (!check_plugin_acf()) return;
+     //   if (!check_plugin_acf()) return;
 
         $post_id = get_the_ID();
         $author_id = get_post_field('post_author', $post_id);
@@ -82,7 +82,7 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_single')) {
 // Shortcode for displaying verified icon for an author
 if (!function_exists(__NAMESPACE__ . '\\verified_icon_author')) {
     function verified_icon_author($atts) {
-        if (!check_plugin_acf()) return;
+       // if (!check_plugin_acf()) return;
 
         global $wpdb;
         $pageURL = $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
@@ -102,7 +102,7 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_author')) {
 // Shortcode to fetch and display a custom author field using ACF
 if (!function_exists(__NAMESPACE__ . '\\acf_author_field_shortcode')) {
     function acf_author_field_shortcode($atts) {
-        if (!check_plugin_acf()) return;
+     //   if (!check_plugin_acf()) return;
 
         $atts = shortcode_atts(array('field' => null), $atts);
 
@@ -122,9 +122,7 @@ if (!function_exists(__NAMESPACE__ . '\\acf_author_field_shortcode')) {
 if ( ! function_exists( __NAMESPACE__ . '\\muckrack_verified' ) ) {
     function muckrack_verified( $atts ) {
 
-        if ( ! check_plugin_acf() ) {
-            return;
-        }
+       // if ( ! check_plugin_acf() ) return;
 
         global $post;
         $author_id = $post->post_author;
