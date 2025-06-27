@@ -1368,7 +1368,7 @@ function verified_profile_shortcode( $atts ) {
         }
       //  write_log( "verified_profile returning {$group[$key]}", true );
         return esc_html( $group[ $key ] );
-    }
+    } 
 
     // nested
     list( $parent, $child ) = $parts;
