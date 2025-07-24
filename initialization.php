@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 5.4.2
+Version: 5.4.3.1
 
 
 Text Domain: smp-verified-profiles
@@ -54,10 +54,10 @@ class Config {
             'proper_folder_name' => dirname( plugin_basename( __FILE__ ) ),
     
             // 3) GitHub endpoints & download URL
-            'api_url'            => 'https://api.github.com/repos/mikeyperes/hws-base-tools',
-            'raw_url'            => 'https://raw.githubusercontent.com/mikeyperes/hws-base-tools/main',
-            'github_url'         => 'https://github.com/mikeyperes/hws-base-tools',
-            'zip_url'            => 'https://github.com/mikeyperes/hws-base-tools/archive/main.zip',
+            'api_url'            => 'https://api.github.com/repos/mikeyperes/smp-verified-profiles',
+            'raw_url'            => 'https://raw.githubusercontent.com/mikeyperes/smp-verified-profiles/main',
+            'github_url'         => 'https://github.com/mikeyperes/smp-verified-profiles',
+            'zip_url'            => 'https://github.com/mikeyperes/smp-verified-profiles/archive/main.zip',
     
             // 4) HTTP settings
             'sslverify'          => true,
