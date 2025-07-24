@@ -35,25 +35,53 @@ class Config {
     public static $plugin_short_id = "smp_vp";
     
 
-    // Add this method to return the GitHub config dynamically
+
     public static function get_github_config() {
-        return array(
-            'slug' => plugin_basename(__FILE__), // Plugin slug
-            'proper_folder_name' => 'smp-verified-profiles', // Proper folder name
-            'api_url' => 'https://api.github.com/repos/mikeyperes/smp-verified-profiles', // GitHub API URL
-            'raw_url' => 'https://raw.github.com/mikeyperes/smp-verified-profiles/main', // Raw GitHub URL
-            'github_url' => 'https://github.com/mikeyperes/smp-verified-profiles', // GitHub repository URL
-            'zip_url' => 'https://github.com/mikeyperes/smp-verified-profiles/archive/main.zip', // Zip URL for the latest version
-            'sslverify' => true, // SSL verification for the download
-            'requires' => '5.0', // Minimum required WordPress version
-            'tested' => '1.1', // Tested up to WordPress version
-            'readme' => 'README.md', // Readme file for version checking
-            'access_token' => '', // Access token if required
-        );
+        // Ensure we can read plugin headers
+        if ( ! function_exists( 'get_plugin_data' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+    
+        // Pull header info from this very file (it contains your Plugin Name, Version, etc.)
+        $plugin_data = get_plugin_data( __FILE__ );
+    
+        // Build and return the updater config
+        return [
+            // 1) Plugin’s WP slug (folder/file path under wp‑content/plugins)
+            'slug'               => plugin_basename( __FILE__ ),
+    
+            // 2) Folder name on disk
+            'proper_folder_name' => dirname( plugin_basename( __FILE__ ) ),
+    
+            // 3) GitHub endpoints & download URL
+            'api_url'            => 'https://api.github.com/repos/mikeyperes/hws-base-tools',
+            'raw_url'            => 'https://raw.githubusercontent.com/mikeyperes/hws-base-tools/main',
+            'github_url'         => 'https://github.com/mikeyperes/hws-base-tools',
+            'zip_url'            => 'https://github.com/mikeyperes/hws-base-tools/archive/main.zip',
+    
+            // 4) HTTP settings
+            'sslverify'          => true,
+            'access_token'       => '',
+    
+            // 5) WP compatibility
+            'requires'           => '5.0',
+            'tested'             => '6.0',
+            'readme'             => 'README.md',
+    
+            // 6) Which file to read “Version:” from
+            'plugin_starter_file'=> basename( __FILE__ ),
+    
+            // 7) Metadata pulled straight from the plugin header
+            'plugin_name'        => $plugin_data['Name'],
+            'version'            => $plugin_data['Version'],
+            'author'             => $plugin_data['Author'],
+            'homepage'           => $plugin_data['PluginURI'],
+            'description'        => $plugin_data['Description'],
+        ];
     }
-}
-
-
+    }
+    
+    
 
 
 
