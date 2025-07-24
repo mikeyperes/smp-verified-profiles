@@ -11,7 +11,7 @@
     $plugin_dir = dirname($plugin_file);
 
     // Define the main plugin file explicitly
-    $main_plugin_file = $plugin_dir . '/'.Config::$plugin_starter_file; // Update this to the correct main file
+    $main_plugin_file = $plugin_dir . '/'.Config::$plugin_starter_file; 
 
     // Ensure the file exists, is a regular file, and is readable
     if (!file_exists($main_plugin_file) || !is_file($main_plugin_file) || !is_readable($main_plugin_file)) {

@@ -683,70 +683,6 @@ if (!function_exists(__NAMESPACE__ . '\\update_schema_markup')) {
 
 
 
-/**
- * Display ACF field structures for given group keys.
- *
- * This function retrieves the ACF fields from specified ACF field groups and returns
- * a formatted string with each field's name, label, and type, including child fields for repeater and group types.
- *
- * @param string|array $group_keys A single ACF group key or an array of group keys.
- * @return string A neatly formatted string listing all ACF fields with their basic information.
- */
-/*
-function display_acf_structures($group_keys) {
-    // Ensure $group_keys is an array even if a single key is passed.
-    $group_keys = (array) $group_keys;
-
-    // Initialize an empty string to hold the result.
-    $acf_structure_output = '<br />';
-
-    // Fetch all the local ACF field groups registered in the system.
-    $field_groups = acf_get_local_field_groups();
-
-    // Iterate over the group keys to process multiple groups if needed.
-    foreach ($group_keys as $group_key) {
-        // Iterate through all available ACF field groups.
-        foreach ($field_groups as $group) {
-            // Check if the current group's key matches the provided group key.
-            if ($group['key'] === $group_key) {
-                // Add the group title to the output for clarity.
-                $acf_structure_output .= "<br><b>Group: " . $group['title'] . " (" . $group['key'] . ")</b><br />";
-             //   $acf_structure_output .= str_repeat("-", 2) ;
-
-                // Retrieve all fields for this group.
-                $fields = acf_get_fields($group['key']);
-
-                // Loop through each field and append name, label, and type.
-                foreach ($fields as $field) {
-                    $acf_structure_output .= "> " . $field['name'] . " - " . 
-                     $field['type'] . "<br />";
-//$field['label'] . " - " .
-                    // Handle repeater and group types to include child fields
-                    if (in_array($field['type'], ['repeater', 'group'])) {
-                        if (!empty($field['sub_fields'])) {
-                            foreach ($field['sub_fields'] as $sub_field) {
-                                $acf_structure_output .= "&nbsp;&nbsp;&nbsp;- " . $sub_field['name'] . " / " . $sub_field['type'] . "<br />";
-                            }
-                        }
-                    }
-                    //$acf_structure_output .= str_repeat("-", 2) . "<br />";
-                }
-                // Break the loop after processing the desired group.
-                break;
-            }
-        }
-    }
-
-    // Return the neatly formatted string of ACF field structures.
-    return $acf_structure_output ? $acf_structure_output : "No matching ACF groups found.";
-}
-*/
-
-
-
-
-
-
 
 
 /**
@@ -810,8 +746,10 @@ function display_acf_structure( $group_keys ) {
                  . '</code>'
                  . '</h2>';
 
+      
         // 4) List all fields
-        $fields = acf_get_fields( $group_key );
+       $fields = acf_get_fields( $group_key );
+       //$fields = acf_get_fields([ 'group_key' => $group_key ]);
         if ( ! empty( $fields ) ) {
             $output .= '<ul style="'
                      . 'list-style-type:disc;'

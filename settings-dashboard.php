@@ -145,14 +145,24 @@ pre {
 //Config::$settings_page_html_id;?>">
 <h1><?php echo Config::$settings_page_display_title;?></h1>
 
-<?php display_settings_acf_post_and_pages_form();
+<?php 
+//display_settings_acf_post_and_pages_form();
+//display_settings_create_pages_and_listing_grids();
+//display_acf_field_status();
 
-display_settings_create_pages_and_listing_grids();
-
-display_acf_field_status();
 render_reprocess_profile_schema_page();
  
+echo display_acf_structure( [
+    'group_66b7bdf713e77',
+    'group_656ea6b4d7088',
+    'group_656eb036374de',
+    'group_65a8b25062d91',
+    'group_658602c9eaa49',
+] );
 ?>
+
+
+
 
 <?php //display_settings_overview();?>
 

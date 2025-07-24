@@ -34,7 +34,53 @@ function get_verified_profile_shortcodes() {
         'display_profile_current_residence' => __NAMESPACE__ . '\\display_profile_current_residence',
         'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
         'display_profile_notable_mentions' => __NAMESPACE__ . '\\get_profile_notable_mentions',
+        'get_profile_field' => __NAMESPACE__ . '\\get_profile_field',
     ];
+}
+
+
+/*
+[get_profile_field field="title"]
+[get_profile_field field="featured"]
+[get_profile_field field="url_wikipedia"]
+[get_profile_field field="url_facebook"]
+[get_profile_field field="url_instagram"]
+[get_profile_field field="url_linkedin"]
+[get_profile_field field="url_website"]
+[get_profile_field field="biography"]
+[get_profile_field field="biography_short"]
+*/
+
+function get_profile_field( $atts ) {
+    // Get CPT slug from your settings
+    $settings = get_verified_profile_settings();
+    $slug     = $settings['slug'];
+
+    global $post;
+    // Only run on the correct post type
+    if ( $post->post_type !== $slug ) {
+        return '';
+    }
+
+    // Pull the requested field name
+    $atts = shortcode_atts( [
+        'field' => '',
+    ], $atts, 'get_profile_field' );
+
+    if ( ! $atts['field'] ) {
+        return '';
+    }
+
+    $field_name = $atts['field'];
+    // Get the ACF value
+    $value = get_field( $field_name, $post->ID );
+
+    // If it's an array, flatten it to a comma-separated string
+    if ( is_array( $value ) ) {
+        $value = implode( ', ', $value );
+    }
+
+    return $value;
 }
 
 // Function to register the shortcodes using the list
@@ -949,7 +995,9 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
      */
     function display_single_post_mentioned_in_article( $atts = [] ) {
        
+ 
         $content = "";
+        $empty_response = '<style>.display_single_post_mentioned_in_article{display:none !important;}</style>';
 
         // 1) Parse shortcode attributes
         $atts = shortcode_atts( [
@@ -967,10 +1015,10 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
         // 3) Fetch the Verified Profile options group
         $vp = get_field( 'verified_profile', 'option' );
         if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
-            $content.="it's empty";
-            return $content;
-            return '';
+                        return $empty_response;
         }
+    
+        
 
         // 4) Extract and normalize the Elementor template ID
         $raw = $vp['loop_items']['display_single_post_mentioned_in_article'] ?? null;
@@ -982,9 +1030,8 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
             $template_id = (int) $raw;
         }
         if ( ! $template_id ) {
-            return '';
-        }
-
+            return $empty_response;
+        }  
 
         // 5) Gather profile IDs from the 'profiles' repeater
         $profile_ids = [];
@@ -1010,7 +1057,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
             }
         }
         if ( empty( $profile_ids ) ) {
-            return '<style>.display_single_post_mentioned_in_article{display:none!important}</style>';
+            return $empty_response;
         }
 
         // 6) Render the Elementor template for each profile
@@ -1056,79 +1103,6 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
 }
 
 
-
-
-
-
-/* DELETE 
-// Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_single_post_mentioned_in_article')) {
-
-    function display_single_post_mentioned_in_article() {
-        $no_results = "<style>.display_single_post_mentioned_in_article{display:none !important}</style>";
-
-        if (!class_exists('Jet_Engine_Render_Listing_Grid')) {
-            return 'JetEngine is not active or the required class is not available.';
-        }
-
-        if (!is_single()) {
-            return 'This shortcode is only for single post pages.';
-        }
-
-        global $post;
-        $profile_ids = [];
-
-        // Iterate over repeater field and get profile IDs
-        if (have_rows('profiles', $post->ID)) {
-            while (have_rows('profiles', $post->ID)) {
-                the_row();
-                $profile_id = get_sub_field('profile');
-                if ($profile_id && has_post_thumbnail($profile_id)) {
-                    $profile_ids[] = $profile_id;
-                }
-            }
-        }
-
-        if (empty($profile_ids)) {
-            return $no_results;
-        }
-
-        $content = '<div class="shortcode_display_single_post_mentioned_in_article">';
-        $listing_id = 15768;
-        $listing_id = get_field('display_single_post_mentioned_in_article', 'option');
-
-        // Settings for JetEngine Listing Grid
-        $settings = [
-            'listing_id' => $listing_id,
-            'lisitng_id'  => $listing_id,
-            'columns' => 7,
-            'lazy_load' => false,
-            'columns_tablet' => 5,
-            'columns_mobile' => 3,
-            'post_status' => ['publish'],
-            'posts_num' => count($profile_ids),
-            'posts_query' => [
-                [
-                    'type' => 'posts_params',
-                    'posts_in' => $profile_ids,
-                    'post_type' => 'profile'
-                ]
-            ],
-            'custom_query' => false,
-            'custom_query_id' => null
-        ];
-
-        // Create and render the listing grid
-        $listing_grid = new \Jet_Engine_Render_Listing_Grid($settings);
-        ob_start();
-        $listing_grid->render();
-        $content .= ob_get_clean();
-        $content .= '</div>';
-        return $content;
-    }
-} else 
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_post_mentioned_in_article function is already declared", true);
-*/
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')) {
