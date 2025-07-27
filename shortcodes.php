@@ -35,6 +35,8 @@ function get_verified_profile_shortcodes() {
         'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
         'display_profile_notable_mentions' => __NAMESPACE__ . '\\get_profile_notable_mentions',
         'get_profile_field' => __NAMESPACE__ . '\\get_profile_field',
+        'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles', 
+        'article_guests' => __NAMESPACE__ . '\\article_guests_links' 
     ];
 }
 
@@ -1386,3 +1388,157 @@ function verified_profile_shortcode( $atts ) {
 
 
 
+// -----------------------------------------------------------------------------
+// posts_where modifier for ACF repeater wildcard
+// -----------------------------------------------------------------------------
+function modify_posts_where_for_acf_repeater_2( $where, $query ) {
+    return str_replace(
+        "meta_key = 'profiles_$_profile'",
+        "meta_key LIKE 'profiles\\_%\\_profile'",
+        $where
+    );
+}
+\add_filter( 'posts_where', __NAMESPACE__ . '\\modify_posts_where_for_acf_repeater_2', 10, 2 );
+
+// -----------------------------------------------------------------------------
+// Shortcode [profiles_in_articles]
+// -----------------------------------------------------------------------------
+if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
+    function display_profiles_in_articles() {
+        global $wpdb, $post;
+        $orig_post = $post;
+
+        // 1) Find all article IDs with at least one profiles_*_profile row
+        $article_ids = $wpdb->get_col( "
+            /* smp-verified-profiles: display_profiles_in_articles() */
+            SELECT DISTINCT post_id
+            FROM {$wpdb->postmeta}
+            WHERE meta_key LIKE 'profiles\\_%\\_profile'
+        " );
+        if ( empty( $article_ids ) ) {
+            return '<style>.profiles_in_articles{display:none!important;}</style>';
+        }
+
+        // 2) Get all numeric profile IDs from those articles
+        $raw = $wpdb->get_col( "
+            SELECT DISTINCT CAST(meta_value AS UNSIGNED)
+            FROM {$wpdb->postmeta}
+            WHERE post_id IN (" . implode( ',', array_map( 'absint', $article_ids ) ) . ")
+              AND meta_key LIKE 'profiles\\_%\\_profile'
+              AND meta_value REGEXP '^[0-9]+$'
+        " );
+        $profile_ids = array_filter( array_map( 'absint', $raw ), function( $id ){ return $id > 0; } );
+        if ( empty( $profile_ids ) ) {
+            return '<style>.profiles_in_articles{display:none!important;}</style>';
+        }
+
+        // 3) Fetch Profile CPTs without priming all their meta/term caches
+        $profiles = \get_posts( [
+            'post_type'              => 'profile',
+            'post__in'               => $profile_ids,
+            'orderby'                => 'post__in',
+            'posts_per_page'         => -1,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+        ] );
+        if ( empty( $profiles ) ) {
+            return '<style>.profiles_in_articles{display:none!important;}</style>';
+        }
+
+        // 4) Render the grid
+        $out  = '<style>
+            .profiles_in_articles{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;}
+            @media(max-width:768px){.profiles_in_articles{grid-template-columns:repeat(2,1fr);}}
+        </style><div class="profiles_in_articles">';
+
+        foreach ( $profiles as $profile ) {
+            /** @var \WP_Post $profile */
+            $post = $profile;
+            \setup_postdata( $post );
+
+            $out .= '<div class="profile-item">';
+            $out .= \Elementor\Plugin::instance()
+                        ->frontend
+                        ->get_builder_content_for_display( 19232 );
+            $out .= '</div>';
+        }
+
+        // restore
+        \wp_reset_postdata();
+        $post = $orig_post;
+
+        $out .= '</div>';
+        return $out;
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Elementor custom query: profiles_in_articles
+// -----------------------------------------------------------------------------
+\add_action( 'elementor/query/profiles_in_articles', function( \WP_Query $query ) {
+    global $wpdb;
+
+    $raw = $wpdb->get_col( "
+        /* smp-verified-profiles: elementor/query/profiles_in_articles */
+        SELECT DISTINCT CAST(meta_value AS UNSIGNED)
+        FROM {$wpdb->postmeta}
+        WHERE meta_key LIKE 'profiles\\_%\\_profile'
+          AND meta_value REGEXP '^[0-9]+$'
+    " );
+
+    $ids = array_filter( array_map( 'absint', $raw ), function( $id ){ return $id > 0; } );
+    if ( empty( $ids ) ) {
+        $query->set( 'post__in', [0] );
+        return;
+    }
+
+    $query->set( 'post_type',              'profile' );
+    $query->set( 'post__in',               $ids );
+    $query->set( 'orderby',                'post__in' );
+    $query->set( 'posts_per_page',         -1 );
+    $query->set( 'update_post_meta_cache', false );
+    $query->set( 'update_post_term_cache', false );
+}, 10, 1 );
+
+// -----------------------------------------------------------------------------
+// Shortcode [article_guests]
+// -----------------------------------------------------------------------------
+if ( ! function_exists( __NAMESPACE__ . '\\article_guests_links' ) ) {
+    function article_guests_links() {
+        global $post;
+        static $css_added = false;
+
+        // --- NO GUESTS? inject REAL CSS in the <head> then bail
+        if ( ! function_exists('have_rows') || ! have_rows('profiles', $post->ID) ) {
+            if ( ! $css_added ) {
+                \add_action( 'wp_head', function(){
+                    echo '<style>.shortcode_article_guests{display:none!important;}</style>';
+                } );
+                $css_added = true;
+            }
+            return '';
+        }
+
+        // --- YES GUESTS: build your links
+        $links = [];
+        while ( have_rows('profiles', $post->ID) ) {
+            the_row();
+            $pid = get_sub_field('profile');
+            if ( empty($pid) || ! is_numeric($pid) ) {
+                continue;
+            }
+            $url  = get_permalink($pid);
+            $name = get_the_title($pid);
+            if ( $url && $name ) {
+                $links[] = '<a href="'. esc_url($url) .'">'. esc_html($name) .'</a>';
+            }
+        }
+        if ( function_exists('reset_rows') ) {
+            reset_rows();
+        }
+
+        // wrap the guest links
+        return '<span class="shortcode_article_guests">'. implode(', ', $links) .'</span>';
+    }
+
+}
