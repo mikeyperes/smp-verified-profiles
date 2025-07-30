@@ -121,7 +121,12 @@ if ( in_array( "person", $category_slugs, true ) ) {
     $birth_place     = get_field( 'personal_birth_place',   $post_id );
     $home_location   = get_field( 'personal_home_location', $post_id );
     $alumni_of       = get_field( 'personal_alumni_of',     $post_id );
-    $bio             = get_field( 'personal_bio',            $post_id );
+ // Get the short bio (fallback to full bio if empty), then strip out all HTML tags.
+$raw_bio = get_field( 'biography_short', $post_id );
+if ( empty( $raw_bio ) ) {
+    $raw_bio = get_field( 'biography', $post_id );
+}
+$bio = wp_strip_all_tags( $raw_bio );
     $gender          = get_field( 'personal_gender',         $post_id );
     $url_website  = get_field( 'url_website',          $post_id ); // <-- new ACF field
 
@@ -129,6 +134,7 @@ if ( in_array( "person", $category_slugs, true ) ) {
     $url_ = array_filter( [
         get_field( 'url_facebook',     $post_id ),
         get_field( 'url_twitter',      $post_id ),
+        get_field( 'url_x',      $post_id ),
         get_field( 'url_instagram',    $post_id ),
         get_field( 'url_linkedin',     $post_id ),
         get_field( 'url_tiktok',       $post_id ),
