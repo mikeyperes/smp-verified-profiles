@@ -413,6 +413,30 @@ function register_verified_profile_custom_fields()
 			'media_upload' => 1,
 			'delay' => 0,
 		),
+        // Append this to your ACF fields array (e.g. right after 'biography_short')
+array(
+    'key'               => 'field_67fa082b1bd36',
+    'label'             => 'Schema Markup',
+    'name'              => 'schema_markup',
+    'aria-label'        => '',
+    'type'              => 'textarea',
+    'instructions'      => 'Schema markup JSON‑LD output. Batch refresh schema objects here: <a href="' . admin_url('options-general.php?page=smp-verified-profiles') . '" target="_blank">Refresh Schema Objects</a>.',
+    'required'          => 0,
+    'conditional_logic' => 0,
+    'wrapper'           => array(
+        'width' => '',
+        'class' => '',
+        'id'    => '',
+    ),
+    'default_value'     => '',
+    'placeholder'       => '',
+    'maxlength'         => '',
+    'rows'              => 10,
+    'new_lines'         => 'wpautop',
+    'readonly'          => 1,
+    'allow_in_bindings' => 0,
+),
+
 	),
 	'location' => array(
 		array(

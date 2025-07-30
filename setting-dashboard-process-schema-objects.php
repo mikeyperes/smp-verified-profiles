@@ -1,87 +1,93 @@
 <?php namespace smp_verified_profiles;
 
-
 /**
  * 2) Render the page with the button + report container + inline jQuery
  */
 function render_reprocess_profile_schema_page() { ?>
-    <div class="wrap">
-        <h1><?php esc_html_e( 'Reprocess All Profile Schema Objects', 'smp_verified_profiles' ); ?></h1>
-        <button id="smp-vp-reprocess-schema" class="button button-primary">
+    <div class="panel">
+        <h2 class="panel-title">
+            <?php esc_html_e( 'Reprocess All Profile Schema Objects', 'smp_verified_profiles' ); ?>
+        </h2>
+        <small>
+            <a href="<?php echo esc_url( admin_url( 'options-general.php?page=smp-verified-profiles' ) ); ?>" target="_blank">
+                <?php esc_html_e( 'Batch refresh schema objects here', 'smp_verified_profiles' ); ?>
+            </a>
+        </small>
+        <div style="clear:both"></div>
+        <button id="smp-vp-reprocess-schema" class="button button-primary" style="margin-top:10px;">
             <?php esc_html_e( 'Reprocess all profile schema objects', 'smp_verified_profiles' ); ?>
         </button>
-        <div id="smp-vp-reprocess-report"
+        <div class="panel-content" id="smp-vp-reprocess-report"
              style="margin-top:20px; padding:15px; background:#fff; border:1px solid #ccc; max-height:400px; overflow:auto;">
         </div>
     </div>
 
-    <script>
-jQuery(document).ready(function($){
-    var offset    = 0,
-        batchSize = 20,
-        total     = 0;
+    <script type="text/javascript">
+    jQuery(document).ready(function($){
+        var offset    = 0,
+            batchSize = 20,
+            total     = 0;
 
-    $('#smp-vp-reprocess-schema').on('click', function(){
-        $(this).prop('disabled', true);
-        $('#smp-vp-reprocess-report')
-            .empty()
-            .append('<p>Starting…</p>');
-        processBatch();
-    });
-
-    function processBatch(){
-        $.post( ajaxurl, {
-            action:     'smp_vp_reprocess_schema',
-            offset:     offset,
-            batch_size: batchSize
-        })
-        .done(function(res){
-            if ( ! res.success ) {
-                $('#smp-vp-reprocess-report')
-                    .append('<p style="color:red;">Error: ' + res.data.message + '</p>');
-                return;
-            }
-
-            total = res.data.total;
-
-            $.each(res.data.items, function(i, item){
-                // escape HTML in the schema for safe display
-                var escapedSchema = $('<div>').text(item.schema).html();
-
-                $('#smp-vp-reprocess-report').append(
-                    '<div style="margin-bottom:20px;">' +
-                      '<p>' +
-                        '<strong>Post ID ' + item.post_id + '</strong> – ' +
-                        '<a href="' + item.admin_link + '" target="_blank">Edit</a> | ' +
-                        '<a href="' + item.view_link + '" target="_blank">View</a>' +
-                      '</p>' +
-                      '<pre style="background:#f9f9f9;padding:10px;border:1px solid #ddd;white-space:pre-wrap;">' +
-                        escapedSchema +
-                      '</pre>' +
-                    '</div>'
-                );
-            });
-
-            offset += batchSize;
-            $('#smp-vp-reprocess-report').append(
-              '<p>Processed ' + Math.min(offset, total) + ' of ' + total + '</p>'
-            );
-
-            if ( offset < total ) {
-                processBatch();
-            } else {
-                $('#smp-vp-reprocess-report')
-                  .append('<p><strong>✅ Completed processing ' + total + ' profiles.</strong></p>');
-            }
-        })
-        .fail(function(){
+        $('#smp-vp-reprocess-schema').on('click', function(){
+            $(this).prop('disabled', true);
             $('#smp-vp-reprocess-report')
-                .append('<p style="color:red;">AJAX request failed.</p>');
+                .empty()
+                .append('<p>Starting…</p>');
+            processBatch();
         });
-    }
-});
-</script>
 
+        function processBatch(){
+            $.post( ajaxurl, {
+                action:     'smp_vp_reprocess_schema',
+                offset:     offset,
+                batch_size: batchSize
+            })
+            .done(function(res){
+                if ( ! res.success ) {
+                    $('#smp-vp-reprocess-report')
+                        .append('<p style="color:red;">Error: ' + res.data.message + '</p>');
+                    return;
+                }
+
+                total = res.data.total;
+
+                $.each(res.data.items, function(i, item){
+                    // escape HTML in the schema for safe display
+                    var escapedSchema = $('<div>').text(item.schema).html();
+
+                    $('#smp-vp-reprocess-report').append(
+                        '<div style="margin-bottom:20px;">' +
+                          '<p>' +
+                            '<strong>Post ID ' + item.post_id + '</strong> – ' +
+                            '<a href="' + item.admin_link + '" target="_blank">Edit</a> | ' +
+                            '<a href="' + item.view_link + '" target="_blank">View</a>' +
+                          '</p>' +
+                          '<pre style="background:#f9f9f9;padding:10px;border:1px solid #ddd;white-space:pre-wrap;">' +
+                            escapedSchema +
+                          '</pre>' +
+                        '</div>'
+                    );
+                });
+
+                offset += batchSize;
+                $('#smp-vp-reprocess-report').append(
+                  '<p>Processed ' + Math.min(offset, total) + ' of ' + total + '</p>'
+                );
+
+                if ( offset < total ) {
+                    processBatch();
+                } else {
+                    $('#smp-vp-reprocess-report')
+                      .append('<p><strong>✅ Completed processing ' + total + ' profiles.</strong></p>');
+                }
+            })
+            .fail(function(){
+                $('#smp-vp-reprocess-report')
+                    .append('<p style="color:red;">AJAX request failed.</p>');
+            });
+        }
+    });
+    </script>
 <?php }
 
 /**
@@ -139,4 +145,3 @@ function ajax_reprocess_schema() {
         'postType' => $post_type,
     ] );
 }
-
