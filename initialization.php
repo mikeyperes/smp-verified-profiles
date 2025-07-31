@@ -220,6 +220,9 @@ include_once("snippet-adjust-profiles-category-meta-box.php");
 
     include_once("snippet-claim-profile-functionality.php");
     include_once("snippet-faviconn-for-verified-pages.php");
+    include_once("snippet-inject-schema-on-single-profile.php");
+
+    
 include_once("snippet-muckrack-functionality.php");
 include_once("settings-dashboard-snippets.php");
 include_once("shortcodes.php");
@@ -326,6 +329,17 @@ function get_snippets($type = "")
 
     $snippet_non_admin = [
         //I don't know what this is
+
+
+        [
+            'id'          => 'enable_snippet_inject_schema_on_single_profile',
+            'name'        => 'enable_snippet_inject_schema_on_single_profile',
+            'description' => '',
+            'info'        => '',
+            'function'    => 'enable_snippet_inject_schema_on_single_profile'
+        ],
+
+
         [
             'id'          => 'enable_snippet_faviconn_for_verified_pages',
             'name'        => 'enable_snippet_faviconn_for_verified_pages',

@@ -58,9 +58,10 @@ function render_reprocess_profile_schema_page() { ?>
                     $('#smp-vp-reprocess-report').append(
                         '<div style="margin-bottom:20px;">' +
                           '<p>' +
-                            '<strong>Post ID ' + item.post_id + '</strong> – ' +
+                            '<strong>' + item.title + ' (ID ' + item.post_id + ')</strong> – ' +
                             '<a href="' + item.admin_link + '" target="_blank">Edit</a> | ' +
-                            '<a href="' + item.view_link + '" target="_blank">View</a>' +
+                            '<a href="' + item.view_link + '" target="_blank">View</a> | ' +
+                            '<a href="' + item.validator_link + '" target="_blank">Validate Schema</a>' +
                           '</p>' +
                           '<pre style="background:#f9f9f9;padding:10px;border:1px solid #ddd;white-space:pre-wrap;">' +
                             escapedSchema +
@@ -130,10 +131,12 @@ function ajax_reprocess_schema() {
 
         // 3) build your response item
         $items[] = [
-            'post_id'    => $post_id,
-            'schema'     => $schema,
-            'admin_link' => get_edit_post_link( $post_id ),
-            'view_link'  => get_permalink( $post_id ),
+            'post_id'        => $post_id,
+            'title'          => get_the_title( $post_id ),
+            'schema'         => $schema,
+            'admin_link'     => get_edit_post_link( $post_id ),
+            'view_link'      => get_permalink( $post_id ),
+            'validator_link' => 'https://validator.schema.org/#url=' . urlencode( get_permalink( $post_id ) ),
         ];
     }
 

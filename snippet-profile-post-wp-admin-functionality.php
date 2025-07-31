@@ -4,17 +4,18 @@ function enable_snippet_profile_post_wp_admin_functionality()
 {
 // Hook into the save post action
 add_action('save_post', __NAMESPACE__.'\save_acf_post_id');
-add_action('wp_head', __NAMESPACE__.'\inject_schema_on_single_profile');
+
 add_action('save_post', __NAMESPACE__.'\generate_schema_markup');
 add_action('admin_footer', __NAMESPACE__.'\enforce_featured_image_with_jquery');
 add_action('admin_footer', __NAMESPACE__.'\custom_quick_edit_javascript');
 add_action('init', __NAMESPACE__.'\remove_content_editor_from_profile_cpt');
 add_action('post_submitbox_misc_actions', __NAMESPACE__.'\wpadmin_profile_display_associated_profiles', 10, 1);
 add_action('init',  __NAMESPACE__.'\disable_content_editor_for_profile');
+
+
+
+
 }
-
-
-
 
 /**
  * Disable the content editor for 'profile' custom post type
@@ -48,27 +49,7 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\save_acf_post_id function is already declared", true);
 }
 
-/**
- * Inject schema markup into the head section of a 'profile' post type single view.
- */
-if (!function_exists(__NAMESPACE__ . '\\inject_schema_on_single_profile')) {
-    function inject_schema_on_single_profile() {
-        if (!check_plugin_acf()) 
-            return;
 
-        $verified_profile_settings = get_verified_profile_settings();
-        //|| is_singular($verified_profile_settings["entity"]) 
-        if (is_singular($verified_profile_settings["slug"])) { 
-            global $post;
-            $schema_json = get_field('schema_markup', $post->ID);
-            if ($schema_json) {
-                echo "<script type='application/ld+json'>" . $schema_json . "</script>";
-            }
-        }
-    }
-} else {
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\inject_schema_on_single_profile function is already declared", true);
-}
 
 /**
  * Generate and save schema markup for a 'profile' or 'organization' based on post categories.
