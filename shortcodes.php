@@ -35,8 +35,7 @@ function get_verified_profile_shortcodes() {
         'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
         'display_profile_notable_mentions' => __NAMESPACE__ . '\\get_profile_notable_mentions',
         'get_profile_field' => __NAMESPACE__ . '\\get_profile_field',
-        'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles', 
-        'article_guests' => __NAMESPACE__ . '\\article_guests_links' 
+        'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles'
     ];
 }
 
@@ -1553,46 +1552,3 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
     $query->set( 'update_post_meta_cache', false );
     $query->set( 'update_post_term_cache', false );
 }, 10, 1 );
-
-// -----------------------------------------------------------------------------
-// Shortcode [article_guests]
-// -----------------------------------------------------------------------------
-if ( ! function_exists( __NAMESPACE__ . '\\article_guests_links' ) ) {
-    function article_guests_links() {
-        global $post;
-        static $css_added = false;
-
-        // --- NO GUESTS? inject REAL CSS in the <head> then bail
-        if ( ! function_exists('have_rows') || ! have_rows('profiles', $post->ID) ) {
-            if ( ! $css_added ) {
-                \add_action( 'wp_head', function(){
-                    echo '<style>.shortcode_article_guests{display:none!important;}</style>';
-                } );
-                $css_added = true;
-            }
-            return '';
-        }
-
-        // --- YES GUESTS: build your links
-        $links = [];
-        while ( have_rows('profiles', $post->ID) ) {
-            the_row();
-            $pid = get_sub_field('profile');
-            if ( empty($pid) || ! is_numeric($pid) ) {
-                continue;
-            }
-            $url  = get_permalink($pid);
-            $name = get_the_title($pid);
-            if ( $url && $name ) {
-                $links[] = '<a href="'. esc_url($url) .'">'. esc_html($name) .'</a>';
-            }
-        }
-        if ( function_exists('reset_rows') ) {
-            reset_rows();
-        }
-
-        // wrap the guest links
-        return '<span class="shortcode_article_guests">'. implode(', ', $links) .'</span>';
-    }
-
-}
