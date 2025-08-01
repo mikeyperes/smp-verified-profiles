@@ -868,15 +868,43 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
         
 
 
+
+
+        // 3) Fetch the Verified Profile options group
+        $vp = get_field( 'verified_profile', 'option' );
+        if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
+                        return $empty_response;
+        }
+    
+        
+//        options_page:verified-profiles-settings > contributor_network:group > loop_items:group > display_single_profile_articles_featured_in:post_object
+
+       
+
+        // 4) Extract and normalize the Elementor template ID
+        $raw = $vp['loop_items']['display_single_profile_articles_featured_in'] ?? null;
+        if ( is_object( $raw ) && isset( $raw->ID ) ) {
+            $template_id = $raw->ID;
+        } elseif ( is_array( $raw ) && isset( $raw['ID'] ) ) {
+            $template_id = (int) $raw['ID'];
+        } else {
+            $template_id = (int) $raw;
+        }
+        if ( ! $template_id ) {
+            return $empty_response;
+        }  
+
+
+
         $out = '<div class="profile-internal-features">';
         foreach ( $post_ids as $id ) {
             $post = get_post( $id );          // overwrite global
             setup_postdata( $post );          // tell WP about it
-    
+    //43689
             $out .= '<!-- rendering ID: ' . esc_html( $post->ID ) . ' -->';
             $out .= \Elementor\Plugin::instance()
                 ->frontend
-                ->get_builder_content_for_display( 43689, $post->ID );
+                ->get_builder_content_for_display( $template_id, $post->ID );
         }
         wp_reset_postdata();
     
