@@ -845,43 +845,41 @@ $output .= '</div>';
 
 
 
-
-
-    // Ensure function existence before declaring
+// Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featured_in' ) ) {
 
     /**
-     * Displays internal features related to the profile using an Elementor Loop Item template.
-     * Leaves the original ACF listing ID fetch commented out.
+     * Shortcode [display_single_profile_articles_featured_in columns_web="4" columns_mobile="2"]
      *
-     * @return string HTML or CSS to hide if no features are found.
+     * @param array $atts {
+     *   @type int $columns_web    Number of columns on desktop (min-width: 768px).
+     *   @type int $columns_mobile Number of columns on mobile (max-width: 767px).
+     * }
+     * @return string HTML of the features loop (with optional injected CSS) or a hide-style.
      */
-    function display_single_profile_articles_featured_in() {
+    function display_single_profile_articles_featured_in( $atts ) {
         global $post;
         $main_post = $post;
-    
+
+        // allow passing columns_web and columns_mobile; default to empty (legacy behavior)
+        $atts = shortcode_atts( [
+            'columns_web'    => '',
+            'columns_mobile' => '',
+        ], $atts, 'display_single_profile_articles_featured_in' );
+
+        // find related posts
         $post_ids = find_posts_with_profile( $post->ID );
         if ( empty( $post_ids ) ) {
             return '<style>.profile_internal_features{display:none !important;}</style>';
         }
-    
-        
 
-
-
-
-        // 3) Fetch the Verified Profile options group
+        // fetch VP options
         $vp = get_field( 'verified_profile', 'option' );
         if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
-                        return $empty_response;
+            return '<style>.profile_internal_features{display:none !important;}</style>';
         }
-    
-        
-//        options_page:verified-profiles-settings > contributor_network:group > loop_items:group > display_single_profile_articles_featured_in:post_object
 
-       
-
-        // 4) Extract and normalize the Elementor template ID
+        // normalize Elementor template ID
         $raw = $vp['loop_items']['display_single_profile_articles_featured_in'] ?? null;
         if ( is_object( $raw ) && isset( $raw->ID ) ) {
             $template_id = $raw->ID;
@@ -891,33 +889,61 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
             $template_id = (int) $raw;
         }
         if ( ! $template_id ) {
-            return $empty_response;
-        }  
+            return '<style>.profile_internal_features{display:none !important;}</style>';
+        }
 
+        // build optional responsive CSS
+        $style_block = '';
+        $wrapper_class = 'profile-internal-features';
+        $cols_web    = intval( $atts['columns_web'] );
+        $cols_mobile = intval( $atts['columns_mobile'] );
+        if ( $cols_web || $cols_mobile ) {
+            // unique classname per instance
+            $unique = 'pif-' . wp_unique_id();
+            $wrapper_class .= ' ' . $unique;
 
+            $rules = '';
+            if ( $cols_web > 0 ) {
+                $rules .= ".$unique{display:grid;grid-template-columns:repeat({$cols_web},1fr);gap:1rem;}\n";
+            }
+            if ( $cols_mobile > 0 ) {
+                $rules .= "@media(max-width:767px){.$unique{grid-template-columns:repeat({$cols_mobile},1fr);}}\n";
+            }
+            if ( $rules ) {
+                $style_block = "<style>\n{$rules}</style>\n";
+            }
+        }
 
-        $out = '<div class="profile-internal-features">';
+        // start output
+        $out = $style_block . "<div class=\"{$wrapper_class}\">";
+
+        // loop through posts and render
         foreach ( $post_ids as $id ) {
-            $post = get_post( $id );          // overwrite global
-            setup_postdata( $post );          // tell WP about it
-    //43689
+            $post = get_post( $id );
+            setup_postdata( $post );
             $out .= '<!-- rendering ID: ' . esc_html( $post->ID ) . ' -->';
             $out .= \Elementor\Plugin::instance()
                 ->frontend
                 ->get_builder_content_for_display( $template_id, $post->ID );
         }
         wp_reset_postdata();
-    
-        $post = $main_post;                   // restore global
+
+        // restore global
+        $post = $main_post;
+
         return $out . '</div>';
     }
-    
+
+    // actually register the shortcode
+    add_shortcode( 'display_single_profile_articles_featured_in', __NAMESPACE__ . '\\display_single_profile_articles_featured_in' );
+
 } else {
     write_log(
         "⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_articles_featured_in already declared",
         true
     );
 }
+
 
 
 
