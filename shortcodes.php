@@ -1,16 +1,8 @@
 <?php namespace smp_verified_profiles;
 use Elementor\Plugin;
 
-
-
-
-
 add_shortcode( 'contributor_network', __NAMESPACE__ . '\\contributor_network_shortcode' );
 add_shortcode( 'verified_profile', __NAMESPACE__ . '\\verified_profile_shortcode' );
-
-
-
-
 
 // Function to get the list of shortcodes for both registration and listing
 function get_verified_profile_shortcodes() {
@@ -26,7 +18,6 @@ function get_verified_profile_shortcodes() {
         'display_single_post_mentioned_in_article' => __NAMESPACE__ . '\\display_single_post_mentioned_in_article',
         'display_theme_footer_text_social_links' => __NAMESPACE__ . '\\display_theme_footer_text_social_links',
         'display_single_profile_validate_schema_button' => __NAMESPACE__ . '\\display_single_profile_validate_schema_button',
-        
 
         'display_profiles_featured_in_single_post' => __NAMESPACE__ . '\\display_profiles_featured_in_single_post',
         'display_profile_council_banner' => __NAMESPACE__ . '\\display_profile_council_banner',
@@ -38,7 +29,6 @@ function get_verified_profile_shortcodes() {
         'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles'
     ];
 }
-
 
 /*
 [get_profile_field field="title"]
@@ -87,24 +77,11 @@ function get_profile_field( $atts ) {
 // Function to register the shortcodes using the list
 function enable_snippet_verified_profile_shortcodes() {
     $shortcodes = get_verified_profile_shortcodes();
-    
+
     foreach ($shortcodes as $shortcode => $callback) {
         add_shortcode($shortcode, $callback);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_featured_in_single_post' ) ) {
@@ -117,10 +94,8 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_featured_in_single_p
     function display_profiles_featured_in_single_post() {
         global $post;
 
-        // Commented out ACF fetch for profile and listing IDs
-        // $profile_id = 14481;
-        // $listing_id = 15006;
-        // $listing_id = get_field( 'display_single_profile_articles_featured_in', 'option' );
+        // Use current profile ID
+        $profile_id = $post ? $post->ID : 0;
 
         // Add custom filter for modifying the ACF repeater query
         add_filter( 'posts_where', __NAMESPACE__ . '\\modify_posts_where_for_acf_repeater' );
@@ -166,20 +141,6 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_featured_in_single_p
     );
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\modify_posts_where_for_acf_repeater')) {
     /**
@@ -191,9 +152,9 @@ if (!function_exists(__NAMESPACE__ . '\\modify_posts_where_for_acf_repeater')) {
     function modify_posts_where_for_acf_repeater($where) {
         return str_replace("meta_key = 'profiles_$", "meta_key LIKE 'profiles_%", $where);
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\modify_posts_where_for_acf_repeater function is already declared", true);
-
+}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_profile_council_banner')) {
@@ -210,15 +171,15 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_council_banner')) {
             $is_council_member = get_field('council_member', 'user_' . $user_id);
 
             // Return the council member banner if applicable
-            if ($is_council_member === true) 
+            if ($is_council_member === true)
                 return '<style>.display_profile_council_banner i:before{content: "\f058";font-family: "Font Awesome 5 Free";font-weight: 900;color: red;font-size: 19px;margin-right: 10px;display: block;}</style><span class="display_profile_council_banner"><i class="fas"></i><span>Her Forward Leadership Council Member</span></span>';
         }
 
         return ''; // Return empty if not a council member
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_council_banner function is already declared", true);
-
+}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_single_profile_text_based_social_profiles')) {
@@ -269,15 +230,15 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_text_based_social
 
         $output = rtrim($output, ' / ');
 
-        if (!$profile_added) 
+        if (!$profile_added)
             return '<style>.profile_quick_online_profiles{display:none !important}</style>';
 
         $output .= '</span>';
         return $output;
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_text_based_social_profiles function is already declared", true);
-
+}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_contact')) {
@@ -286,14 +247,14 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_contact')) {
      *
      * @return string HTML of contact methods or CSS to hide element if none exist.
      */
-    function display_profile_quick_contact() {return;
+    function display_profile_quick_contact() {
         $output = '<span class="shortcode_display_profile_quick_contact">';
         $contact_added = false;
 
         if (get_field('contact_information_email_preferred')) {
             $email = get_field('contact_information_email_email');
             if (!empty($email)) {
-                $output .= "<a href='mailto:".esc_html($email) . '>'.esc_html($email).'</a> / ';
+                $output .= "<a href='mailto:" . esc_html($email) . "'>" . esc_html($email) . '</a> / ';
                 $contact_added = true;
             }
         }
@@ -331,20 +292,19 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_contact')) {
         }
 
         // Remove the last ' / ' from the output
-  // Only remove the exact trailing delimiter once
-if ( substr( $output, -3 ) === ' / ' ) {
-    $output = substr( $output, 0, -3 );
-}
+        if ( substr( $output, -3 ) === ' / ' ) {
+            $output = substr( $output, 0, -3 );
+        }
 
-        if (!$contact_added) 
+        if (!$contact_added)
             return '<style> .shortcode_display_profile_quick_contact{display:none !important}</style>';
 
         $output .= '</span>';
         return $output;
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_quick_contact function is already declared", true);
-
+}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
@@ -369,7 +329,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
             }
 
             // If no 'school' field has content, hide the element
-            if (!$has_school_content) 
+            if (!$has_school_content)
                 return '<style>.profile_education{display:none !important}</style>';
 
             // Reset the loop for output generation
@@ -402,14 +362,9 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
 
         return '<style> .profile_education{display:none !important}</style>';
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_education function is already declared", true);
-
-
-
-
-
-
+}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_single_profile_organizations_founded')) {
@@ -494,19 +449,10 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_organizations_fou
         $output .= '</div>';
         return $output;
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_organizations_founded function is already declared", true);
+}
 
-
-
-
-
-
-
-
-
-
-    
 // Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_article_written_by' ) ) {
     /**
@@ -524,24 +470,18 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_article_writte
             return $no_results;
         }
 
-                        // pull the template ID from your ACF “display_single_profile_press_releases” option
-//$template_id = get_field( 'display_single_profile_article_written_by', 'option' );
+        // fetch the entire Verified Profile options group once
+        $vp = get_field( 'verified_profile', 'option' );
 
-// fetch the entire Verified Profile options group once
-$vp = get_field( 'verified_profile', 'option' );
+        // now pull out whichever loop‐item you need, e.g.:
+        $template_id = 0;
 
-// now pull out whichever loop‐item you need, e.g.:
-$template_id = 0;
+        // for “Articles Written by Profile Entity”
+        if ( ! empty( $vp['loop_items']['display_single_profile_article_written_by'] ) ) {
+            $template_id = (int) $vp['loop_items']['display_single_profile_article_written_by'];
+        }
 
-// for “Articles Written by Profile Entity”
-if ( ! empty( $vp['loop_items']['display_single_profile_article_written_by'] ) ) {
-    $template_id = (int) $vp['loop_items']['display_single_profile_article_written_by'];
-}
-
-
-
-if (!$template_id ) return;
-
+        if (!$template_id ) return '';
 
         // Query the latest 5 posts by that contributor
         $args  = [
@@ -556,14 +496,13 @@ if (!$template_id ) return;
             return $no_results;
         }
 
-        // Render each post through your Elementor Loop Item (ID 12345)
+        // Render each post through your Elementor Loop Item
         $content  = '<div class="single_profile_article_written_by">';
         while ( $query->have_posts() ) {
             $query->the_post();
-            // This will apply the Loop Item template to the current global $post
             $content .= \Elementor\Plugin::instance()
                 ->frontend
-                ->get_builder_content_for_display( $template_id);
+                ->get_builder_content_for_display( $template_id );
         }
         wp_reset_postdata();
 
@@ -586,12 +525,6 @@ if (!$template_id ) return;
     );
 }
 
-
-
-
-
-
-
 // Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_press_releases' ) ) {
     /**
@@ -605,25 +538,16 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_press_releases
         $profile_id = $post->ID;
         $post_ids   = [];
 
-                // pull the template ID from your ACF “display_single_profile_press_releases” option
-//$template_id = get_field( 'display_single_profile_press_releases', 'option' );
+        // fetch the entire Verified Profile options group once
+        $vp = get_field( 'verified_profile', 'option' );
 
-// fetch the entire Verified Profile options group once
-$vp = get_field( 'verified_profile', 'option' );
+        // pull the template ID
+        $template_id = 0;
+        if ( ! empty( $vp['loop_items']['display_single_profile_press_releases'] ) ) {
+            $template_id = (int) $vp['loop_items']['display_single_profile_press_releases'];
+        }
 
-// pull the template ID from your ACF “display_single_profile_press_releases” option
-$template_id = 0;
-if ( ! empty( $vp['loop_items']['display_single_profile_press_releases'] ) ) {
-    $template_id = (int) $vp['loop_items']['display_single_profile_press_releases'];
-}
-
-
-if (!$template_id ) return;
-
-
-        // Commented out JetEngine listing ID fetch
-        // $listing_id = 15315;
-        // $listing_id = get_field('display_single_profile_press_releases', 'option');
+        if (!$template_id ) return '';
 
         // If no ACF rows and no Hexa PR username, hide this section
         if ( ! have_rows( 'additional_hexa_pr_wire_releases', $profile_id )
@@ -665,32 +589,23 @@ if (!$template_id ) return;
             return '<style>.single_profile_press_releases{display:none !important;}</style>';
         }
 
+        // Render each found press-release via Elementor Loop Item template
+        foreach ( $post_ids as $pr_id ) {
+            $pr_post = get_post( $pr_id );
+            if ( ! $pr_post ) {
+                continue;
+            }
 
-    // Render each found press-release via Elementor Loop Item template ID 43785
-foreach ( $post_ids as $pr_id ) {
-    $pr_post = get_post( $pr_id );
-    if ( ! $pr_post ) {
-        continue;
-    }
+            $backup_post = $post;          // 1) back up the main global
+            $post        = $pr_post;       // 2) overwrite global with this press-release
+            setup_postdata( $post );       // 3) let WP internals point at it
 
-    $backup_post = $post;          // 1) back up the main global
-    $post        = $pr_post;       // 2) overwrite global with this press-release
-    setup_postdata( $post );       // 3) let WP internals point at it
+            $content .= \Elementor\Plugin::instance()
+                ->frontend
+                ->get_builder_content_for_display( $template_id, $post->ID );
 
-
-// only render if it’s set
-
-    $content .= \Elementor\Plugin::instance()
-        ->frontend
-        ->get_builder_content_for_display( $template_id, $post->ID );
-
-
-
-    $post = $backup_post;          // 4) restore original global
-
-}
-
-wp_reset_postdata();
+            $post = $backup_post;          // 4) restore original global
+        }
 
         wp_reset_postdata();
 
@@ -704,56 +619,49 @@ wp_reset_postdata();
     );
 }
 
-
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_single_profile_validate_schema_button')) {
-/**
-* Displays a button to validate the schema of the current profile page.
-*
-* @return string HTML of the schema validation button.
-*/
-function display_single_profile_validate_schema_button() {
-return '<a target=_blank href="https://validator.schema.org/#url=' . get_the_permalink() . '">Validate schema of ' . get_the_title() . '<i aria-hidden="true" class="fas fa-external-link-square-alt"></i></a>';
+    /**
+    * Displays a button to validate the schema of the current profile page.
+    *
+    * @return string HTML of the schema validation button.
+    */
+    function display_single_profile_validate_schema_button() {
+        return '<a target=_blank href="https://validator.schema.org/#url=' . get_the_permalink() . '">Validate schema of ' . get_the_title() . '<i aria-hidden="true" class="fas fa-external-link-square-alt"></i></a>';
+    }
+} else {
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_validate_schema_button function is already declared", true);
 }
-} else 
-write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_single_profile_validate_schema_button function is already declared", true);
-
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_profile_location_born')) {
-/**
-* Displays the place of birth of the profile.
-*
-* @return string HTML of the place of birth or CSS to hide element if none exist.
-*/
-function display_profile_location_born() {
-$location_born = get_field('personal_location_born_location_born');
-$location_born_wikipedia_url = get_field('personal_location_born_location_born_wikipedia_url');
+    /**
+    * Displays the place of birth of the profile.
+    *
+    * @return string HTML of the place of birth or CSS to hide element if none exist.
+    */
+    function display_profile_location_born() {
+        $location_born = get_field('personal_location_born_location_born');
+        $location_born_wikipedia_url = get_field('personal_location_born_location_born_wikipedia_url');
 
-if (empty($location_born)) {
-return '<style> .display_profile_location_born{display:none !important}</style>';
-}
+        if (empty($location_born)) {
+            return '<style> .display_profile_location_born{display:none !important}</style>';
+        }
 
-$output = '<span class="shortcode_display_profile_location_born">';
+        $output = '<span class="shortcode_display_profile_location_born">';
 
-if (!empty($location_born_wikipedia_url)) {
-$output .= '<a href="' . esc_url($location_born_wikipedia_url) . '" target="_blank">' . esc_html($location_born) . '</a>';
+        if (!empty($location_born_wikipedia_url)) {
+            $output .= '<a href="' . esc_url($location_born_wikipedia_url) . '" target="_blank">' . esc_html($location_born) . '</a>';
+        } else {
+            $output .= esc_html($location_born);
+        }
+
+        $output .= '</span>';
+        return $output;
+    }
 } else {
-$output .= esc_html($location_born);
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_location_born function is already declared", true);
 }
-
-$output .= '</span>';
-return $output;
-}
-} else 
-write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_location_born function is already declared", true);
-
-
-
-
-
-
-
 
 // Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_profile_current_residence' ) ) {
@@ -776,7 +684,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profile_current_residence' ) 
                      . esc_html( $current_residence )
                      . '</a>';
         } else {
-            $output .= esc_html( $current_location );
+            $output .= esc_html( $current_residence );
         }
         $output .= '</span>';
 
@@ -789,60 +697,44 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profile_current_residence' ) 
     );
 }
 
-
-
-
-
-
-
-
-
-
-
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\get_profile_notable_mentions')) {
-/**
-* Displays notable recognitions for the profile using a repeater field.
-*
-* @return string HTML of notable recognitions or CSS to hide element if none exist.
-*/
-function get_profile_notable_mentions() {
-if (!have_rows('notable_recognitions')) {
-return "<style>.profile_notable_recognitions{display:none !important}</style>";
-}
+    /**
+    * Displays notable recognitions for the profile using a repeater field.
+    *
+    * @return string HTML of notable recognitions or CSS to hide element if none exist.
+    */
+    function get_profile_notable_mentions() {
+        if (!have_rows('notable_recognitions')) {
+            return "<style>.profile_notable_recognitions{display:none !important}</style>";
+        }
 
-$output = '<div class="container_notable_recognitions">';
-$total_rows = count(get_field('notable_recognitions'));
-$current_row = 0;
+        $output = '<div class="container_notable_recognitions">';
+        $total_rows = count(get_field('notable_recognitions'));
+        $current_row = 0;
 
-while (have_rows('notable_recognitions')) {
-the_row();
-$current_row++;
-$title = get_sub_field('title');
-$link = get_sub_field('link');
-$source = get_sub_field('source');
+        while (have_rows('notable_recognitions')) {
+            the_row();
+            $current_row++;
+            $title = get_sub_field('title');
+            $link = get_sub_field('link');
+            $source = get_sub_field('source');
 
-if (empty($title) && empty($source)) continue;
+            if (empty($title) && empty($source)) continue;
 
-$output .= '<div><a href="' . esc_url($link) . '" target="_blank"><span class="source">' . esc_html($source) . '</span> - <span class="title">' . esc_html($title) . '</span><i aria-hidden="true" class="fas fa-external-link-square-alt"></i></a></div>';
+            $output .= '<div><a href="' . esc_url($link) . '" target="_blank"><span class="source">' . esc_html($source) . '</span> - <span class="title">' . esc_html($title) . '</span><i aria-hidden="true" class="fas fa-external-link-square-alt"></i></a></div>';
 
-if ($current_row < $total_rows) {
-    $output .= '<hr>';
-}
-}
+            if ($current_row < $total_rows) {
+                $output .= '<hr>';
+            }
+        }
 
-$output .= '</div>';
+        $output .= '</div>';
         return $output;
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\get_profile_notable_mentions function is already declared", true);
-
-
-
-
-
-
-
+}
 
 // Ensure function existence before declaring
 if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featured_in' ) ) {
@@ -943,15 +835,6 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
     );
 }
 
-
-
-
-
-
-
-
-    
-
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
     /**
@@ -998,11 +881,11 @@ if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
         }
 
         $content = '<div class="display_home_profiles">';
-        
+
         // Settings for JetEngine Listing Grid
         $settings = [
             'listing_id' => $listing_id,
-    'lisitng_id'  => $listing_id,
+            'lisitng_id'  => $listing_id,
             'columns' => 7,
             'lazy_load' => false,
             'columns_tablet' => 4,
@@ -1028,13 +911,9 @@ if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
         $content .= '</div>';
         return $content;
     }
-} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
-
-
-
-
-
-
+} else {
+    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
+}
 
 if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_article' ) ) {
     /**
@@ -1049,8 +928,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
      * @return string HTML or inline style to hide container.
      */
     function display_single_post_mentioned_in_article( $atts = [] ) {
-       
- 
+
         $content = "";
         $empty_response = '<style>.display_single_post_mentioned_in_article{display:none !important;}</style>';
 
@@ -1070,10 +948,8 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
         // 3) Fetch the Verified Profile options group
         $vp = get_field( 'verified_profile', 'option' );
         if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
-                        return $empty_response;
+            return $empty_response;
         }
-    
-        
 
         // 4) Extract and normalize the Elementor template ID
         $raw = $vp['loop_items']['display_single_post_mentioned_in_article'] ?? null;
@@ -1086,14 +962,12 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
         }
         if ( ! $template_id ) {
             return $empty_response;
-        }  
+        }
 
         // 5) Gather profile IDs from the 'profiles' repeater
         $profile_ids = [];
 
-      //  return "1111".get_field("profiles", $post->ID );
         if ( have_rows( 'profiles', $post->ID ) ) {
-         //   return "im here!!!rows yes";
             while ( have_rows( 'profiles', $post->ID ) ) {
                 the_row();
                 $pid = get_sub_field( 'profile' );
@@ -1157,8 +1031,6 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_arti
     }
 }
 
-
-
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')) {
     /**
@@ -1166,7 +1038,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')
      *
      * @return string HTML of the external profiles or empty string if none exist.
      */
-    function display_website_footer_external_profiles() {
+    function display_theme_footer_text_social_links() {
         $fields = [
             'muckrack_url' => 'MuckRack',
             'crunchbase_url' => 'CrunchBase',
@@ -1192,10 +1064,9 @@ if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')
 
         return $output;
     }
-} else 
+} else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_theme_footer_text_social_links function is already declared", true);
-
-
+}
 
 function find_posts_with_profile($profile_id) {
     // Add a filter to modify the WHERE clause of the SQL query
@@ -1239,18 +1110,10 @@ function find_posts_with_profile($profile_id) {
 
     // Remove the filter to avoid affecting other queries
     remove_filter('posts_where', __NAMESPACE__.'\customize_posts_where');
- 
+
     // Return the array of matching post IDs
     return $matching_post_ids;
 }
-
-
-
-
-
-
-
-
 
 /**
  * Shortcode: [contributor_network field="program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
@@ -1334,7 +1197,6 @@ function contributor_network_shortcode( $atts ) {
     return esc_html( $val );
 }
 
-
 /**
  * Shortcode: [verified_profile field="program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
  *
@@ -1356,97 +1218,73 @@ function contributor_network_shortcode( $atts ) {
  *   [verified_profile field="pages.verified_profiles_apply"]
  */
 function verified_profile_shortcode( $atts ) {
-   // write_log( 'verified_profile_shortcode raw $atts: ' . var_export( $atts, true ), true );
-
     $atts  = shortcode_atts([
         'field' => '',
         'size'  => 'thumbnail',
     ], $atts, 'verified_profile');
-    //write_log( 'verified_profile_shortcode parsed $atts: ' . var_export( $atts, true ), true );
 
     $field = sanitize_text_field( $atts['field'] );
     $size  = sanitize_key(       $atts['size'] );
-    //write_log( "verified_profile_shortcode sanitized field={$field}, size={$size}", true );
     if ( ! $field ) {
-    //   write_log( 'verified_profile_shortcode: no field, returning empty', true );
         return '';
     }
 
     $group = get_field( 'verified_profile', 'option' );
-   // write_log( 'verified_profile group loaded: ' . var_export( $group, true ), true );
     if ( ! is_array( $group ) ) {
-      //  write_log( 'verified_profile: group not array, returning empty', true );
         return '';
     }
 
     $parts = explode( '.', $field, 2 );
-   // write_log( 'verified_profile parts: ' . var_export( $parts, true ), true );
 
     // top-level
     if ( count( $parts ) === 1 ) {
         $key = $parts[0];
-      //  write_log( "verified_profile handling top-level key={$key}", true );
         if ( empty( $group[ $key ] ) ) {
-         //   write_log( "verified_profile key {$key} empty, returning empty", true );
             return '';
         }
         if ( $key === 'logo' ) {
             $url = wp_get_attachment_image_url( $group['logo'], $size );
-           // write_log( "verified_profile logo URL={$url}", true );
             return $url ?: '';
         }
-      //  write_log( "verified_profile returning {$group[$key]}", true );
         return esc_html( $group[ $key ] );
-    } 
+    }
 
     // nested
     list( $parent, $child ) = $parts;
-   // write_log( "verified_profile nested parent={$parent}, child={$child}", true );
 
     // new key?
     if ( isset( $group[ $parent ][ $child ] ) && $group[ $parent ][ $child ] !== '' ) {
         $val = $group[ $parent ][ $child ];
-       // write_log( "verified_profile found {$parent}.{$child} => " . var_export( $val, true ), true );
     }
     // fallback old page_ prefix
     elseif ( $parent === 'pages' && isset( $group[ $parent ]['page_' . $child] ) && $group[ $parent ]['page_' . $child ] !== '' ) {
         $val = $group[ $parent ]['page_' . $child];
-       // write_log( "verified_profile fallback pages.page_{$child} => " . var_export( $val, true ), true );
     }
     else {
-       // write_log( "verified_profile nested {$parent}.{$child} empty, returning empty", true );
         return '';
     }
 
     // pages → return permalink
     if ( $parent === 'pages' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-       // write_log( "verified_profile returning permalink for page ID={$post_id}", true );
         return get_permalink( $post_id );
     }
 
     // loop_items → return ID
     if ( $parent === 'loop_items' ) {
         $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-      //  write_log( "verified_profile returning loop_items ID={$post_id}", true );
         return (string) $post_id;
     }
 
-    write_log( "verified_profile returning fallback " . esc_html( $val ), true );
     return esc_html( $val );
 }
-
-
-
-
-
 
 // -----------------------------------------------------------------------------
 // posts_where modifier for ACF repeater wildcard
 // -----------------------------------------------------------------------------
 function modify_posts_where_for_acf_repeater_2( $where, $query ) {
     return str_replace(
-        "meta_key = 'profiles_$_profile'",
+        'meta_key = \'profiles_$_profile\'',
         "meta_key LIKE 'profiles\\_%\\_profile'",
         $where
     );
