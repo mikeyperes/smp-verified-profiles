@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 5.8.5
+Version: 5.9
 
 
 Text Domain: smp-verified-profiles
@@ -21,7 +21,7 @@ defined('ABSPATH') or die('No script kiddies please!');
 
 // Generic functions import 
 include_once("generic-functions.php");
- 
+  
 // Define constants
 class Config {
     public static $plugin_name = "Scale My Publication - Verified Profiles";
