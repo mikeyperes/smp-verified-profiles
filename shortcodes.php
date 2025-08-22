@@ -1067,53 +1067,41 @@ if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')
 } else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_theme_footer_text_social_links function is already declared", true);
 }
+// define once at top level
+function customize_posts_where($where) {
+    $where = str_replace("meta_key = 'profiles_$", "meta_key LIKE 'profiles_%", $where);
+    return $where;
+}
+
 
 function find_posts_with_profile($profile_id) {
-    // Add a filter to modify the WHERE clause of the SQL query
-    add_filter('posts_where', __NAMESPACE__.'\customize_posts_where');
+    add_filter('posts_where', __NAMESPACE__.'\\customize_posts_where');
 
-    // Custom function to modify the WHERE clause
-    function customize_posts_where( $where ) {
-        $where = str_replace("meta_key = 'profiles_$", "meta_key LIKE 'profiles_%", $where);
-        return $where;
-    }
-
-    // Set up a custom query with your specific parameters
-    $args = array(
-        'post_type' => 'post', // or your specific custom post type
+    $args = [
+        'post_type'      => 'post',
         'posts_per_page' => -1,
-        'meta_query' => array(
-            array(
-                'key' => 'profiles_$_profile', // Adjust based on your ACF field name
-                'value' => $profile_id, // The profile ID you're searching for
-                'compare' => 'LIKE'
-            )
-        )
-    );
+        'meta_query'     => [[
+            'key'     => 'profiles_$_profile',
+            'value'   => $profile_id,
+            'compare' => 'LIKE'
+        ]]
+    ];
 
-    // Execute the custom query
     $the_query = new \WP_Query($args);
+    $matching_post_ids = [];
 
-    // Array to store the IDs of posts that match the criteria
-    $matching_post_ids = array();
-
-    // Check if there are posts that match the criteria
     if ($the_query->have_posts()) {
         while ($the_query->have_posts()) {
             $the_query->the_post();
-            $matching_post_ids[] = get_the_ID(); // Store the post ID
+            $matching_post_ids[] = get_the_ID();
         }
     }
-
-    // Clean up after the custom query
     wp_reset_postdata();
 
-    // Remove the filter to avoid affecting other queries
-    remove_filter('posts_where', __NAMESPACE__.'\customize_posts_where');
-
-    // Return the array of matching post IDs
+    remove_filter('posts_where', __NAMESPACE__.'\\customize_posts_where');
     return $matching_post_ids;
 }
+
 
 /**
  * Shortcode: [contributor_network field="program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
