@@ -216,54 +216,6 @@ if (!function_exists(__NAMESPACE__ . '\\is_contributor')) {
 
 
 
-if (!function_exists(__NAMESPACE__ . '\\check_plugin_status')) {
-    function check_plugin_status($plugin_slug) {
-        $is_installed = file_exists(WP_PLUGIN_DIR . '/' . $plugin_slug);
-        $is_active = $is_installed && is_plugin_active($plugin_slug);
-
-        // Initialize auto-update as not enabled since it's meaningless if not installed
-        $is_auto_update_enabled = false;
-
-        if ($is_installed) { 
-            // Check global auto-update setting first
-            $global_auto_update_enabled = apply_filters('auto_update_plugin', false, (object) array('plugin' => $plugin_slug));
- 
-            // If globally enabled, set auto-update to true
-            if ($global_auto_update_enabled) {
-                $is_auto_update_enabled = true;
-            } else {
-                // Get the current list of plugins with auto-updates enabled
-                $auto_update_plugins = get_option('auto_update_plugins', []);
-
-                // Check if this specific plugin is in the list
-                $is_auto_update_enabled = in_array($plugin_slug, $auto_update_plugins);
-
-                // If not in the auto-update plugins list, apply the global filter
-                if (!$is_auto_update_enabled) {
-                    $update_plugins = get_site_transient('update_plugins');
-
-                    // Check the transient data for this specific plugin
-                    if (isset($update_plugins->no_update[$plugin_slug])) {
-                        $plugin_data = $update_plugins->no_update[$plugin_slug];
-                    } elseif (isset($update_plugins->response[$plugin_slug])) {
-                        $plugin_data = $update_plugins->response[$plugin_slug];
-                    }
-
-                    // Apply the auto_update_plugin filter with both arguments
-                    if (isset($plugin_data)) {
-                        $is_auto_update_enabled = apply_filters('auto_update_plugin', false, $plugin_data);
-                    }
-                }
-            }
-        }
-
-        // Log the final auto-update status for debugging
-        write_log("Plugin Slug: $plugin_slug - Installed: " . ($is_installed ? 'Yes' : 'No') . " - Auto-Update Enabled: " . ($is_auto_update_enabled ? 'Yes' : 'No'),false);
-
-        return [$is_installed, $is_active, $is_auto_update_enabled];
-    }
-} else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\check_plugin_status function is already declared", true);
-
 
 if (!function_exists(__NAMESPACE__ . '\\is_plugin_auto_update_enabled')) {
     function is_plugin_auto_update_enabled($plugin_id) {

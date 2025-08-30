@@ -5,7 +5,7 @@ Description: Verified Profiles Functionality
 Author: Michael Peres
 Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
 Description: Verified Profile integration for Scale My Publication systems.
-Version: 6.0
+Version: 6.1
 
 
 Text Domain: smp-verified-profiles
@@ -18,6 +18,97 @@ namespace smp_verified_profiles;
  
 // Ensure this file is being included by a parent file
 defined('ABSPATH') or die('No script kiddies please!');
+
+
+
+
+
+
+/**
+ * Check that each “OR” group of plugins is satisfied (“AND” across groups).
+ *
+ * @param array $groups Array of plugin-file arrays.
+ * @return array [bool $ok, string $error_message]
+ */
+function check_required_plugins( array $groups ): array {
+    // bring in WP’s plugin helpers if needed
+    if ( ! function_exists( 'check_plugin_status' ) ) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+
+    $missing = [];
+
+    foreach ( $groups as $group ) {
+        $group_ok = false;
+        foreach ( $group as $plugin_file ) {
+            if ( function_exists( 'check_plugin_status' ) ) {
+                list( , $active ) = check_plugin_status( $plugin_file );
+            } else {
+                $active = is_plugin_active( $plugin_file );
+            }
+            if ( $active ) {
+                $group_ok = true;
+                break;
+            }
+        }
+        if ( ! $group_ok ) {
+            $missing[] = $group;
+        }
+    }
+
+    if ( empty( $missing ) ) {
+        return [ true, '' ];
+    }
+
+    // build a human-readable list of the missing groups
+    $labels = array_map( function( $group ) {
+        return implode( ' or ', $group );
+    }, $missing );
+
+    $error = 'requires ' . implode( ', ', $labels ) . '.';
+
+    return [ false, $error ];
+}
+
+
+
+
+
+
+
+ // require ACF Pro OR ACF Pro Temp
+ $required_plugins = [
+    ["hws-base-tools/initialization.php"],
+    [
+        'advanced-custom-fields-pro/acf.php',
+ 'advanced-custom-fields-pro-temp/acf.php'
+     
+    ]
+   /// [  ]
+
+];
+
+
+// Usage in your plugin bootstrap:
+list( $ok, $error ) = check_required_plugins( $required_plugins );
+if ( ! $ok ) {
+    // show notice on the dashboard
+    add_action( 'admin_notices', function() use ( $error ) {
+        echo '<div class="notice notice-error"><p><strong>'
+           . esc_html( Config::$plugin_name )
+           . '</strong> ' . esc_html( $error ) . '</p></div>';
+    } );
+
+    return;
+}
+
+
+
+
+
+
+
+
 
 // Generic functions import 
 include_once("generic-functions.php");
@@ -124,31 +215,7 @@ add_action( 'admin_init', function() {
 
 
 
-// Array of plugins to check
-$plugins_to_check = [
-    'advanced-custom-fields-pro/acf.php',
-    'advanced-custom-fields-pro-temp/acf.php'
-];
 
-// Initialize flags for active status
-$acf_active = false;
-
-// Check if any of the plugins is active
-foreach ($plugins_to_check as $plugin) {
-    list($installed, $active) = check_plugin_status($plugin);
-    if ($active) {
-        $acf_active = true;
-        break; // Stop checking once we find an active one
-    }
-}
-
-// If none of the ACF plugins are active, display a warning and prevent the plugin from running
-if (!$acf_active) {
-    add_action('admin_notices', function() {
-        echo '<div class="notice notice-error"><p><strong>'.\smp_verified_profiles\Config::$plugin_name.'</strong> The Advanced Custom Fields (ACF) or Advanced Custom Fields Pro (ACF Pro) plugin is required and must be active to use this plugin. Please activate ACF or ACF Pro.</p></div>';
-    });
-    return; // Stop further execution of the plugin
-}
 
 
 include_once("activate-snippets.php");
