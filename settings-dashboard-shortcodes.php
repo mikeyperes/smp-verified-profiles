@@ -241,9 +241,10 @@ function smp_vp_discover_shortcodes() {
 
         foreach ( array_keys( $provided ) as $tag ) {
             if ( ! isset( $items[ $tag ] ) ) {
-                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [] ];
+                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [], 'callback' => '' ];
             }
             $items[ $tag ]['sources'][] = 'provider';
+            $items[ $tag ]['callback']  = $provided[ $tag ];
         }
     }
 
@@ -282,20 +283,44 @@ function smp_vp_scan_php_shortcodes() {
             continue;
         }
 
-        if ( ! preg_match_all( '/add_shortcode\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,/i', $code, $matches ) ) {
+        if ( ! preg_match_all( '/add_shortcode\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*([^)]+)\)/i', $code, $matches, PREG_SET_ORDER ) ) {
             continue;
         }
 
         $relative = ltrim( str_replace( $root, '', $path ), DIRECTORY_SEPARATOR );
-        foreach ( $matches[1] as $tag ) {
+        foreach ( $matches as $match ) {
+            $tag = $match[1];
             if ( ! isset( $items[ $tag ] ) ) {
-                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [] ];
+                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [], 'callback' => '' ];
             }
             $items[ $tag ]['sources'][] = $relative;
+
+            $callback = smp_vp_parse_shortcode_callback_expression( $match[2] );
+            if ( $callback !== '' ) {
+                $items[ $tag ]['callback'] = $callback;
+            }
         }
     }
 
     return $items;
+}
+
+/**
+ * Parse common shortcode callback expressions from source.
+ *
+ * @param string $expression Callback expression.
+ * @return string
+ */
+function smp_vp_parse_shortcode_callback_expression( $expression ) {
+    if ( preg_match( '/__NAMESPACE__\s*\.\s*[\'"]\\\\\\\\?([a-zA-Z0-9_]+)[\'"]/', $expression, $matches ) ) {
+        return __NAMESPACE__ . '\\' . $matches[1];
+    }
+
+    if ( preg_match( '/[\'"]([a-zA-Z0-9_\\\\]+)[\'"]/', $expression, $matches ) ) {
+        return $matches[1];
+    }
+
+    return '';
 }
 
 /**
@@ -619,8 +644,18 @@ function smp_vp_render_shortcode_preview( $shortcode, $profile_id = 0 ) {
     $previous_post = $post;
     $raw           = '';
     $buffer_level  = ob_get_level();
+    $tag           = smp_vp_extract_shortcode_tag( $shortcode );
+    $temp_added    = false;
 
     try {
+        if ( $tag && ! shortcode_exists( $tag ) ) {
+            $callback = smp_vp_get_discovered_shortcode_callback( $tag );
+            if ( $callback && is_callable( $callback ) ) {
+                add_shortcode( $tag, $callback );
+                $temp_added = true;
+            }
+        }
+
         if ( $profile_id ) {
             $profile_post = get_post( $profile_id );
             if ( $profile_post ) {
@@ -640,6 +675,10 @@ function smp_vp_render_shortcode_preview( $shortcode, $profile_id = 0 ) {
         $raw = 'Error rendering shortcode: ' . $e->getMessage();
     }
 
+    if ( $temp_added ) {
+        remove_shortcode( $tag );
+    }
+
     wp_reset_postdata();
     $post = $previous_post;
     $GLOBALS['post'] = $previous_post;
@@ -648,6 +687,36 @@ function smp_vp_render_shortcode_preview( $shortcode, $profile_id = 0 ) {
         'raw'     => $raw,
         'summary' => smp_vp_summarize_shortcode_output( $raw, $shortcode ),
     ];
+}
+
+/**
+ * Extract the shortcode tag from a shortcode string.
+ *
+ * @param string $shortcode Shortcode string.
+ * @return string
+ */
+function smp_vp_extract_shortcode_tag( $shortcode ) {
+    if ( preg_match( '/^\s*\[([a-zA-Z0-9_-]+)/', $shortcode, $matches ) ) {
+        return $matches[1];
+    }
+
+    return '';
+}
+
+/**
+ * Get a discovered shortcode callback.
+ *
+ * @param string $tag Shortcode tag.
+ * @return string
+ */
+function smp_vp_get_discovered_shortcode_callback( $tag ) {
+    foreach ( smp_vp_discover_shortcodes() as $shortcode ) {
+        if ( $shortcode['tag'] === $tag ) {
+            return isset( $shortcode['callback'] ) ? (string) $shortcode['callback'] : '';
+        }
+    }
+
+    return '';
 }
 
 /**
