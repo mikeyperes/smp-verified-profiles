@@ -11,7 +11,7 @@
  * Plugin Info is displayed at the bottom of the Overview tab.
  * 
  * @package smp_verified_profiles
- * @since 6.3
+ * @since 6.4
  */
 
 namespace smp_verified_profiles;
@@ -51,6 +51,7 @@ function display_wp_admin_settings_page() {
         'system-checks' => '🔍 System Checks',
         'plugins'       => '🔌 Plugin Checks',
         'snippets'      => '✂️ Snippets',
+        'shortcodes'    => 'Shortcodes',
     ];
     
     // Output dashboard styles from components file
@@ -116,6 +117,13 @@ function display_wp_admin_settings_page() {
                         // Display snippets with toggles
                         if ( function_exists( __NAMESPACE__ . '\\display_settings_snippets' ) ) {
                             display_settings_snippets();
+                        }
+                        break;
+
+                    case 'shortcodes':
+                        // Display shortcode discovery and live examples
+                        if ( function_exists( __NAMESPACE__ . '\\display_settings_shortcodes' ) ) {
+                            display_settings_shortcodes();
                         }
                         break;
                 }

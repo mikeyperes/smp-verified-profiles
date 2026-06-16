@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.3
+ * Version: 6.4
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -402,6 +402,7 @@ add_action( 'init', function() {
             include_once __DIR__ . '/settings-dashboard-components.php';
             include_once __DIR__ . '/settings-dashboard-overview.php';
             include_once __DIR__ . '/settings-dashboard-snippets.php';
+            include_once __DIR__ . '/settings-dashboard-shortcodes.php';
             include_once __DIR__ . '/settings-dashboard.php';
             
             // Activate admin-only snippets

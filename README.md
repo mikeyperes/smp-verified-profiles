@@ -2,7 +2,7 @@
 
 A comprehensive WordPress plugin for managing verified profiles on Scale My Publication systems. This plugin provides complete profile verification, management, and display functionality with ACF (Advanced Custom Fields) integration.
 
-![Version](https://img.shields.io/badge/version-6.3-blue.svg)
+![Version](https://img.shields.io/badge/version-6.4-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
@@ -462,7 +462,12 @@ Logs appear in `/wp-content/debug.log`
 
 ## Changelog
 
-### Version 6.3 (Current)
+### Version 6.4 (Current)
+
+- **Added** Shortcodes dashboard tab with source scanning, descriptions, registration status, and live examples
+- **Added** Verified profile selector that renders field/shortcode/value rows for the selected profile
+
+### Version 6.3
 - **Removed** hws-base-tools dependency - plugin is now fully self-contained
 - **Added** Centralized Config class for all plugin settings
 - **Added** Self-contained GitHub_Updater class with public API

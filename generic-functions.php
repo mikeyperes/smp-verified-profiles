@@ -6,7 +6,7 @@
  * Self-contained - no dependency on hws-base-tools.
  * 
  * @package smp_verified_profiles
- * @version 6.3
+ * @version 6.4
  */
 
 namespace smp_verified_profiles;
