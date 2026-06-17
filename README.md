@@ -462,7 +462,11 @@ Logs appear in `/wp-content/debug.log`
 
 ## Changelog
 
-### Version 6.4 (Current)
+### Version 6.5.1 (Current)
+
+- **Removed** legacy Staff Writer and MuckRack user ACF field declarations so hws-base-tools is the sole owner of those fields.
+
+### Version 6.4
 
 - **Added** Shortcodes dashboard tab with source scanning, descriptions, registration status, and live examples
 - **Added** Verified profile selector that renders field/shortcode/value rows for the selected profile
