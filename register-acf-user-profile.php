@@ -1,5 +1,19 @@
 <?php namespace smp_verified_profiles;
 
+/**
+ * Deprecated in favor of hws-base-tools as the sole user.php social ACF source.
+ * These group definitions remain below for history, but must never register.
+ */
+function is_deprecated_user_social_acf_group( $group_key )
+{
+    $deprecated_groups = array(
+        'group_590d64c31db0a' => 'Profile',
+        'group_6419bc02b6e93' => 'User/Author',
+    );
+
+    return isset( $deprecated_groups[ $group_key ] );
+}
+
 
 function register_user_custom_fields()
 {
@@ -11,7 +25,7 @@ function register_user_custom_fields()
 	
 	/// MOVE TO HWS 
 
-
+    if ( ! is_deprecated_user_social_acf_group( 'group_590d64c31db0a' ) ) {
     acf_add_local_field_group( array(
 		'key' => 'group_590d64c31db0a',
 		'title' => 'Profile',
@@ -421,6 +435,7 @@ function register_user_custom_fields()
 		'description' => '',
 		'show_in_rest' => 0,
 	) );
+    }
 	
 
     // MOVE TO HWS PLUGIN END 
@@ -455,6 +470,7 @@ function register_user_custom_fields()
 
 
 
+	if ( ! is_deprecated_user_social_acf_group( 'group_6419bc02b6e93' ) ) {
 	acf_add_local_field_group( array(
 	'key' => 'group_6419bc02b6e93',
 	'title' => 'User/Author',
@@ -983,7 +999,8 @@ function register_user_custom_fields()
 	'active' => true,
 	'description' => '',
 	'show_in_rest' => 0,
-) );
+	) );
+	}
 
 
 
