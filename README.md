@@ -462,7 +462,10 @@ Logs appear in `/wp-content/debug.log`
 
 ## Changelog
 
-### Version 6.5.1 (Current)
+### Version 6.5.2 (Current)
+- Added the active Personal Education repeater to the verified profile ACF group for schema-ready school, degree, date, URL, Wikipedia, SameAs, and description fields.
+
+### Version 6.5.1
 
 - **Removed** legacy Staff Writer and MuckRack user ACF field declarations so hws-base-tools is the sole owner of those fields.
 
