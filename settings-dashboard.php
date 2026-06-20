@@ -37,6 +37,109 @@ function add_wp_admin_settings_page() {
 add_action( 'admin_menu', __NAMESPACE__ . '\\add_wp_admin_settings_page' );
 
 /**
+ * Dashboard tab definitions.
+ *
+ * @return array<string,string>
+ */
+function smp_vp_dashboard_tabs() {
+    return apply_filters( 'smp_vp_dashboard_tabs', [
+        'overview'      => 'Overview',
+        'system-checks' => 'System Checks',
+        'plugins'       => 'Plugin Checks',
+        'snippets'      => 'Snippets',
+        'shortcodes'    => 'Shortcodes',
+    ] );
+}
+
+/**
+ * Render a single dashboard tab.
+ */
+function smp_vp_render_dashboard_tab( $tab_id ) {
+    $tab_id   = sanitize_key( (string) $tab_id );
+    $rendered = apply_filters( 'smp_vp_render_dashboard_tab', false, $tab_id );
+
+    if ( $rendered ) {
+        return;
+    }
+
+    switch ( $tab_id ) {
+        case 'overview':
+            if ( function_exists( __NAMESPACE__ . '\\display_settings_overview' ) ) {
+                display_settings_overview();
+            }
+            if ( function_exists( __NAMESPACE__ . '\\display_plugin_info' ) ) {
+                display_plugin_info();
+            }
+            break;
+
+        case 'system-checks':
+            if ( function_exists( __NAMESPACE__ . '\\display_settings_system_checks' ) ) {
+                display_settings_system_checks();
+            }
+            break;
+
+        case 'plugins':
+            if ( function_exists( __NAMESPACE__ . '\\display_settings_check_plugins' ) ) {
+                display_settings_check_plugins();
+            }
+            break;
+
+        case 'snippets':
+            if ( function_exists( __NAMESPACE__ . '\\display_settings_snippets' ) ) {
+                display_settings_snippets();
+            }
+            break;
+
+        case 'shortcodes':
+            if ( function_exists( __NAMESPACE__ . '\\display_settings_shortcodes' ) ) {
+                display_settings_shortcodes();
+            }
+            break;
+
+        default:
+            echo '<div class="notice notice-warning"><p>' . esc_html__( 'Unknown dashboard tab.', 'smp_verified_profiles' ) . '</p></div>';
+            break;
+    }
+}
+
+/**
+ * Build the AJAX payload expected by Hexa's host tab renderer.
+ *
+ * @return array<string,string>
+ */
+function smp_vp_tab_fragment( $tab_id ) {
+    $tabs   = smp_vp_dashboard_tabs();
+    $tab_id = sanitize_key( (string) $tab_id );
+
+    if ( '' === $tab_id || ! array_key_exists( $tab_id, $tabs ) ) {
+        $keys   = array_keys( $tabs );
+        $tab_id = isset( $keys[0] ) ? (string) $keys[0] : 'overview';
+    }
+
+    ob_start();
+    smp_vp_render_dashboard_tab( $tab_id );
+    $html = (string) ob_get_clean();
+
+    return [
+        'tab'   => $tab_id,
+        'label' => smp_vp_tab_label( $tabs[ $tab_id ] ?? $tab_id ),
+        'html'  => $html,
+    ];
+}
+
+function smp_vp_tab_label( $tab ) {
+    if ( is_array( $tab ) && isset( $tab['label'] ) ) {
+        return (string) $tab['label'];
+    }
+
+    if ( is_object( $tab ) && isset( $tab->label ) ) {
+        return (string) $tab->label;
+    }
+
+    return (string) $tab;
+}
+
+/**
  * Display the main settings page with tabs
  */
 function display_wp_admin_settings_page() {
@@ -44,15 +147,12 @@ function display_wp_admin_settings_page() {
     if ( ob_get_level() == 0 ) {
         ob_start();
     }
-    
-    // Define available tabs
-    $tabs = [
-        'overview'      => '📊 Overview',
-        'system-checks' => '🔍 System Checks',
-        'plugins'       => '🔌 Plugin Checks',
-        'snippets'      => '✂️ Snippets',
-        'shortcodes'    => 'Shortcodes',
-    ];
+    if ( ! current_user_can( Config::$settings_page_capability ) ) {
+        wp_die( esc_html__( 'You do not have permission to access this page.', 'smp_verified_profiles' ) );
+    }
+
+    $tabs   = smp_vp_dashboard_tabs();
+    $active = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
     
     // Output dashboard styles from components file
     if ( function_exists( __NAMESPACE__ . '\\output_dashboard_styles' ) ) {
@@ -63,158 +163,71 @@ function display_wp_admin_settings_page() {
     <div class="wrap" id="smp-dashboard">
         <h1><?php echo esc_html( Config::$settings_page_display_title ); ?></h1>
         
-        <!-- Tab Navigation -->
-        <div class="smp-tabs-nav">
-            <?php
-            $first = true;
-            foreach ( $tabs as $tab_id => $tab_label ) :
-                $active = $first ? ' active' : '';
-            ?>
-                <button type="button" class="smp-tab-btn<?php echo $active; ?>" data-tab="<?php echo esc_attr( $tab_id ); ?>">
-                    <?php echo esc_html( $tab_label ); ?>
-                </button>
-            <?php
-                $first = false;
-            endforeach;
-            ?>
-        </div>
-        
-        <!-- Tab Contents -->
-        <?php
-        $first = true;
-        foreach ( $tabs as $tab_id => $tab_label ) :
-            $active = $first ? ' active' : '';
-        ?>
-            <div id="tab-<?php echo esc_attr( $tab_id ); ?>" class="smp-tab-content<?php echo $active; ?>">
-                <?php
-                switch ( $tab_id ) {
-                    case 'overview':
-                        // Display overview content
-                        if ( function_exists( __NAMESPACE__ . '\\display_settings_overview' ) ) {
-                            display_settings_overview();
-                        }
-                        // Plugin info at bottom of overview
-                        if ( function_exists( __NAMESPACE__ . '\\display_plugin_info' ) ) {
-                            display_plugin_info();
-                        }
-                        break;
-                        
-                    case 'system-checks':
-                        // Display system checks
-                        if ( function_exists( __NAMESPACE__ . '\\display_settings_system_checks' ) ) {
-                            display_settings_system_checks();
-                        }
-                        break;
-                        
-                    case 'plugins':
-                        // Display plugin dependency checks
-                        if ( function_exists( __NAMESPACE__ . '\\display_settings_check_plugins' ) ) {
-                            display_settings_check_plugins();
-                        }
-                        break;
-                        
-                    case 'snippets':
-                        // Display snippets with toggles
-                        if ( function_exists( __NAMESPACE__ . '\\display_settings_snippets' ) ) {
-                            display_settings_snippets();
-                        }
-                        break;
+        <script>
+        window.smpVP = window.smpVP || {};
+        smpVP.nonce = '<?php echo esc_js( function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action ) ); ?>';
+        smpVP.nonceField = '<?php echo esc_js( Config::$ajax_nonce_field ); ?>';
+        smpVP.toggleSnippet = function(snippetId) {
+            var $ = jQuery;
+            var isChecked = $('#toggle-' + snippetId).prop('checked');
+            var $item = $('[data-snippet-id="' + snippetId + '"]');
 
-                    case 'shortcodes':
-                        // Display shortcode discovery and live examples
-                        if ( function_exists( __NAMESPACE__ . '\\display_settings_shortcodes' ) ) {
-                            display_settings_shortcodes();
-                        }
-                        break;
-                }
-                ?>
-            </div>
-        <?php
-            $first = false;
-        endforeach;
-        ?>
-    </div>
-    
-    <!-- Tab switching JavaScript (no page refresh) -->
-    <script>
-    // Create namespace for this plugin's JS
-    var smpVP = smpVP || {};
-    
-    // Store nonce for AJAX calls
-    smpVP.nonce = '<?php echo wp_create_nonce( 'smp_vp_ajax_nonce' ); ?>';
-    
-    jQuery(document).ready(function($) {
-        // Tab switching functionality
-        $('.smp-tab-btn').on('click', function() {
-            var tabId = $(this).data('tab');
-            
-            // Update active states
-            $('.smp-tab-btn').removeClass('active');
-            $(this).addClass('active');
-            
-            // Show selected tab content
-            $('.smp-tab-content').removeClass('active');
-            $('#tab-' + tabId).addClass('active');
-            
-            // Store active tab in sessionStorage (persists during session)
-            sessionStorage.setItem('smpActiveTab', tabId);
-        });
-        
-        // Restore last active tab from sessionStorage
-        var savedTab = sessionStorage.getItem('smpActiveTab');
-        if (savedTab && $('.smp-tab-btn[data-tab="' + savedTab + '"]').length) {
-            $('.smp-tab-btn[data-tab="' + savedTab + '"]').click();
-        }
-    });
-    
-    /**
-     * Toggle snippet enabled/disabled state via AJAX
-     * Called when user clicks a snippet toggle switch
-     * 
-     * @param {string} snippetId The option name/ID of the snippet
-     */
-    smpVP.toggleSnippet = function(snippetId) {
-        var $ = jQuery;
-        var isChecked = $('#toggle-' + snippetId).prop('checked');
-        var $item = $('[data-snippet-id="' + snippetId + '"]');
-        
-        // Visual feedback - dim the item while saving
-        $item.css('opacity', '0.5');
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'smp_vp_toggle_snippet',
-                snippet_id: snippetId,
-                enable: isChecked ? 1 : 0,
-                nonce: smpVP.nonce
-            },
-            success: function(response) {
-                $item.css('opacity', '1');
-                
-                if (response.success) {
-                    // Show success feedback with green border flash
-                    $item.css('border-left', isChecked ? '3px solid #00a32a' : '3px solid #d63638');
-                    setTimeout(function() {
-                        $item.css('border-left', '');
-                    }, 1500);
-                } else {
-                    // Show error and revert toggle
-                    alert('Error: ' + (response.data || 'Failed to save setting'));
+            $item.css('opacity', '0.5');
+
+            $.ajax({
+                url: window.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'smp_vp_toggle_snippet',
+                    snippet_id: snippetId,
+                    enable: isChecked ? 1 : 0,
+                    nonce: smpVP.nonce
+                },
+                success: function(response) {
+                    $item.css('opacity', '1');
+
+                    if (response && response.success) {
+                        $item.css('border-left', isChecked ? '3px solid #00a32a' : '3px solid #d63638');
+                        setTimeout(function() {
+                            $item.css('border-left', '');
+                        }, 1500);
+                    } else {
+                        alert('Error: ' + ((response && response.data && response.data.message) || (response && response.data) || 'Failed to save setting'));
+                        $('#toggle-' + snippetId).prop('checked', !isChecked);
+                    }
+                },
+                error: function() {
+                    $item.css('opacity', '1');
+                    alert('AJAX error occurred. Please try again.');
                     $('#toggle-' + snippetId).prop('checked', !isChecked);
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                $item.css('opacity', '1');
-                console.error('AJAX Error:', textStatus, errorThrown);
-                alert('AJAX error occurred. Please try again.');
-                // Revert toggle on error
-                $('#toggle-' + snippetId).prop('checked', !isChecked);
-            }
-        });
-    };
-    </script>
+            });
+        };
+        </script>
+
+        <?php
+        if ( class_exists( '\\Hexa\\PluginCore\\WpAdminTabs\\HostTabsRenderer' ) ) {
+            $renderer = new \Hexa\PluginCore\WpAdminTabs\HostTabsRenderer();
+            $renderer->render(
+                [
+                    'tabs'            => $tabs,
+                    'active'          => $active,
+                    'page_url'        => menu_page_url( Config::$settings_page_slug, false ),
+                    'ajax_action'     => 'smp_vp_load_tab',
+                    'nonce'           => function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action ),
+                    'nonce_field'     => Config::$ajax_nonce_field,
+                    'root_id'         => 'smp-vp-host-tabs',
+                    'panel_id'        => 'smp-vp-host-tab-panel',
+                    'label'           => Config::$settings_page_display_title,
+                    'render_callback' => __NAMESPACE__ . '\\smp_vp_render_dashboard_tab',
+                ]
+            );
+        } else {
+            smp_vp_render_dashboard_tab( $active );
+        }
+        ?>
+    </div>
     
     <?php
     // End output buffering
@@ -222,44 +235,3 @@ function display_wp_admin_settings_page() {
         echo ob_get_clean();
     }
 }
-
-/**
- * AJAX handler for toggling snippet settings
- * Saves the snippet enabled/disabled state to WordPress options
- */
-function ajax_toggle_snippet() {
-    // Verify nonce for security
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'smp_vp_ajax_nonce' ) ) {
-        wp_send_json_error( 'Invalid security token' );
-        return;
-    }
-    
-    // Check user capabilities
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( 'Unauthorized' );
-        return;
-    }
-    
-    // Get and sanitize parameters
-    $snippet_id = isset( $_POST['snippet_id'] ) ? sanitize_text_field( $_POST['snippet_id'] ) : '';
-    $enable     = isset( $_POST['enable'] ) ? (bool) $_POST['enable'] : false;
-    
-    if ( empty( $snippet_id ) ) {
-        wp_send_json_error( 'Missing snippet ID' );
-        return;
-    }
-    
-    // Update the option
-    $result = update_option( $snippet_id, $enable );
-    
-    if ( $result || get_option( $snippet_id ) === $enable ) {
-        wp_send_json_success([
-            'snippet_id' => $snippet_id,
-            'enabled'    => $enable,
-            'message'    => $enable ? 'Snippet enabled' : 'Snippet disabled',
-        ]);
-    } else {
-        wp_send_json_error( 'Failed to update setting' );
-    }
-}
-add_action( 'wp_ajax_smp_vp_toggle_snippet', __NAMESPACE__ . '\\ajax_toggle_snippet' );

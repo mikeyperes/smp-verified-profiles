@@ -159,7 +159,7 @@ function display_settings_shortcodes() {
  * AJAX handler for selected profile shortcode values.
  */
 function ajax_shortcode_profile_values() {
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'smp_vp_ajax_nonce' ) ) {
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], Config::$ajax_nonce_action ) ) {
         wp_send_json_error( 'Invalid security token' );
     }
 

@@ -7,9 +7,6 @@ add_filter('acf/load_field/name=profile', __NAMESPACE__.'\make_unclaimed_profile
 add_action('admin_footer-user-edit.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer-profile.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer', __NAMESPACE__.'\enqueue_custom_admin_scripts');
-add_action('wp_ajax_get_unclaimed_profiles', __NAMESPACE__.'\get_unclaimed_profiles');
-add_action('wp_ajax_send_email', __NAMESPACE__.'\handle_send_email');
-add_action('wp_ajax_refresh_user', __NAMESPACE__.'\handle_refresh_user');
 add_action('personal_options_update', __NAMESPACE__.'\update_user_profile_content');
 add_action('edit_user_profile_update', __NAMESPACE__.'\update_user_profile_content');
 add_action('user_register', __NAMESPACE__.'\update_user_profile_content', 10, 1);
@@ -171,6 +168,8 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
+                var smpVpNonce = <?php echo wp_json_encode( function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action ) ); ?>;
+
                 // Function to extract email content from TinyMCE editor using ACF field key
                 function getEmailContentFromACF(fieldKey) {
                     var iframeId = $('.acf-field-' + fieldKey + ' .wp-editor-wrap iframe').attr('id');
@@ -188,10 +187,12 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
                     var emailContent = getEmailContentFromACF('6586033cc6afe');
 
                     $.ajax({
-                        url: 'https://herforward.com/wp-admin/admin-ajax.php',
+                        url: ajaxurl,
                         type: 'POST',
+                        dataType: 'json',
                         data: {
                             action: 'send_email',
+                            nonce: smpVpNonce,
                             prefix: 'new_entity_email',
                             subject: emailSubject,
                             message: emailContent,
@@ -199,7 +200,11 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
                             user_id: <?php echo get_user_id(); ?>
                         },
                         success: function(response) {
-                            alert('Email sent successfully: ' + response);
+                            if (response && response.success) {
+                                alert((response.data && response.data.message) || 'Email sent successfully.');
+                            } else {
+                                alert((response && response.data && response.data.message) || 'Email not sent.');
+                            }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             console.error("AJAX error: ", textStatus, errorThrown);
@@ -218,11 +223,16 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
                         dataType: 'json',
                         data: {
                             action: 'get_unclaimed_profiles',
+                            nonce: smpVpNonce,
                             user_id: <?php echo get_user_id(); ?>,
                         },
                         success: function(response) {
                             var $dropdown = $('#select_unclaimed_profiles');
-                            $.each(response, function(i, profile) {
+                            $dropdown.empty();
+                            if (!response || !response.success || !response.data || !response.data.profiles) {
+                                return;
+                            }
+                            $.each(response.data.profiles, function(i, profile) {
                                 $dropdown.append($('<option></option>').val(profile.id).html(profile.name));
                             });
                         },
@@ -248,10 +258,15 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
  */
 if (!function_exists(__NAMESPACE__ . '\\get_unclaimed_profiles')) {
     function get_unclaimed_profiles() {
+        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
+
         $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
         if (!$user_id) {
-            echo json_encode(array('error' => 'Invalid User ID'));
-            wp_die();
+            wp_send_json_error( [ 'message' => 'Invalid User ID' ] );
+        }
+
+        if ( ! current_user_can( 'edit_user', $user_id ) ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
         }
 
         $unclaimed_profiles = get_field('unclaimed_profiles', 'user_' . $user_id);
@@ -267,8 +282,7 @@ if (!function_exists(__NAMESPACE__ . '\\get_unclaimed_profiles')) {
             }
         }
 
-        echo json_encode($profiles_data);
-        wp_die(); // Terminate AJAX execution correctly
+        wp_send_json_success( [ 'profiles' => $profiles_data ] );
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\get_unclaimed_profiles function is already declared", true);
 
@@ -278,13 +292,23 @@ if (!function_exists(__NAMESPACE__ . '\\get_unclaimed_profiles')) {
  */
 if (!function_exists(__NAMESPACE__ . '\\handle_send_email')) {
     function handle_send_email() {
-        $prefix = $_POST['prefix'];
-        $subject = $_POST['subject'];
-        $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
-        $profile_id = isset($_POST['profile_id']) ? sanitize_text_field($_POST['profile_id']) : '';
-        $user_id = isset($_POST['user_id']) ? sanitize_text_field($_POST['user_id']) : '';
+        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
 
-        update_field($prefix . "_message", $_POST['message'], "user_" . $user_id);
+        $user_id = isset($_POST['user_id']) ? absint($_POST['user_id']) : 0;
+        if ( ! $user_id || ! current_user_can( 'edit_user', $user_id ) ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
+        }
+
+        $prefix = isset($_POST['prefix']) ? sanitize_key($_POST['prefix']) : '';
+        if ( ! in_array( $prefix, [ 'welcome_email', 'new_entity_email' ], true ) ) {
+            wp_send_json_error( [ 'message' => 'Invalid email template.' ], 400 );
+        }
+
+        $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
+        $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
+        $profile_id = isset($_POST['profile_id']) ? absint($_POST['profile_id']) : 0;
+
+        update_field($prefix . "_message", $message, "user_" . $user_id);
         update_field($prefix . "_subject", $subject, "user_" . $user_id);
         $message = get_field($prefix . "_message", "user_" . $user_id);
 
@@ -308,18 +332,18 @@ if (!function_exists(__NAMESPACE__ . '\\handle_send_email')) {
 
         $headers = array(
             'Content-Type: text/html; charset=UTF-8',
-            'Reply-To: Her Forward <contact@michaelperes.com>',
-            'From: Her Forward <no-reply@herforward.com>',
-            'Cc: contact@michaelperes.com',
-            'Cc: michael@mike-ro-tech.com'
+            'Reply-To: ' . get_bloginfo( 'name' ) . ' <' . get_option( 'admin_email' ) . '>',
+            'From: ' . get_bloginfo( 'name' ) . ' <' . get_option( 'admin_email' ) . '>'
         );
 
+        $sent = 0;
         foreach ($emails as $email) {
-            wp_mail($email, $subject, $message, $headers);
+            if ( wp_mail($email, $subject, $message, $headers) ) {
+                $sent++;
+            }
         }
 
-        echo 'Email Sent';
-        wp_die();
+        wp_send_json_success( [ 'message' => 'Email sent.', 'sent' => $sent ] );
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\handle_send_email function is already declared", true);
 
@@ -329,15 +353,16 @@ if (!function_exists(__NAMESPACE__ . '\\handle_send_email')) {
  */
 if (!function_exists(__NAMESPACE__ . '\\handle_refresh_user')) {
     function handle_refresh_user() {
-        check_ajax_referer('refresh_user_nonce', 'nonce');
+        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
 
         $user_id = intval($_POST['user_id']);
-        $password = sanitize_text_field($_POST['password']);
+        if ( ! $user_id || ! current_user_can( 'edit_user', $user_id ) ) {
+            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
+        }
 
-        update_field("password", $password, "user_" . $user_id);
         update_user_email_settings($user_id);
 
-        wp_send_json_success(['message' => 'User and email content updated for user ID ' . $user_id]);
+        wp_send_json_success(['message' => 'User email content refreshed for user ID ' . $user_id]);
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\handle_refresh_user function is already declared", true);
 
@@ -351,11 +376,6 @@ if (!function_exists(__NAMESPACE__ . '\\update_user_profile_content')) {
     function update_user_profile_content($user_id) {
         add_action('acf/save_post', function() use ($user_id) {
             update_user_email_settings($user_id);
-
-            if (isset($_POST['pass1']) && !empty($_POST['pass1'])) {
-                $password = sanitize_text_field($_POST['pass1']);
-                update_field('password', $password, 'user_' . $user_id);
-            }
         }, 20);
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\update_user_profile_content function is already declared", true);
@@ -376,9 +396,11 @@ if (!function_exists(__NAMESPACE__ . '\\update_user_email_settings')) {
         $user_data = get_userdata($user_id);
         $user_username = $user_data->user_login;
         $user_email = $user_data->user_email;
-        $user_password = get_field('password', 'user_' . $user_id);
         $user_full_name = $user_data->display_name;
         $user_first_name = $user_data->first_name;
+        $reset_url = function_exists( __NAMESPACE__ . '\\smp_vp_password_reset_url' )
+            ? smp_vp_password_reset_url( (int) $user_id )
+            : wp_lostpassword_url();
 
   // build the login URL dynamically
 $dashboard_url = esc_url( admin_url() ); // e.g. https://herforward.com/wp-admin/
@@ -389,7 +411,7 @@ $user_email = isset( $user_email ) ? $user_email : '';
 $credentials_dashboard_content  = '<b>Login URL:</b> ' . $dashboard_url . '<br />';
 $credentials_dashboard_content .= '<b>Username:</b> ' . esc_html( $user_username ) . '<br />';
 $credentials_dashboard_content .= '<b>Email:</b> '    . esc_html( $user_email )    . '<br />';
-$credentials_dashboard_content .= '<b>Password:</b> ' . esc_html( $user_password );
+$credentials_dashboard_content .= '<b>Password setup:</b> <a href="' . esc_url( $reset_url ) . '">Set or reset password</a>';
 
 
         // Define groups of settings and their corresponding fields.
@@ -433,56 +455,40 @@ $credentials_dashboard_content .= '<b>Password:</b> ' . esc_html( $user_password
 if (!function_exists(__NAMESPACE__ . '\\add_user_edit_js')) {
     function add_user_edit_js() {
         $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
-        $ajax_nonce = wp_create_nonce('refresh_user_nonce');
+        $ajax_nonce = function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action );
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
-                // Add the Refresh User button
-                var buttonHtml = '<button id="refresh_user" class="button button-secondary">Refresh User</button>';
+                var buttonHtml = '<button id="refresh_user" class="button button-secondary">Refresh Email Content</button>';
                 $('.user-pass1-wrap').after(buttonHtml);
 
                 // Handler for the Refresh User button click
                 $(document).on('click', '#refresh_user', function(e) {
                     e.preventDefault();
 
-                    // Click the "Set New Password" button
-                    $('.wp-generate-pw').click();
-
-                    setTimeout(function() {
-                        var newPassword = $('#pass1').val();
-                        alert(newPassword); // Debug line, remove in production
-
-                        // Update the ACF password field with the new password
-                        $('input[name="acf[field_6567d327ffdf0]"]').val(newPassword);
-
-                        // AJAX request to update user password
-                        $.ajax({
-                            url: ajaxurl,
-                            type: 'post',
-                            data: {
-                                action: 'refresh_user',
-                                user_id: <?php echo get_user_id(); ?>,
-                                password: newPassword,
-                                nonce: '<?php echo $ajax_nonce; ?>'
-                            },
-                            success: function(response) {
-                                if (response.success) {
-                                    alert('User ID <?php echo $user_id; ?> updated successfully.');
-                                } else {
-                                    alert('Error updating user ID <?php echo $user_id; ?>');
-                                }
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
-                                console.log("AJAX Error:", textStatus, errorThrown);
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            action: 'refresh_user',
+                            user_id: <?php echo get_user_id(); ?>,
+                            nonce: '<?php echo esc_js( $ajax_nonce ); ?>'
+                        },
+                        success: function(response) {
+                            if (response && response.success) {
+                                alert((response.data && response.data.message) || 'User email content refreshed.');
+                            } else {
+                                alert((response && response.data && response.data.message) || 'Error refreshing user email content.');
                             }
-                        });
-                    }, 500);
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.log("AJAX Error:", textStatus, errorThrown);
+                        }
+                    });
                 });
             });
         </script>
         <?php
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\add_user_edit_js function is already declared", true);
-
-
-

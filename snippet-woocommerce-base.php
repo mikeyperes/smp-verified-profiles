@@ -102,7 +102,10 @@ if (!function_exists(__NAMESPACE__ . '\\custom_actions_after_successful_order'))
                 $user = new \WP_User($user_id);
                 $user->set_role('verified_profile_manager');
 
-                wp_mail($customer_email, 'Welcome to Verified Profile Manager', "Hello $customer_name,\n\nYour account has been created. Email: $customer_email\nPassword: $user_password", array('Content-Type: text/plain; charset=UTF-8'));
+                $reset_url = function_exists( __NAMESPACE__ . '\\smp_vp_password_reset_url' )
+                    ? smp_vp_password_reset_url( (int) $user_id )
+                    : wp_lostpassword_url();
+                wp_mail($customer_email, 'Welcome to Verified Profile Manager', "Hello $customer_name,\n\nYour account has been created.\n\nEmail: $customer_email\nSet your password: $reset_url", array('Content-Type: text/plain; charset=UTF-8'));
             }
         }
 

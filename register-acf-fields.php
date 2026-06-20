@@ -285,7 +285,7 @@ function register_acf_fields_general() {
                     ['key'=>'field_welcome_subject','label'=>'Subject','name'=>'subject','type'=>'text'],
                     ['key'=>'field_welcome_message','label'=>'Message','name'=>'message','type'=>'wysiwyg','tabs'=>'all','toolbar'=>'full','media_upload'=>1],
                 ]],
-                ['key'=>'field_password','label'=>'Password','name'=>'password','type'=>'text'],
+                ['key'=>'field_password','label'=>'Password Handling','name'=>'password_notice','type'=>'message','message'=>'Plaintext passwords are not stored. Use the WordPress password reset/setup link in email templates.'],
                 ['key'=>'field_price_verified_profile','label'=>'Price Verified Profile','name'=>'price_verified_profile','type'=>'text','default_value'=>'19.99'],
                 ['key'=>'field_price_leadership_council','label'=>'Price Leadership Council','name'=>'price_leadership_council','type'=>'text'],
                 ['key'=>'field_is_council_member2','label'=>'Is Council Member','name'=>'is_council_member','type'=>'true_false'],

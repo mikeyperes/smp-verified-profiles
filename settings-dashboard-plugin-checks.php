@@ -143,12 +143,18 @@ foreach ($plugins as $plugin) {
             $button.prop('disabled', true).text('Checking...');
 
             $.post(
-                '<?= admin_url('admin-ajax.php') ?>', 
+                window.ajaxurl,
                 {
-                    action: 'hws_ct_force_update_check'
+                    action: 'smp_vp_force_plugin_update_check',
+                    nonce: window.smpVP ? smpVP.nonce : ''
                 }, 
                 function(response) {
-                    var data = JSON.parse(response);
+                    if (!response || !response.success || !response.data) {
+                        $button.prop('disabled', false).text('Failed to Check');
+                        return;
+                    }
+
+                    var data = response.data;
                     $('#last-checked').text(data.last_checked);
                     $('#plugins-with-updates').text(data.plugins_with_updates);
 
@@ -163,7 +169,7 @@ foreach ($plugins as $plugin) {
 
                     $button.prop('disabled', false).text('Force WordPress to Check for Plugin Updates');
                 }
-            ).fail(function() {
+            , 'json').fail(function() {
                 $button.prop('disabled', false).text('Failed to Check');
             });
         });
@@ -302,6 +308,12 @@ function hws_ct_get_plugins_list() {
 
 
 function hws_ct_force_update_check() {
+    if ( ! current_user_can( 'update_plugins' ) ) {
+        wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
+    }
+
+    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
+
     // Force WordPress to check for plugin and theme updates
     wp_clean_update_cache();
     wp_update_plugins();
@@ -329,7 +341,5 @@ function hws_ct_force_update_check() {
     ]);
     wp_die();
 }
-
-add_action('wp_ajax_hws_ct_force_update_check', 'hws_base_tools\hws_ct_force_update_check');
 
 ?>

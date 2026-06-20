@@ -17,15 +17,6 @@ namespace smp_verified_profiles;
 defined( 'ABSPATH' ) || exit;
 
 // ============================================================================
-// REGISTER AJAX HANDLERS
-// ============================================================================
-add_action( 'wp_ajax_smp_vp_download_plugin_zip', __NAMESPACE__ . '\\ajax_download_plugin_zip' );
-add_action( 'wp_ajax_smp_vp_force_update_check', __NAMESPACE__ . '\\ajax_force_update_check' );
-add_action( 'wp_ajax_smp_vp_direct_update_plugin', __NAMESPACE__ . '\\ajax_direct_update_plugin' );
-add_action( 'wp_ajax_smp_vp_load_github_versions', __NAMESPACE__ . '\\ajax_load_github_versions' );
-add_action( 'wp_ajax_smp_vp_download_specific_version', __NAMESPACE__ . '\\ajax_download_specific_version' );
-
-// ============================================================================
 // AJAX HANDLERS
 // ============================================================================
 
@@ -561,202 +552,27 @@ function smp_get_plugin_data() {
  * Display the plugin info panel on the settings page
  */
 function display_plugin_info() {
-    $plugin_data   = smp_get_plugin_data();
-    $github_repo   = Config::$github_repo;
-    $github_branch = Config::$github_branch;
-    $folder_name   = Config::$plugin_folder_name;
-    
-    $new_version      = smp_get_github_version( $github_repo, $github_branch ) ?: 'Checking...';
-    $update_available = $new_version !== 'Checking...' && version_compare( $new_version, $plugin_data['Version'], '>' );
-    
-    preg_match( '/href=["\']([^"\']+)["\']/', $plugin_data['Author'], $matches );
-    $author_url  = $matches[1] ?? '#';
-    $author_name = strip_tags( $plugin_data['Author'] );
+    if ( class_exists( '\\Hexa\\PluginCore\\PluginUpdates\\UpdaterPanelRenderer' )
+        && function_exists( __NAMESPACE__ . '\\smp_vp_updater_config' ) ) {
+        $config = smp_vp_updater_config();
+
+        if ( $config instanceof \Hexa\PluginCore\PluginUpdates\UpdaterConfig ) {
+            ( new \Hexa\PluginCore\PluginUpdates\UpdaterPanelRenderer( $config ) )->render();
+            return;
+        }
+    }
+
+    $plugin_data = smp_get_plugin_data();
     ?>
     <div class="panel">
         <h2 class="panel-title"><?php echo esc_html( Config::$plugin_name ); ?> - Plugin Info</h2>
         <div class="panel-content">
-            <div style="margin-bottom: 15px;">
-                <strong>Plugin Name:</strong> <?php echo esc_html( $plugin_data['Name'] ); ?>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <strong>Plugin Slug:</strong> <?php echo esc_html( $folder_name ); ?>
-            </div>
-            
-            <div style="margin-bottom: 15px; padding: 15px; background: <?php echo $update_available ? '#fcf0f1' : '#edfaef'; ?>; border: 1px solid <?php echo $update_available ? '#d63638' : '#00a32a'; ?>; border-radius: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <strong>Current Version:</strong> 
-                        <span style="font-size: 16px; font-weight: bold;"><?php echo esc_html( $plugin_data['Version'] ); ?></span>
-                    </div>
-                    <div>
-                        <strong>Latest Version:</strong> 
-                        <span id="smp-latest-version" style="font-size: 16px; font-weight: bold; color: <?php echo $update_available ? '#d63638' : '#00a32a'; ?>;">
-                            <?php echo esc_html( $new_version ); ?>
-                        </span>
-                    </div>
-                </div>
-                <?php if ( $update_available ) : ?>
-                <p style="margin: 10px 0 0; color: #d63638; font-weight: bold;">
-                    ⚠️ Update available! v<?php echo esc_html( $plugin_data['Version'] ); ?> → v<?php echo esc_html( $new_version ); ?>
-                </p>
-                <?php else : ?>
-                <p style="margin: 10px 0 0; color: #00a32a;">✅ You are running the latest version</p>
-                <?php endif; ?>
-            </div>
-            
-            <div style="margin-bottom: 20px; padding: 15px; background: #f0f6fc; border: 1px solid #c3c4c7; border-radius: 6px;">
-                <strong>🔄 Update Actions</strong>
-                <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" id="smp-force-update-check" class="button button-secondary">🔍 Force Update Check</button>
-                    <button type="button" id="smp-direct-update" class="button button-primary" <?php echo $update_available ? '' : 'disabled'; ?>>⬆️ Update Now from GitHub</button>
-                    <a href="<?php echo esc_url( admin_url( 'update-core.php?force-check=1' ) ); ?>" class="button button-secondary" target="_blank">📋 WP Update Page</a>
-                </div>
-                <div id="smp-update-status" style="margin-top: 10px;"></div>
-            </div>
-            
-            <div style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
-                <strong>📦 Download Plugin ZIP:</strong>
-                <p style="font-size: 12px; color: #666; margin: 5px 0 10px;">Downloads from GitHub with correct folder name.</p>
-                <button type="button" id="smp-download-plugin-zip" class="button button-secondary" data-folder="<?php echo esc_attr( $folder_name ); ?>">⬇️ Download <?php echo esc_html( $folder_name ); ?>.zip</button>
-                <span id="smp-download-status" style="margin-left: 10px;"></span>
-            </div>
-            
-            <div style="margin-bottom: 15px; padding: 15px; background: #fff8e5; border: 1px solid #dba617; border-radius: 6px;">
-                <strong>📜 Version History</strong>
-                <p style="font-size: 12px; color: #666; margin: 5px 0 10px;">Select a version tag from GitHub to download.</p>
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <select id="smp-version-select" style="min-width: 200px;"><option value="">-- Click "Load Versions" --</option></select>
-                    <button type="button" id="smp-load-versions" class="button button-secondary">🔄 Load Versions</button>
-                    <button type="button" id="smp-download-version" class="button button-secondary" disabled>⬇️ Download Selected Version</button>
-                </div>
-                <div id="smp-version-status" style="margin-top: 10px;"></div>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <strong>GitHub URL:</strong> <a href="https://github.com/<?php echo esc_attr( $github_repo ); ?>" target="_blank">https://github.com/<?php echo esc_html( $github_repo ); ?></a>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <strong>Author:</strong> <a href="<?php echo esc_url( $author_url ); ?>" target="_blank"><?php echo esc_html( $author_name ); ?></a>
-            </div>
+            <p><strong>Plugin Name:</strong> <?php echo esc_html( $plugin_data['Name'] ); ?></p>
+            <p><strong>Plugin Slug:</strong> <?php echo esc_html( Config::$plugin_folder_name ); ?></p>
+            <p><strong>Current Version:</strong> <?php echo esc_html( $plugin_data['Version'] ); ?></p>
+            <p><strong>GitHub URL:</strong> <a href="https://github.com/<?php echo esc_attr( Config::$github_repo ); ?>" target="_blank" rel="noopener">https://github.com/<?php echo esc_html( Config::$github_repo ); ?></a></p>
+            <p><?php esc_html_e( 'Hexa updater controls are unavailable because the Hexa WordPress Plugin Core did not load.', 'smp_verified_profiles' ); ?></p>
         </div>
     </div>
-    
-    <script>
-    jQuery(document).ready(function($) {
-        var currentVer = '<?php echo esc_js( $plugin_data['Version'] ); ?>';
-        var folderName = '<?php echo esc_js( $folder_name ); ?>';
-        
-        $('#smp-force-update-check').on('click', function() {
-            var $btn = $(this), $status = $('#smp-update-status');
-            $btn.prop('disabled', true).text('🔄 Checking...');
-            $status.html('<span style="color: #666;">Clearing caches and checking GitHub...</span>');
-            
-            $.post(ajaxurl, { action: 'smp_vp_force_update_check' }, function(response) {
-                if (response.success) {
-                    $('#smp-latest-version').text(response.data.new_version);
-                    $status.html('<span style="color: green;">✅ Latest version: ' + response.data.new_version + '</span>');
-                    if (response.data.new_version && response.data.new_version !== currentVer) {
-                        $('#smp-direct-update').prop('disabled', false);
-                        $status.append(' <strong style="color: #d63638;">- Update available!</strong>');
-                    }
-                } else {
-                    $status.html('<span style="color: red;">❌ ' + response.data + '</span>');
-                }
-                $btn.prop('disabled', false).text('🔍 Force Update Check');
-            }).fail(function() {
-                $status.html('<span style="color: red;">❌ AJAX Error</span>');
-                $btn.prop('disabled', false).text('🔍 Force Update Check');
-            });
-        });
-        
-        $('#smp-direct-update').on('click', function() {
-            if (!confirm('Download latest version from GitHub and update the plugin?')) return;
-            var $btn = $(this), $status = $('#smp-update-status');
-            $btn.prop('disabled', true).text('⏳ Updating...');
-            $status.html('<span style="color: #666;">Downloading from GitHub...</span>');
-            
-            $.ajax({ url: ajaxurl, type: 'POST', timeout: 120000, data: { action: 'smp_vp_direct_update_plugin' },
-                success: function(response) {
-                    if (response.success) {
-                        $status.html('<span style="color: green;">✅ ' + response.data.message + '</span>');
-                        if (response.data.reload) setTimeout(function() { location.reload(); }, 2000);
-                    } else {
-                        $status.html('<span style="color: red;">❌ ' + response.data + '</span>');
-                        $btn.prop('disabled', false).text('⬆️ Update Now from GitHub');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $status.html('<span style="color: red;">❌ Error: ' + error + '</span>');
-                    $btn.prop('disabled', false).text('⬆️ Update Now from GitHub');
-                }
-            });
-        });
-        
-        $('#smp-download-plugin-zip').on('click', function() {
-            var $btn = $(this), $status = $('#smp-download-status');
-            $btn.prop('disabled', true).text('⏳ Preparing...');
-            
-            $.post(ajaxurl, { action: 'smp_vp_download_plugin_zip' }, function(response) {
-                if (response.success) {
-                    $status.html('<a href="' + response.data.url + '" style="color: green;">✅ Download Ready</a>');
-                    window.location.href = response.data.url;
-                } else {
-                    $status.html('<span style="color: red;">❌ ' + response.data + '</span>');
-                }
-                $btn.prop('disabled', false).text('⬇️ Download ' + folderName + '.zip');
-            }).fail(function() {
-                $status.html('<span style="color: red;">❌ AJAX Error</span>');
-                $btn.prop('disabled', false).text('⬇️ Download ' + folderName + '.zip');
-            });
-        });
-        
-        $('#smp-load-versions').on('click', function() {
-            var $btn = $(this), $select = $('#smp-version-select'), $status = $('#smp-version-status');
-            $btn.prop('disabled', true).text('🔄 Loading...');
-            
-            $.post(ajaxurl, { action: 'smp_vp_load_github_versions' }, function(response) {
-                if (response.success) {
-                    $select.empty().append('<option value="">-- Select Version --</option>');
-                    $.each(response.data.versions, function(i, ver) {
-                        $select.append('<option value="' + ver.name + '">' + ver.name + '</option>');
-                    });
-                    $status.html('<span style="color: green;">✅ Loaded ' + response.data.count + ' versions</span>');
-                    $('#smp-download-version').prop('disabled', false);
-                } else {
-                    $status.html('<span style="color: red;">❌ ' + response.data + '</span>');
-                }
-                $btn.prop('disabled', false).text('🔄 Load Versions');
-            }).fail(function() {
-                $status.html('<span style="color: red;">❌ AJAX Error</span>');
-                $btn.prop('disabled', false).text('🔄 Load Versions');
-            });
-        });
-        
-        $('#smp-download-version').on('click', function() {
-            var $btn = $(this), $select = $('#smp-version-select'), $status = $('#smp-version-status');
-            var version = $select.val();
-            if (!version) { $status.html('<span style="color: orange;">⚠️ Select a version first</span>'); return; }
-            $btn.prop('disabled', true).text('⏳ Preparing...');
-            $status.html('<span style="color: #666;">Downloading ' + version + '...</span>');
-            
-            $.ajax({ url: ajaxurl, type: 'POST', timeout: 60000, data: { action: 'smp_vp_download_specific_version', version: version },
-                success: function(response) {
-                    if (response.success) {
-                        $status.html('<a href="' + response.data.url + '" style="color: green;">✅ ' + response.data.filename + ' ready</a>');
-                        window.location.href = response.data.url;
-                    } else {
-                        $status.html('<span style="color: red;">❌ ' + response.data + '</span>');
-                    }
-                    $btn.prop('disabled', false).text('⬇️ Download Selected Version');
-                },
-                error: function() {
-                    $status.html('<span style="color: red;">❌ AJAX Error</span>');
-                    $btn.prop('disabled', false).text('⬇️ Download Selected Version');
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }

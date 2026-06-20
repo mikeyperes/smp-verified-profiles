@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.2
+ * Version: 6.5.3
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -39,6 +39,18 @@ class Config {
     
     /** @var string Short identifier for options/transients */
     public static $plugin_short_id = "smp_vp";
+
+    /** @var string Current plugin version */
+    public static $plugin_version = "6.5.3";
+
+    /** @var string Shared nonce action for Hexa core admin AJAX */
+    public static $ajax_nonce_action = "smp_vp_admin";
+
+    /** @var string Shared nonce field for Hexa core admin AJAX */
+    public static $ajax_nonce_field = "nonce";
+
+    /** @var string Prefix for Hexa core plugin updater AJAX actions */
+    public static $updater_ajax_prefix = "smp_vp_core_updater";
     
     // -------------------------------------------------------------------------
     // Settings Page Configuration
@@ -141,6 +153,41 @@ class Config {
         ];
     }
 }
+
+// ============================================================================
+// HEXA WORDPRESS PLUGIN CORE AUTOLOADER
+// ============================================================================
+function register_hexa_plugin_core_autoloader(): void {
+    static $registered = false;
+
+    if ( $registered ) {
+        return;
+    }
+
+    $base_dir = __DIR__ . '/lib/hexa-wordpress-plugin-core/src/';
+    $prefix   = 'Hexa\\PluginCore\\';
+
+    spl_autoload_register(
+        static function( string $class_name ) use ( $base_dir, $prefix ): void {
+            if ( strncmp( $class_name, $prefix, strlen( $prefix ) ) !== 0 ) {
+                return;
+            }
+
+            $relative_class = substr( $class_name, strlen( $prefix ) );
+            $file           = $base_dir . str_replace( '\\', DIRECTORY_SEPARATOR, $relative_class ) . '.php';
+
+            if ( is_readable( $file ) ) {
+                require_once $file;
+            }
+        },
+        true,
+        true
+    );
+
+    $registered = true;
+}
+
+register_hexa_plugin_core_autoloader();
 
 // ============================================================================
 // DEBUG LOGGING FUNCTION
@@ -308,6 +355,13 @@ if ( ! $plugins_ok ) {
 
 // Generic helper functions
 include_once __DIR__ . '/generic-functions.php';
+
+// Hexa Plugin Core integration: shared AJAX guard, updater, and host tabs.
+include_once __DIR__ . '/hexa-core-integration.php';
+
+if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
+    add_action( 'admin_init', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 5 );
+}
 
 // ============================================================================
 // ADMIN INIT: Output buffering fix for settings page

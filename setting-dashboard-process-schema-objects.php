@@ -39,6 +39,7 @@ function render_reprocess_profile_schema_page() { ?>
         function processBatch(){
             $.post( ajaxurl, {
                 action:     'smp_vp_reprocess_schema',
+                nonce:      window.smpVP ? smpVP.nonce : '',
                 offset:     offset,
                 batch_size: batchSize
             })
@@ -99,6 +100,8 @@ function ajax_reprocess_schema() {
     if ( ! current_user_can( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => 'Permission denied.' ] );
     }
+
+    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
 
     // get dynamic post type from settings
     $settings  = get_verified_profile_settings();

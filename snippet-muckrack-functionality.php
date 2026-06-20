@@ -52,7 +52,7 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_author')) {
         $nicename = str_replace(array("herforward.com/author/", "/"), "", $pageURL);
 
         // Get author ID based on nicename
-        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM fUaKOcQVM_users WHERE user_nicename = %s", $nicename));
+        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
         $verified_field = get_field('is_verified', 'user_' . $author_id);
 
         if ($verified_field == 'true') {
@@ -88,7 +88,7 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_author')) {
         $pageURL = $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
         $nicename = str_replace(array("herforward.com/author/", "/"), "", $pageURL);
 
-        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM fUaKOcQVM_users WHERE user_nicename = %s", $nicename));
+        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
         $verified_field = get_field('is_verified', 'user_' . $author_id);
         $verified_image_url = "/wp-content/uploads/2022/07/checkmark.svg"; // Placeholder for image
 
