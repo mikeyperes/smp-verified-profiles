@@ -3,8 +3,6 @@
 // Hook the function into the admin menu action
 add_action('admin_menu', __NAMESPACE__.'\add_custom_admin_pages');
 add_action('admin_head', __NAMESPACE__.'\add_styles_admin_profiles_dashboard');
-// Hook the function into the admin menu action
-add_action('admin_menu', __NAMESPACE__.'\add_custom_admin_pages');
  
 // Add custom admin pages
 function add_custom_admin_pages() {
@@ -15,24 +13,19 @@ function add_custom_admin_pages() {
     if (!is_profile_manager()) return;
     
     // Add a Profiles Dashboard menu item
-    add_menu_page('Profiles Dashboard', 'Profiles Dashboard', 'read', 'profiles-dashboard', 'display_admin_profiles_dashboard');
+    add_menu_page('Profiles Dashboard', 'Profiles Dashboard', 'read', 'profiles-dashboard', __NAMESPACE__ . '\\display_admin_profiles_dashboard');
     
-    // Global $submenu for potential submenu usage (not used in this snippet)
-    global $submenu;
-    
-    // Getting the current user ID
-    $user_id = get_current_user_id();
-    
-    // Fetch unclaimed profiles for the user
-    $unclaimed_profiles = get_field('unclaimed_profiles', 'user_' . $user_id);
-    // Uncomment the following line to debug the unclaimed profiles
-    // var_dump($unclaimed_profiles);
 }
 
 
 
 // Add custom admin styles for tables
 function add_styles_admin_profiles_dashboard() {
+    $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+    if ( ! $screen || 'toplevel_page_profiles-dashboard' !== $screen->id ) {
+        return;
+    }
+
     echo '<style>
        .display_admin_profiles_dashboard .custom-admin-table {
             width: 100%;

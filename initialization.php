@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.6
+ * Version: 6.5.7
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.6";
+    public static $plugin_version = "6.5.7";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -167,6 +167,108 @@ function add_plugin_settings_action_link( array $links ): array {
 }
 
 add_filter( 'plugin_action_links_' . Config::get_plugin_basename(), __NAMESPACE__ . '\\add_plugin_settings_action_link' );
+
+function smp_vp_request_value( string $key ): string {
+    if ( isset( $_POST[ $key ] ) && is_scalar( $_POST[ $key ] ) ) {
+        return sanitize_key( wp_unslash( (string) $_POST[ $key ] ) );
+    }
+
+    if ( isset( $_GET[ $key ] ) && is_scalar( $_GET[ $key ] ) ) {
+        return sanitize_key( wp_unslash( (string) $_GET[ $key ] ) );
+    }
+
+    return '';
+}
+
+function smp_vp_is_settings_dashboard_request(): bool {
+    if ( is_admin() && Config::$settings_page_slug === smp_vp_request_value( 'page' ) ) {
+        return true;
+    }
+
+    if ( wp_doing_ajax() ) {
+        $action = smp_vp_request_value( 'action' );
+        return in_array(
+            $action,
+            [
+                'smp_vp_load_tab',
+                'smp_vp_toggle_snippet',
+                'smp_verified_profiles_toggle_snippet',
+                'smp_verified_profiles_modify_wp_config_constants',
+                'smp_verified_profiles_execute_function',
+                'smp_vp_force_plugin_update_check',
+            ],
+            true
+        );
+    }
+
+    return false;
+}
+
+function smp_vp_is_relevant_admin_request(): bool {
+    if ( smp_vp_is_settings_dashboard_request() ) {
+        return true;
+    }
+
+    if ( ! is_admin() ) {
+        return false;
+    }
+
+    global $pagenow;
+    if ( isset( $pagenow ) && in_array( $pagenow, [ 'post.php', 'post-new.php', 'edit.php', 'users.php', 'user-edit.php', 'profile.php' ], true ) ) {
+        return true;
+    }
+
+    if ( 'profiles-dashboard' === smp_vp_request_value( 'page' ) ) {
+        return true;
+    }
+
+    if ( wp_doing_ajax() ) {
+        return in_array( smp_vp_request_value( 'action' ), [ 'get_unclaimed_profiles', 'send_email', 'refresh_user' ], true );
+    }
+
+    return false;
+}
+
+function smp_vp_load_settings_dashboard_files(): void {
+    static $loaded = false;
+
+    if ( $loaded ) {
+        return;
+    }
+
+    include_once __DIR__ . '/settings-dashboard-define-pages-and-listing-grids.php';
+    include_once __DIR__ . '/settings-dashboard-system-checks.php';
+    include_once __DIR__ . '/settings-dashboard-plugin-info.php';
+    include_once __DIR__ . '/settings-dashboard-plugin-checks.php';
+    include_once __DIR__ . '/settings-event-handling.php';
+    include_once __DIR__ . '/setting-dashboard-process-schema-objects.php';
+    include_once __DIR__ . '/settings-dashboard-components.php';
+    include_once __DIR__ . '/settings-dashboard-overview.php';
+    include_once __DIR__ . '/settings-dashboard-snippets.php';
+    include_once __DIR__ . '/settings-dashboard-shortcodes.php';
+    include_once __DIR__ . '/settings-dashboard.php';
+
+    $loaded = true;
+}
+
+function smp_vp_render_settings_page(): void {
+    smp_vp_load_settings_dashboard_files();
+
+    if ( function_exists( __NAMESPACE__ . '\\display_wp_admin_settings_page' ) ) {
+        display_wp_admin_settings_page();
+    }
+}
+
+function smp_vp_register_settings_menu(): void {
+    add_options_page(
+        Config::$settings_page_name,
+        Config::$settings_page_name,
+        Config::$settings_page_capability,
+        Config::$settings_page_slug,
+        __NAMESPACE__ . '\\smp_vp_render_settings_page'
+    );
+}
+add_action( 'admin_menu', __NAMESPACE__ . '\\smp_vp_register_settings_menu' );
 
 // ============================================================================
 // HEXA WORDPRESS PLUGIN CORE AUTOLOADER
@@ -388,6 +490,10 @@ if ( is_admin() ) {
         if ( isset( $_GET['page'] ) && $_GET['page'] === Config::$settings_page_slug ) {
             remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
         }
+
+        if ( Config::$settings_page_slug === smp_vp_request_value( 'page' ) && 'emails' === smp_vp_request_value( 'tab' ) && function_exists( 'acf_form_head' ) ) {
+            acf_form_head();
+        }
     } );
 }
 
@@ -423,40 +529,31 @@ add_action( 'init', function() {
     // -------------------------------------------------------------------------
     // ADMIN-ONLY FEATURES (Performance: skip on frontend)
     // -------------------------------------------------------------------------
-    if ( is_admin() ) {
-        // Skip heavy processing during Elementor operations
-        if ( ! is_elementor_context() ) {
-            // WP Admin adjustments and snippets
-            include_once __DIR__ . '/snippet-adjust-profiles-category-meta-box.php';
-            include_once __DIR__ . '/snippet-adjust-wp-admin-for-profile-managers.php';
-            include_once __DIR__ . '/snippet-wp-admin-user-page-functionality.php';
-            include_once __DIR__ . '/snippet-post-functionality.php';
-            include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
-            include_once __DIR__ . '/snippet-wp-admin-user-page-optional-functionality.php';
-            include_once __DIR__ . '/snippet-disable-password-reset.php';
-            include_once __DIR__ . '/snippet-wp-admin-add-featured-image-to-events.php';
-            include_once __DIR__ . '/snippet-wp-admin-filter-featured-profiles.php';
-            
-            // Dashboard and settings pages
-            include_once __DIR__ . '/profile-manager-dashboard.php';
-            include_once __DIR__ . '/settings-dashboard-define-pages-and-listing-grids.php';
-            include_once __DIR__ . '/settings-dashboard-system-checks.php';
-            include_once __DIR__ . '/settings-dashboard-plugin-info.php';
-            include_once __DIR__ . '/settings-dashboard-plugin-checks.php';
-            include_once __DIR__ . '/settings-event-handling.php';
-            include_once __DIR__ . '/setting-dashboard-process-schema-objects.php';
-            
-            // Dashboard components and tabs (load components first!)
-            include_once __DIR__ . '/settings-dashboard-components.php';
-            include_once __DIR__ . '/settings-dashboard-overview.php';
-            include_once __DIR__ . '/settings-dashboard-snippets.php';
-            include_once __DIR__ . '/settings-dashboard-shortcodes.php';
-            include_once __DIR__ . '/settings-dashboard.php';
-            
-            // Activate admin-only snippets
-            activate_snippets( 'admin' );
-        }
-    }
+	if ( is_admin() ) {
+	    // Skip heavy processing during Elementor operations
+	    if ( ! is_elementor_context() ) {
+	        // Profile-manager menu registration is lightweight and guarded internally.
+	        include_once __DIR__ . '/profile-manager-dashboard.php';
+
+	        if ( smp_vp_is_relevant_admin_request() ) {
+	            include_once __DIR__ . '/snippet-adjust-profiles-category-meta-box.php';
+	            include_once __DIR__ . '/snippet-adjust-wp-admin-for-profile-managers.php';
+	            include_once __DIR__ . '/snippet-wp-admin-user-page-functionality.php';
+	            include_once __DIR__ . '/snippet-post-functionality.php';
+	            include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
+	            include_once __DIR__ . '/snippet-wp-admin-user-page-optional-functionality.php';
+	            include_once __DIR__ . '/snippet-disable-password-reset.php';
+	            include_once __DIR__ . '/snippet-wp-admin-add-featured-image-to-events.php';
+	            include_once __DIR__ . '/snippet-wp-admin-filter-featured-profiles.php';
+
+	            if ( smp_vp_is_settings_dashboard_request() ) {
+	                smp_vp_load_settings_dashboard_files();
+	            }
+
+	            activate_snippets( 'admin' );
+	        }
+	    }
+	}
     
     // -------------------------------------------------------------------------
     // FRONTEND + ADMIN FEATURES (Always loaded)

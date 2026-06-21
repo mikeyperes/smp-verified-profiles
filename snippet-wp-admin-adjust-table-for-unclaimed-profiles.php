@@ -90,16 +90,17 @@ if (!function_exists(__NAMESPACE__ . '\\show_unclaimed_profiles')) {
     function show_unclaimed_profiles($value, $column_name, $user_id) {
         if ('unclaimed_profiles' === $column_name) {
             $profiles_output = '';
-            if (have_rows('unclaimed_profiles', 'user_' . $user_id)) {
-                while (have_rows('unclaimed_profiles', 'user_' . $user_id)) {
-                    the_row();
-                    $profile_id = get_sub_field('profile');
-                    if ($profile_id) {
-                        $profile_post = get_post($profile_id);
-                        if ($profile_post) {
-                            $profiles_output .= '<a href="' . get_permalink($profile_id) . '" target="_blank">' . get_the_title($profile_id) . '</a><br>';
-                        }
-                    }
+            $rows = function_exists( 'get_field' ) ? get_field( 'unclaimed_profiles', 'user_' . $user_id ) : [];
+            $rows = is_array( $rows ) ? array_slice( $rows, 0, 20 ) : [];
+            foreach ( $rows as $row ) {
+                $profile_id = is_array( $row ) && isset( $row['profile'] ) ? absint( $row['profile'] ) : 0;
+                if ( ! $profile_id ) {
+                    continue;
+                }
+
+                $profile_post = get_post( $profile_id );
+                if ( $profile_post ) {
+                    $profiles_output .= '<a href="' . esc_url( get_permalink( $profile_id ) ) . '" target="_blank">' . esc_html( $profile_post->post_title ) . '</a><br>';
                 }
             }
             return $profiles_output;
@@ -148,12 +149,7 @@ if (!function_exists(__NAMESPACE__ . '\\show_profile_post_count')) {
      */
     function show_profile_post_count($value, $column_name, $user_id) {
         if ('profile_posts' === $column_name) {
-            $query = new \WP_Query([
-                'post_type' => 'profile',
-                'author' => $user_id,
-                'posts_per_page' => -1
-            ]);
-            return $query->found_posts;
+            return (string) count_user_posts( (int) $user_id, 'profile', true );
         }
         return $value;
     }
@@ -188,13 +184,17 @@ if (!function_exists(__NAMESPACE__ . '\\show_claimed_profiles')) {
             $posts = get_posts([
                 'post_type' => 'profile',
                 'author' => $user_id,
-                'posts_per_page' => -1
+                'posts_per_page' => 20,
+                'fields' => 'ids',
+                'no_found_rows' => true,
+                'update_post_meta_cache' => false,
+                'update_post_term_cache' => false,
             ]);
 
             $output = '';
-            foreach ($posts as $post) {
-                $permalink = get_permalink($post->ID);
-                $output .= '<a href="' . esc_url($permalink) . '" target="_blank">' . esc_html($post->post_title) . '</a><br>';
+            foreach ($posts as $post_id) {
+                $permalink = get_permalink($post_id);
+                $output .= '<a href="' . esc_url($permalink) . '" target="_blank">' . esc_html(get_the_title($post_id)) . '</a><br>';
             }
             return $output;
         }

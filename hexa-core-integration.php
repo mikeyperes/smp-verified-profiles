@@ -204,6 +204,10 @@ function smp_vp_register_ajax_actions(): void {
 }
 
 function smp_vp_ajax_load_tab( AjaxRequest $request ): array {
+    if ( function_exists( __NAMESPACE__ . '\\smp_vp_load_settings_dashboard_files' ) ) {
+        smp_vp_load_settings_dashboard_files();
+    }
+
     return smp_vp_tab_fragment( $request->key( 'tab', 'overview', 'post' ) );
 }
 

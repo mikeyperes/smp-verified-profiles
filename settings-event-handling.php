@@ -5,7 +5,11 @@ add_action('admin_head', __NAMESPACE__ . '\\activate_listeners');
 
 
 function activate_listeners()
-{?>
+{
+    if ( function_exists( __NAMESPACE__ . '\\smp_vp_is_settings_dashboard_request' ) && ! smp_vp_is_settings_dashboard_request() ) {
+        return;
+    }
+    ?>
     <script>
     window.smpVP = window.smpVP || {};
     smpVP.nonce = smpVP.nonce || '<?php echo esc_js( function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action ) ); ?>';

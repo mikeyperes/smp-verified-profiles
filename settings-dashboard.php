@@ -34,7 +34,6 @@ function add_wp_admin_settings_page() {
         __NAMESPACE__ . '\\display_wp_admin_settings_page'  // Callback function
     );
 }
-add_action( 'admin_menu', __NAMESPACE__ . '\\add_wp_admin_settings_page' );
 
 /**
  * Dashboard tab definitions.
@@ -48,6 +47,7 @@ function smp_vp_dashboard_tabs() {
         'plugins'       => 'Plugin Checks',
         'snippets'      => 'Snippets',
         'shortcodes'    => 'Shortcodes',
+        'emails'        => 'Emails',
     ] );
 }
 
@@ -94,6 +94,10 @@ function smp_vp_render_dashboard_tab( $tab_id ) {
             if ( function_exists( __NAMESPACE__ . '\\display_settings_shortcodes' ) ) {
                 display_settings_shortcodes();
             }
+            break;
+
+        case 'emails':
+            display_settings_emails();
             break;
 
         default:
@@ -234,4 +238,25 @@ function display_wp_admin_settings_page() {
     if ( ob_get_level() != 0 ) {
         echo ob_get_clean();
     }
+}
+
+function display_settings_emails() {
+    echo '<div class="smp-card"><h2>' . esc_html__( 'Email Options', 'smp_verified_profiles' ) . '</h2>';
+
+    if ( ! function_exists( 'acf_form' ) ) {
+        echo '<p>' . esc_html__( 'ACF Pro is required to edit email options.', 'smp_verified_profiles' ) . '</p></div>';
+        return;
+    }
+
+    acf_form(
+        [
+            'post_id'         => 'options',
+            'field_groups'    => [ 'group_658739a0ab536' ],
+            'form'            => true,
+            'submit_value'    => __( 'Save Email Options', 'smp_verified_profiles' ),
+            'updated_message' => __( 'Email options saved.', 'smp_verified_profiles' ),
+        ]
+    );
+
+    echo '</div>';
 }

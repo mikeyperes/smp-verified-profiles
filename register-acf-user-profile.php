@@ -1148,16 +1148,16 @@ function register_user_custom_fields()
 			'delay' => 0,
 		),
 	),
-	'location' => array(
-		array(
+		'location' => array(
 			array(
-				'param' => 'options_page',
-				'operator' => '==',
-				'value' => 'theme-options-emails',
-			),
-			array(
-				'param' => 'current_user_role',
-				'operator' => '==',
+				array(
+					'param' => 'options_page',
+					'operator' => '==',
+					'value' => Config::$settings_page_slug,
+				),
+				array(
+					'param' => 'current_user_role',
+					'operator' => '==',
 				'value' => 'administrator',
 			),
 		),
@@ -1618,13 +1618,5 @@ function register_user_custom_fields()
 	'description' => '',
 	'show_in_rest' => 0,
 ) );
-
-
-
-
-	acf_add_options_page( array(
-	'page_title' => 'Theme Options - Emails',
-	'menu_slug' => 'theme-options-emails',
-	'redirect' => false,
-) );}
+}
 ?>
