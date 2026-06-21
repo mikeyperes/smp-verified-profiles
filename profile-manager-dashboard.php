@@ -113,7 +113,7 @@ function display_admin_claimed_profiles() {
     $user_id = get_current_user_id();
 
     // Query for profiles where the current user is the author
-    $claimed_profiles = new WP_Query([
+    $claimed_profiles = new \WP_Query([
         'post_type' => 'profile',
         'author'    => $user_id,
     ]);
