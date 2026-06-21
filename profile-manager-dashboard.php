@@ -3,8 +3,6 @@
 // Hook the function into the admin menu action
 add_action('admin_menu', __NAMESPACE__.'\add_custom_admin_pages');
 add_action('admin_head', __NAMESPACE__.'\add_styles_admin_profiles_dashboard');
-// Hook the function into the admin menu action
-add_action('admin_menu', __NAMESPACE__.'\add_custom_admin_pages');
  
 // Add custom admin pages
 function add_custom_admin_pages() {
@@ -15,7 +13,7 @@ function add_custom_admin_pages() {
     //if (!is_profile_manager()) return;
     
     // Add a Profiles Dashboard menu item
-    add_menu_page('Profiles Dashboard', 'Profiles Dashboard', 'read', 'profiles-dashboard', 'display_admin_profiles_dashboard');
+    add_menu_page('Profiles Dashboard', 'Profiles Dashboard', 'read', 'profiles-dashboard', __NAMESPACE__ . '\\display_admin_profiles_dashboard');
     
     // Global $submenu for potential submenu usage (not used in this snippet)
     global $submenu;
@@ -150,7 +148,7 @@ function display_admin_claimed_profiles() {
 
 function display_admin_profiles_dashboard() {
     // Perform pre-checks
-    if (!perform_verified_profiles_plugin_prechecks()) return;
+    if (function_exists(__NAMESPACE__ . '\\perform_verified_profiles_plugin_prechecks') && !perform_verified_profiles_plugin_prechecks()) return;
 
     $user = wp_get_current_user();
     $price_verified_profile = get_field('price_verified_profile', 'user_' . $user->ID);
