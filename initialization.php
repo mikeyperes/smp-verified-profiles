@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.4
+ * Version: 6.5.5
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.4";
+    public static $plugin_version = "6.5.5";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -51,6 +51,9 @@ class Config {
 
     /** @var string Prefix for Hexa core plugin updater AJAX actions */
     public static $updater_ajax_prefix = "smp_vp_core_updater";
+
+    /** @var string Prefix for vendored Hexa WordPress Plugin Core package updater AJAX actions */
+    public static $core_package_ajax_prefix = "smp_vp_hexa_core_package";
     
     // -------------------------------------------------------------------------
     // Settings Page Configuration
@@ -371,6 +374,7 @@ include_once __DIR__ . '/generic-functions.php';
 include_once __DIR__ . '/hexa-core-integration.php';
 
 if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
+    add_action( 'plugins_loaded', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 20 );
     add_action( 'admin_init', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 5 );
 }
 
@@ -388,30 +392,9 @@ if ( is_admin() ) {
 }
 
 // ============================================================================
-// GITHUB UPDATER INITIALIZATION
-// Self-contained - no hws-base-tools dependency
+// HEXA CORE GITHUB UPDATER INITIALIZATION
+// Runtime update checks are registered through Hexa Plugin Core in hexa-core-integration.php.
 // ============================================================================
-add_action( 'admin_init', function() {
-    // Include our own GitHub Updater class
-    include_once __DIR__ . '/GitHub_Updater.php';
-    
-    // Initialize the updater with configuration from Config class
-    // All values passed explicitly - no global variable references
-    $config = Config::get_github_config();
-    
-    if ( class_exists( __NAMESPACE__ . '\\WP_GitHub_Updater' ) ) {
-        new WP_GitHub_Updater( $config );
-    }
-    
-    // Force update check debug hook
-    if ( isset( $_GET['force-update-check'] ) ) {
-        wp_clean_update_cache();
-        set_site_transient( 'update_plugins', null );
-        wp_update_plugins();
-        error_log( Config::$plugin_name . ': Forced plugin update check triggered.' );
-    }
-}, 10 );
-
 // ============================================================================
 // INCLUDE SNIPPET ACTIVATION SYSTEM
 // ============================================================================

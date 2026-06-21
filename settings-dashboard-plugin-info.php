@@ -552,14 +552,30 @@ function smp_get_plugin_data() {
  * Display the plugin info panel on the settings page
  */
 function display_plugin_info() {
-    if ( class_exists( '\\Hexa\\PluginCore\\PluginUpdates\\UpdaterPanelRenderer' )
-        && function_exists( __NAMESPACE__ . '\\smp_vp_updater_config' ) ) {
+    $rendered = false;
+
+    if ( class_exists( "\\Hexa\\PluginCore\\PluginUpdates\\UpdaterPanelRenderer" )
+        && function_exists( __NAMESPACE__ . "\\smp_vp_updater_config" ) ) {
         $config = smp_vp_updater_config();
 
         if ( $config instanceof \Hexa\PluginCore\PluginUpdates\UpdaterConfig ) {
             ( new \Hexa\PluginCore\PluginUpdates\UpdaterPanelRenderer( $config ) )->render();
-            return;
+            $rendered = true;
         }
+    }
+
+    if ( class_exists( "\\Hexa\\PluginCore\\CorePackageUpdates\\CorePackagePanelRenderer" )
+        && function_exists( __NAMESPACE__ . "\\smp_vp_core_package_config" ) ) {
+        $core_config = smp_vp_core_package_config();
+
+        if ( $core_config instanceof \Hexa\PluginCore\CorePackageUpdates\CorePackageConfig ) {
+            ( new \Hexa\PluginCore\CorePackageUpdates\CorePackagePanelRenderer( $core_config ) )->render();
+            $rendered = true;
+        }
+    }
+
+    if ( $rendered ) {
+        return;
     }
 
     $plugin_data = smp_get_plugin_data();
@@ -567,11 +583,11 @@ function display_plugin_info() {
     <div class="panel">
         <h2 class="panel-title"><?php echo esc_html( Config::$plugin_name ); ?> - Plugin Info</h2>
         <div class="panel-content">
-            <p><strong>Plugin Name:</strong> <?php echo esc_html( $plugin_data['Name'] ); ?></p>
+            <p><strong>Plugin Name:</strong> <?php echo esc_html( $plugin_data["Name"] ); ?></p>
             <p><strong>Plugin Slug:</strong> <?php echo esc_html( Config::$plugin_folder_name ); ?></p>
-            <p><strong>Current Version:</strong> <?php echo esc_html( $plugin_data['Version'] ); ?></p>
+            <p><strong>Current Version:</strong> <?php echo esc_html( $plugin_data["Version"] ); ?></p>
             <p><strong>GitHub URL:</strong> <a href="https://github.com/<?php echo esc_attr( Config::$github_repo ); ?>" target="_blank" rel="noopener">https://github.com/<?php echo esc_html( Config::$github_repo ); ?></a></p>
-            <p><?php esc_html_e( 'Hexa updater controls are unavailable because the Hexa WordPress Plugin Core did not load.', 'smp_verified_profiles' ); ?></p>
+            <p><?php esc_html_e( "Hexa updater controls are unavailable because the Hexa WordPress Plugin Core did not load.", "smp_verified_profiles" ); ?></p>
         </div>
     </div>
     <?php

@@ -1,6 +1,9 @@
 <?php
 namespace smp_verified_profiles;
 
+use Hexa\PluginCore\CorePackageUpdates\CorePackageAjaxController;
+use Hexa\PluginCore\CorePackageUpdates\CorePackageConfig;
+use Hexa\PluginCore\PluginUpdates\GitHubPluginUpdater;
 use Hexa\PluginCore\PluginUpdates\UpdaterAjaxController;
 use Hexa\PluginCore\PluginUpdates\UpdaterConfig;
 use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
@@ -61,6 +64,40 @@ function smp_vp_updater_config(): ?UpdaterConfig {
     return $config;
 }
 
+function smp_vp_core_package_config(): ?CorePackageConfig {
+    static $config = null;
+
+    if ( $config instanceof CorePackageConfig ) {
+        return $config;
+    }
+
+    if ( ! class_exists( CorePackageConfig::class ) ) {
+        return null;
+    }
+
+    $config = CorePackageConfig::from_core_root(
+        __DIR__ . "/lib/hexa-wordpress-plugin-core",
+        [
+            "github_repo"        => "mikeyperes/hexa-wordpress-plugin-core",
+            "github_branch"      => "main",
+            "nonce_action"       => Config::$ajax_nonce_action,
+            "nonce_param"        => Config::$ajax_nonce_field,
+            "ajax_action_prefix" => Config::$core_package_ajax_prefix,
+            "cache_key"          => "smp_vp_hexa_plugin_core_package",
+        ]
+    );
+
+    return $config;
+}
+
+function smp_vp_should_boot_hexa_core_updater(): bool {
+    if ( is_admin() || wp_doing_ajax() || wp_doing_cron() ) {
+        return true;
+    }
+
+    return defined( "WP_CLI" ) && WP_CLI;
+}
+
 function smp_vp_boot_hexa_core_admin(): void {
     static $booted = false;
 
@@ -68,28 +105,48 @@ function smp_vp_boot_hexa_core_admin(): void {
         return;
     }
 
-    if ( is_admin() || wp_doing_ajax() ) {
+    if ( smp_vp_should_boot_hexa_core_updater() ) {
         $updater_config = smp_vp_updater_config();
-        if ( $updater_config instanceof UpdaterConfig && class_exists( UpdaterAjaxController::class ) ) {
-            ( new UpdaterAjaxController( $updater_config ) )->register();
+        if ( $updater_config instanceof UpdaterConfig ) {
+            if ( class_exists( GitHubPluginUpdater::class ) ) {
+                ( new GitHubPluginUpdater( $updater_config ) )->register();
+            }
+
+            if ( class_exists( UpdaterAjaxController::class ) ) {
+                ( new UpdaterAjaxController( $updater_config ) )->register();
+            }
         }
 
+        $core_config = smp_vp_core_package_config();
+        if ( $core_config instanceof CorePackageConfig && class_exists( CorePackageAjaxController::class ) ) {
+            ( new CorePackageAjaxController( $core_config ) )->register();
+        }
+    }
+
+    if ( is_admin() || wp_doing_ajax() ) {
         if ( class_exists( CoreTabModule::class ) && class_exists( CoreTabConfig::class ) ) {
             ( new CoreTabModule(
                 new CoreTabConfig(
                     [
-                        'tabs_filter'   => 'smp_vp_dashboard_tabs',
-                        'render_filter' => 'smp_vp_render_dashboard_tab',
-                        'capability'    => Config::$settings_page_capability,
-                        'core_root'     => __DIR__ . '/lib/hexa-wordpress-plugin-core',
-                        'readme_path'   => __DIR__ . '/lib/hexa-wordpress-plugin-core/README.md',
-                        'library_path'  => __DIR__ . '/HEXA_PLUGIN_CORE_LIBRARY.md',
+                        "tabs_filter"   => "smp_vp_dashboard_tabs",
+                        "render_filter" => "smp_vp_render_dashboard_tab",
+                        "capability"    => Config::$settings_page_capability,
+                        "core_root"     => __DIR__ . "/lib/hexa-wordpress-plugin-core",
+                        "readme_path"   => __DIR__ . "/lib/hexa-wordpress-plugin-core/README.md",
+                        "library_path"  => __DIR__ . "/HEXA_PLUGIN_CORE_LIBRARY.md",
                     ]
                 )
             ) )->register();
         }
 
         smp_vp_register_ajax_actions();
+    }
+
+    if ( is_admin() && isset( $_GET["force-update-check"] ) ) {
+        wp_clean_update_cache();
+        set_site_transient( "update_plugins", null );
+        wp_update_plugins();
+        error_log( Config::$plugin_name . ": Forced Hexa Core plugin update check triggered." );
     }
 
     $booted = true;

@@ -2,7 +2,7 @@
 
 A comprehensive WordPress plugin for managing verified profiles on Scale My Publication systems. This plugin provides complete profile verification, management, and display functionality with ACF (Advanced Custom Fields) integration.
 
-![Version](https://img.shields.io/badge/version-6.4-blue.svg)
+![Version](https://img.shields.io/badge/version-6.5.5-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
@@ -35,7 +35,7 @@ A comprehensive WordPress plugin for managing verified profiles on Scale My Publ
 ### Key Highlights
 
 - ✅ **Self-contained** - No external plugin dependencies (except ACF Pro)
-- ✅ **GitHub Auto-Updates** - Automatic updates directly from this repository
+- ✅ **Hexa Core GitHub Auto-Updates** - Shared Hexa Core updater checks and installs this repository
 - ✅ **Modular Snippet System** - Enable/disable features individually
 - ✅ **Performance Optimized** - Elementor-aware loading, admin-only features properly scoped
 - ✅ **Centralized Configuration** - All settings managed through a single Config class
@@ -154,7 +154,7 @@ class Config {
 ```
 smp-verified-profiles/
 ├── initialization.php          # Main plugin file, Config class, bootstrap
-├── GitHub_Updater.php          # Self-contained GitHub updater class
+├── GitHub_Updater.php          # Legacy updater class; runtime updates use Hexa Core
 ├── generic-functions.php       # Core helper functions
 │
 ├── ACF Field Registrations
@@ -302,20 +302,20 @@ Snippets are modular feature toggles that can be enabled/disabled from the setti
 
 ## GitHub Auto-Updates
 
-The plugin includes a self-contained GitHub updater that checks for new versions automatically.
+The plugin uses Hexa WordPress Plugin Core for GitHub update checks, direct installs, and vendored core package checks.
 
 ### How It Works
 
 1. WordPress checks for plugin updates periodically
-2. The updater fetches the `Version:` header from GitHub's raw file
+2. Hexa Core fetches the `Version:` header from GitHub's raw file
 3. If a newer version exists, it appears in WordPress Updates
-4. Updates download directly from GitHub and rename folders correctly
+4. Hexa Core downloads directly from GitHub and normalizes the folder slug correctly
 
 ### Manual Update Check
 
 1. Go to **Settings → Verified Profiles - Settings**
 2. Scroll to **Plugin Info** panel
-3. Click **Force Update Check**
+3. Click **Force Update Check** for the plugin or **Force Core Check** for the vendored Hexa Core package
 
 ### Direct Update
 
@@ -462,7 +462,10 @@ Logs appear in `/wp-content/debug.log`
 
 ## Changelog
 
-### Version 6.5.2 (Current)
+### Version 6.5.5 (Current)
+- Swapped runtime update checks to Hexa WordPress Plugin Core, added the vendored Hexa Core package updater panel, and synced the bundled core to 0.17.2.
+
+### Version 6.5.2
 - Added the active Personal Education repeater to the verified profile ACF group for schema-ready school, degree, date, URL, Wikipedia, SameAs, and description fields.
 
 ### Version 6.5.1

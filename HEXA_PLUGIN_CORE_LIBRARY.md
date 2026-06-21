@@ -191,7 +191,7 @@ Namespace:
 Hexa\PluginCore\SiteStructure
 ```
 
-Use `PageStructureManager` for critical page blueprints, callback-backed assigned page storage, starter/template content, page details, managed page create/delete protection, WordPress navigation menu creation, custom menu items, add-all-pages menu actions, menu blueprint attachment, and page-to-menu-item attachment. Use `SiteStructureAjaxController` to keep host-specific AJAX action names while sharing nonce, capability, and request handling. Use `SiteStructureRenderer` for the admin UI.
+Use `PageStructureManager` for critical page blueprints, callback-backed assigned page storage, starter/template content, page details, managed page create/delete protection, WordPress navigation menu creation, custom menu items, add-all-pages menu actions, menu blueprint attachment, and page-to-menu-item attachment. Use `SiteStructureAjaxController` to keep host-specific AJAX action names while sharing nonce, capability, and request handling. Use `SiteStructureRenderer` for the admin UI. The renderer accepts `show_pages` and `show_menus` so hosts can split page assignment and menu building into separate tabs without duplicating menu code.
 
 ```php
 use Hexa\PluginCore\SiteStructure\PageStructureManager;
@@ -229,7 +229,7 @@ $manager = new PageStructureManager([
         'create_menu_item' => 'my_plugin_create_menu_item',
         'attach_page_to_menu_item' => 'my_plugin_attach_page_to_menu_item',
         'attach_menu_structure' => 'my_plugin_attach_menu_structure',
-        'add_pages_to_menu' => 'my_plugin_add_pages_to_menu',
+        'menu_inventory' => 'my_plugin_menu_inventory',
         'save_template' => 'my_plugin_save_template',
         'apply_template' => 'my_plugin_apply_template',
         'page_details' => 'my_plugin_page_details',
@@ -250,7 +250,7 @@ echo (new SiteStructureRenderer($manager, [
         'create_menu_item' => 'my_plugin_create_menu_item',
         'attach_page_to_menu_item' => 'my_plugin_attach_page_to_menu_item',
         'attach_menu_structure' => 'my_plugin_attach_menu_structure',
-        'add_pages_to_menu' => 'my_plugin_add_pages_to_menu',
+        'menu_inventory' => 'my_plugin_menu_inventory',
         'save_template' => 'my_plugin_save_template',
         'apply_template' => 'my_plugin_apply_template',
         'page_details' => 'my_plugin_page_details',
@@ -265,7 +265,7 @@ Generic SiteStructure AJAX actions:
 
 ```text
 assign_page, create_page, delete_page, create_navigation_menu, delete_navigation_menu,
-create_menu_item, attach_page_to_menu_item, attach_menu_structure, add_pages_to_menu,
+create_menu_item, attach_page_to_menu_item, attach_menu_structure, menu_inventory,
 save_template, apply_template, page_details, update_page_slug
 ```
 
