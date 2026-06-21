@@ -154,6 +154,17 @@ class Config {
     }
 }
 
+function add_plugin_settings_action_link( array $links ): array {
+    $settings_url = admin_url( 'options-general.php?page=' . Config::$settings_page_slug );
+    $settings_link = '<a href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Settings', 'smp-verified-profiles' ) . '</a>';
+
+    $links[] = $settings_link;
+
+    return $links;
+}
+
+add_filter( 'plugin_action_links_' . Config::get_plugin_basename(), __NAMESPACE__ . '\\add_plugin_settings_action_link' );
+
 // ============================================================================
 // HEXA WORDPRESS PLUGIN CORE AUTOLOADER
 // ============================================================================
