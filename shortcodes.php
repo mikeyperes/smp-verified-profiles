@@ -1378,3 +1378,140 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
     $query->set( 'update_post_meta_cache', false );
     $query->set( 'update_post_term_cache', false );
 }, 10, 1 );
+
+// -----------------------------------------------------------------------------
+// Single profile frontend ACF details
+// -----------------------------------------------------------------------------
+\add_filter( "the_content", __NAMESPACE__ . "\\smp_vp_append_single_profile_frontend_fields", 20 );
+
+function smp_vp_append_single_profile_frontend_fields( $content ) {
+    if ( \is_admin() || ! \is_singular( "profile" ) || ! \in_the_loop() || ! \is_main_query() ) {
+        return $content;
+    }
+
+    global $post;
+    if ( ! $post instanceof \WP_Post || "profile" !== $post->post_type ) {
+        return $content;
+    }
+
+    static $rendered = [];
+    $post_id = (int) $post->ID;
+    if ( isset( $rendered[ $post_id ] ) ) {
+        return $content;
+    }
+
+    $rendered[ $post_id ] = true;
+    $details = smp_vp_render_single_profile_frontend_fields( $post_id );
+
+    if ( "" === $details ) {
+        return $content;
+    }
+
+    return $content . $details;
+}
+
+function smp_vp_profile_field_value( int $post_id, string $field ): string {
+    $value = null;
+
+    if ( \function_exists( "get_field" ) ) {
+        $value = \get_field( $field, $post_id );
+    }
+
+    if ( null === $value || false === $value || "" === $value || [] === $value ) {
+        $value = \get_post_meta( $post_id, $field, true );
+    }
+
+    if ( \is_array( $value ) ) {
+        $flat = [];
+        \array_walk_recursive(
+            $value,
+            static function ( $item ) use ( &$flat ) {
+                if ( \is_scalar( $item ) ) {
+                    $item = \trim( (string) $item );
+                    if ( "" !== $item ) {
+                        $flat[] = $item;
+                    }
+                }
+            }
+        );
+        $value = \implode( " ", \array_unique( $flat ) );
+    }
+
+    return \trim( \wp_strip_all_tags( (string) $value ) );
+}
+
+function smp_vp_profile_education_rows( int $post_id ): array {
+    $rows = [];
+
+    if ( \function_exists( "get_field" ) ) {
+        $acf_rows = \get_field( "personal_education", $post_id );
+        if ( \is_array( $acf_rows ) ) {
+            foreach ( $acf_rows as $row ) {
+                if ( \is_array( $row ) ) {
+                    $rows[] = $row;
+                }
+            }
+        }
+    }
+
+    if ( empty( $rows ) ) {
+        $count = (int) \get_post_meta( $post_id, "personal_education", true );
+        for ( $index = 0; $index < $count; $index++ ) {
+            $row = [];
+            foreach ( [ "school", "degree", "field_of_study", "start_date", "end_date", "url", "wikipedia_url", "same_as", "description" ] as $key ) {
+                $row[ $key ] = (string) \get_post_meta( $post_id, "personal_education_" . $index . "_" . $key, true );
+            }
+            $rows[] = $row;
+        }
+    }
+
+    return \array_values( \array_filter( $rows, static function ( $row ) {
+        return \is_array( $row ) && \array_filter( $row );
+    } ) );
+}
+
+function smp_vp_render_single_profile_frontend_fields( int $post_id ): string {
+    $job_title = smp_vp_profile_field_value( $post_id, "title" );
+    $short_bio = smp_vp_profile_field_value( $post_id, "biography_short" );
+    $website   = smp_vp_profile_field_value( $post_id, "url_website" );
+    $education = smp_vp_profile_education_rows( $post_id );
+
+    if ( "" === $job_title && "" === $short_bio && "" === $website && empty( $education ) ) {
+        return "";
+    }
+
+    $output  = "<section class=\"smp-vp-profile-acf-details\" aria-label=\"Verified profile details\">";
+    $output .= "<style>.smp-vp-profile-acf-details{margin:2rem 0;padding:1.25rem;border:1px solid #e5e7eb;border-radius:14px;background:#fff}.smp-vp-profile-acf-details__heading{margin:0 0 1rem;font-size:1.05rem;font-weight:700}.smp-vp-profile-acf-details dl{display:grid;gap:.85rem;margin:0}.smp-vp-profile-acf-details dt{font-weight:700;color:#111827}.smp-vp-profile-acf-details dd{margin:0;color:#374151}.smp-vp-profile-acf-details a{word-break:break-word}</style>";
+    $output .= "<h2 class=\"smp-vp-profile-acf-details__heading\">Verified profile details</h2>";
+    $output .= "<dl>";
+
+    if ( "" !== $job_title ) {
+        $output .= "<div class=\"smp-vp-profile-acf-details__row\" data-field=\"title\"><dt>Title</dt><dd>" . \esc_html( $job_title ) . "</dd></div>";
+    }
+
+    if ( "" !== $short_bio ) {
+        $output .= "<div class=\"smp-vp-profile-acf-details__row\" data-field=\"biography_short\"><dt>Short biography</dt><dd>" . \esc_html( $short_bio ) . "</dd></div>";
+    }
+
+    if ( "" !== $website ) {
+        $output .= "<div class=\"smp-vp-profile-acf-details__row\" data-field=\"url_website\"><dt>Website</dt><dd><a href=\"" . \esc_url( $website ) . "\" rel=\"nofollow noopener\" target=\"_blank\">" . \esc_html( $website ) . "</a></dd></div>";
+    }
+
+    if ( ! empty( $education ) ) {
+        $output .= "<div class=\"smp-vp-profile-acf-details__row\" data-field=\"personal_education\"><dt>Education</dt><dd><ul>";
+        foreach ( $education as $row ) {
+            $school = isset( $row["school"] ) ? \trim( (string) $row["school"] ) : "";
+            $url    = isset( $row["url"] ) ? \trim( (string) $row["url"] ) : "";
+            $label  = \trim( $school . ( "" !== $url ? " " . $url : "" ) );
+            if ( "" === $label ) {
+                continue;
+            }
+            $output .= "<li>" . \esc_html( $label ) . "</li>";
+        }
+        $output .= "</ul></dd></div>";
+    }
+
+    $output .= "</dl></section>";
+
+    return $output;
+}
