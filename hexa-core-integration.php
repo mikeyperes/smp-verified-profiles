@@ -174,6 +174,9 @@ function smp_vp_register_ajax_actions(): void {
             'smp_vp_toggle_snippet' => [
                 'callback' => __NAMESPACE__ . '\\smp_vp_ajax_toggle_snippet',
             ],
+            'smp_vp_test_snippet' => [
+                'callback' => __NAMESPACE__ . '\\smp_vp_ajax_test_snippet',
+            ],
             'smp_verified_profiles_toggle_snippet' => [
                 'callback' => __NAMESPACE__ . '\\smp_vp_ajax_toggle_snippet',
             ],
@@ -219,26 +222,46 @@ function smp_vp_ajax_toggle_snippet( AjaxRequest $request ): array {
         throw AjaxFailure::bad_request( 'Missing snippet ID.' );
     }
 
-    $allowed = [];
-    foreach ( [ 'acf', 'admin', 'non_admin' ] as $type ) {
-        foreach ( get_snippets( $type ) as $snippet ) {
-            if ( ! empty( $snippet['id'] ) ) {
-                $allowed[] = (string) $snippet['id'];
-            }
-        }
+    if ( ! function_exists( __NAMESPACE__ . '\\smp_vp_snippet_registry' ) ) {
+        throw AjaxFailure::bad_request( 'Snippet registry is not available.' );
     }
 
-    if ( ! in_array( $snippet_id, $allowed, true ) ) {
+    $registry = smp_vp_snippet_registry();
+
+    if ( ! $registry->has( $snippet_id ) ) {
         throw AjaxFailure::bad_request( 'Invalid snippet ID.' );
     }
 
-    update_option( $snippet_id, $enable );
+    if ( ! $registry->set_enabled( $snippet_id, $enable ) ) {
+        throw AjaxFailure::bad_request( 'Snippet could not be updated.' );
+    }
 
     return [
         'snippet_id' => $snippet_id,
         'enabled'    => $enable,
         'message'    => $enable ? 'Snippet enabled.' : 'Snippet disabled.',
+        'test'       => $registry->test( $snippet_id ),
     ];
+}
+
+function smp_vp_ajax_test_snippet( AjaxRequest $request ): array {
+    $snippet_id = $request->text( 'snippet_id', '', 'post' );
+
+    if ( '' === $snippet_id ) {
+        throw AjaxFailure::bad_request( 'Missing snippet ID.' );
+    }
+
+    if ( ! function_exists( __NAMESPACE__ . '\\smp_vp_snippet_registry' ) ) {
+        throw AjaxFailure::bad_request( 'Snippet registry is not available.' );
+    }
+
+    $registry = smp_vp_snippet_registry();
+
+    if ( ! $registry->has( $snippet_id ) ) {
+        throw AjaxFailure::bad_request( 'Invalid snippet ID.' );
+    }
+
+    return $registry->test( $snippet_id );
 }
 
 function smp_vp_ajax_modify_wp_config_constants( AjaxRequest $request ): array {
