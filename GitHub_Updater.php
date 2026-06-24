@@ -196,7 +196,7 @@ class WP_GitHub_Updater {
         // Fetch the main plugin file from GitHub
         $starter_file = isset( $this->config['plugin_starter_file'] ) 
             ? $this->config['plugin_starter_file'] 
-            : 'initialization.php';
+            : 'smp-verified-profiles.php';
             
         $url = trailingslashit( $this->config['raw_url'] ) . $starter_file;
         

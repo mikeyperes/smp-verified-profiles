@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.16
+ * Version: 6.5.17
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -32,7 +32,7 @@ class Config {
     public static $plugin_name = "Scale My Publication - Verified Profiles";
     
     /** @var string Main plugin file name */
-    public static $plugin_starter_file = "initialization.php";
+    public static $plugin_starter_file = "smp-verified-profiles.php";
     
     /** @var string Plugin folder name (must match actual folder) */
     public static $plugin_folder_name = "smp-verified-profiles";
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.16";
+    public static $plugin_version = "6.5.17";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -192,8 +192,6 @@ function smp_vp_is_settings_dashboard_request(): bool {
             [
                 'smp_vp_load_tab',
                 'smp_vp_toggle_snippet',
-                'smp_vp_test_snippet',
-                'smp_vp_shortcode_profile_values',
                 'smp_verified_profiles_toggle_snippet',
                 'smp_verified_profiles_modify_wp_config_constants',
                 'smp_verified_profiles_execute_function',
@@ -225,7 +223,19 @@ function smp_vp_is_relevant_admin_request(): bool {
     }
 
     if ( wp_doing_ajax() ) {
-        return in_array( smp_vp_request_value( 'action' ), [ 'get_unclaimed_profiles', 'send_email', 'refresh_user', 'smp_vp_shortcode_profile_values' ], true );
+        return in_array(
+            smp_vp_request_value( 'action' ),
+            [
+                'get_unclaimed_profiles',
+                'send_email',
+                'refresh_user',
+                'smp_vp_spawn_save_settings',
+                'smp_vp_spawn_test_api',
+                'smp_vp_spawn_propose',
+                'smp_vp_spawn_approve',
+            ],
+            true
+        );
     }
 
     return false;
@@ -249,6 +259,7 @@ function smp_vp_load_settings_dashboard_files(): void {
     include_once __DIR__ . '/settings-dashboard-snippets.php';
     include_once __DIR__ . '/settings-dashboard-shortcodes.php';
     include_once __DIR__ . '/settings-dashboard.php';
+    include_once __DIR__ . '/verified-profile-spawner.php';
 
     $loaded = true;
 }
@@ -542,6 +553,7 @@ add_action( 'init', function() {
 	            include_once __DIR__ . '/snippet-adjust-wp-admin-for-profile-managers.php';
 	            include_once __DIR__ . '/snippet-wp-admin-user-page-functionality.php';
 	            include_once __DIR__ . '/snippet-post-functionality.php';
+	            include_once __DIR__ . '/verified-profile-spawner.php';
 	            include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
 	            include_once __DIR__ . '/snippet-wp-admin-user-page-optional-functionality.php';
 	            include_once __DIR__ . '/snippet-disable-password-reset.php';
