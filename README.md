@@ -2,7 +2,7 @@
 
 A comprehensive WordPress plugin for managing verified profiles on Scale My Publication systems. This plugin provides complete profile verification, management, and display functionality with ACF (Advanced Custom Fields) integration.
 
-![Version](https://img.shields.io/badge/version-6.5.14-blue.svg)
+![Version](https://img.shields.io/badge/version-6.5.16-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
@@ -462,7 +462,11 @@ Logs appear in `/wp-content/debug.log`
 
 ## Changelog
 
-### Version 6.5.11 (Current)
+### Version 6.5.16 (Current)
+- Rebuilt the Shortcodes dashboard tab on Hexa WP Core ShortcodeRegistry with grouped discovery, runtime registration status, source/callback reporting, and retained profile value previews.
+- Renamed the post edit metabox to Verified Profiles and changed the scan button text to Find Profiles.
+
+### Version 6.5.11
 - Synced Hexa WordPress Plugin Core to 0.18.0 and moved the Snippets tab to the generic core snippet registry with description, testing, related snippets, related shortcodes, and README components.
 
 ### Version 6.5.6

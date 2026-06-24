@@ -199,12 +199,9 @@ function add_edit_profile_links_inside_label() {
  */
 add_action('add_meta_boxes_post', __NAMESPACE__ . '\\add_find_profiles_metabox');
 function add_find_profiles_metabox($post) {
-    $labels = get_verified_profile_settings();
-    $title  = isset($labels['plural']) ? (string) $labels['plural'] : 'Profiles';
-
     add_meta_box(
         'smpvp_find_profiles',
-        sprintf(__('Find %s', 'smpvp'), $title),
+        __('Verified Profiles', 'smpvp'),
         __NAMESPACE__ . '\\render_find_profiles_metabox',
         'post',
         'normal',
@@ -227,7 +224,7 @@ function render_find_profiles_metabox(\WP_Post $post) {
     <div id="smpvp-box">
         <p>
             <button type="button" id="smpvp-scan" class="button button-primary" style="width:100%;">
-                <?php echo esc_html(sprintf('Scan & Add %s', $labels['plural'] ?? 'Profiles')); ?>
+                <?php esc_html_e('Find Profiles', 'smpvp'); ?>
             </button>
         </p>
         <p>

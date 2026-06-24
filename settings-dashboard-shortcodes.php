@@ -8,6 +8,11 @@
 
 namespace smp_verified_profiles;
 
+use Hexa\PluginCore\ShortcodeRegistry\ShortcodeDefinition;
+use Hexa\PluginCore\ShortcodeRegistry\ShortcodeDisplayRenderer;
+use Hexa\PluginCore\ShortcodeRegistry\ShortcodeRegistry;
+use Hexa\PluginCore\WpAdminComponents\CoreUi;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -17,98 +22,94 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function display_settings_shortcodes() {
     $shortcodes = smp_vp_discover_shortcodes();
+    $groups     = smp_vp_group_shortcode_catalog( $shortcodes );
     $profiles   = smp_vp_get_verified_profile_posts();
-    $profile_id = ! empty( $profiles ) ? (int) $profiles[0]->ID : 0;
+    $summary    = smp_vp_shortcode_catalog_summary( $shortcodes );
+
+    if ( ! class_exists( ShortcodeDisplayRenderer::class ) || ! class_exists( ShortcodeRegistry::class ) ) {
+        echo '<div class="notice notice-error"><p>' . esc_html__( 'Hexa Core ShortcodeRegistry is not available.', 'smp-verified-profiles' ) . '</p></div>';
+        return;
+    }
+
+    $registry = smp_vp_shortcode_registry( $shortcodes );
+
+    CoreUi::render_assets();
+    $renderer = new ShortcodeDisplayRenderer();
     ?>
-    <div class="smp-panel">
-        <div class="smp-panel-header">Shortcodes</div>
-        <div class="smp-panel-body">
-            <p>Shortcodes discovered from this plugin's PHP files and shortcode provider functions. Registered status reflects the current WordPress runtime.</p>
+    <div class="hpc-ui smp-vp-shortcodes">
+        <?php smp_vp_render_shortcode_dashboard_styles(); ?>
 
-            <table class="smp-table smp-shortcodes-table">
-                <thead>
-                    <tr>
-                        <th>Shortcode</th>
-                        <th>Description</th>
-                        <th>Live Example</th>
-                        <th>Status</th>
-                        <th>Source</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php foreach ( $shortcodes as $shortcode ) : ?>
+        <section class="hpc-card smp-vp-shortcodes-head">
+            <div>
+                <h2><?php esc_html_e( 'Verified Profiles Shortcodes', 'smp-verified-profiles' ); ?></h2>
+                <p><?php esc_html_e( 'Registry-backed catalog built from direct shortcode registrations, provider arrays, legacy snippets, and entity shortcode files. Runtime status reflects the current WordPress request.', 'smp-verified-profiles' ); ?></p>
+            </div>
+            <div class="smp-vp-shortcodes-pills">
+                <?php echo CoreUi::pill( (string) $summary['total'] . ' discovered', 'dark' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php echo CoreUi::pill( (string) count( $registry->all() ) . ' in registry', 'dark' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php echo CoreUi::pill( (string) $summary['registered'] . ' registered', 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <?php echo CoreUi::pill( (string) $summary['missing'] . ' missing', $summary['missing'] > 0 ? 'danger' : 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </div>
+        </section>
+
+        <?php foreach ( smp_vp_shortcode_groups() as $group_id => $group ) : ?>
+            <?php
+            $items = $groups[ $group_id ] ?? [];
+            if ( empty( $items ) ) {
+                continue;
+            }
+            ?>
+            <details class="hpc-section smp-vp-shortcode-group" open>
+                <summary>
+                    <span><?php echo esc_html( $group['label'] ); ?></span>
+                    <?php echo CoreUi::pill( (string) count( $items ) . ' shortcodes', 'dark' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                </summary>
+                <div class="hpc-section-body">
+                    <?php if ( '' !== $group['description'] ) : ?>
+                        <p class="smp-vp-shortcode-group-description"><?php echo esc_html( $group['description'] ); ?></p>
+                    <?php endif; ?>
                     <?php
-                    $tag     = $shortcode['tag'];
-                    $example = $shortcode['example'];
-                    $preview = smp_vp_render_shortcode_preview( $example, $profile_id );
+                    echo $renderer->render(
+                        smp_vp_shortcode_render_items( $items ),
+                        [
+                            'title'       => '',
+                            'description' => '',
+                        ]
+                    ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                     ?>
-                    <tr>
-                        <td><code>[<?php echo esc_html( $tag ); ?>]</code></td>
-                        <td><?php echo esc_html( $shortcode['description'] ); ?></td>
-                        <td>
-                            <code><?php echo esc_html( $example ); ?></code>
-                            <div class="smp-shortcode-preview"><?php echo esc_html( $preview['summary'] ); ?></div>
-                        </td>
-                        <td>
-                            <?php if ( shortcode_exists( $tag ) ) : ?>
-                                <span class="status-ok">Registered</span>
-                            <?php else : ?>
-                                <span class="status-warn">Discovered only</span>
-                            <?php endif; ?>
-                        </td>
-                        <td><?php echo esc_html( implode( ', ', $shortcode['sources'] ) ); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+                </div>
+            </details>
+        <?php endforeach; ?>
+
+        <details class="hpc-section smp-vp-shortcode-profile-values" open>
+            <summary>
+                <span><?php esc_html_e( 'Verified Profile Field Values', 'smp-verified-profiles' ); ?></span>
+                <?php echo CoreUi::pill( (string) count( $profiles ) . ' profiles', 'dark' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </summary>
+            <div class="hpc-section-body">
+                <p><?php esc_html_e( 'Select a verified profile to render profile field examples and shortcode values against that profile context.', 'smp-verified-profiles' ); ?></p>
+
+                <?php if ( empty( $profiles ) ) : ?>
+                    <div class="notice notice-warning inline"><p><?php esc_html_e( 'No published verified profiles were found for the configured profile post type.', 'smp-verified-profiles' ); ?></p></div>
+                <?php else : ?>
+                    <div class="smp-vp-shortcode-profile-controls">
+                        <label for="smp-vp-shortcode-profile"><strong><?php esc_html_e( 'Verified profile', 'smp-verified-profiles' ); ?></strong></label>
+                        <select id="smp-vp-shortcode-profile">
+                            <?php foreach ( $profiles as $profile ) : ?>
+                                <option value="<?php echo esc_attr( $profile->ID ); ?>">
+                                    <?php echo esc_html( $profile->post_title . ' (#' . $profile->ID . ')' ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="button" class="hpc-button secondary" id="smp-vp-refresh-shortcode-values"><?php esc_html_e( 'Refresh Values', 'smp-verified-profiles' ); ?></button>
+                    </div>
+
+                    <div id="smp-vp-shortcode-values-status" class="smp-vp-shortcode-values-status" aria-live="polite"></div>
+                    <div id="smp-vp-shortcode-values"></div>
+                <?php endif; ?>
+            </div>
+        </details>
     </div>
-
-    <div class="smp-panel">
-        <div class="smp-panel-header">Verified Profile Shortcode Values</div>
-        <div class="smp-panel-body">
-            <p>Select a verified profile to render profile fields and shortcode values against that profile context.</p>
-
-            <?php if ( empty( $profiles ) ) : ?>
-                <div class="smp-info-box warning">No published verified profiles were found for the configured profile post type.</div>
-            <?php else : ?>
-                <label for="smp-vp-shortcode-profile"><strong>Verified profile</strong></label>
-                <select id="smp-vp-shortcode-profile" style="min-width:320px;">
-                    <?php foreach ( $profiles as $profile ) : ?>
-                        <option value="<?php echo esc_attr( $profile->ID ); ?>">
-                            <?php echo esc_html( $profile->post_title . ' (#' . $profile->ID . ')' ); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="button" class="button button-secondary" id="smp-vp-refresh-shortcode-values">Refresh Values</button>
-
-                <div id="smp-vp-shortcode-values-status" class="smp-shortcode-values-status"></div>
-                <div id="smp-vp-shortcode-values"></div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <style>
-        .smp-shortcodes-table code,
-        #smp-vp-shortcode-values code {
-            white-space: nowrap;
-        }
-        .smp-shortcode-preview {
-            margin-top: 6px;
-            color: #50575e;
-            font-size: 12px;
-            max-width: 420px;
-            overflow-wrap: anywhere;
-        }
-        .smp-shortcode-values-status {
-            margin: 12px 0;
-            color: #646970;
-        }
-        .smp-shortcode-value {
-            max-width: 520px;
-            overflow-wrap: anywhere;
-        }
-    </style>
 
     <script>
     jQuery(function($) {
@@ -128,11 +129,12 @@ function display_settings_shortcodes() {
                 data: {
                     action: 'smp_vp_shortcode_profile_values',
                     profile_id: profileId,
-                    nonce: smpVP.nonce
+                    nonce: window.smpVP ? smpVP.nonce : ''
                 },
                 success: function(response) {
                     if (!response || !response.success) {
-                        $('#smp-vp-shortcode-values-status').text(response && response.data ? response.data : 'Failed to load shortcode values.');
+                        var message = response && response.data && response.data.message ? response.data.message : response && response.data ? response.data : 'Failed to load shortcode values.';
+                        $('#smp-vp-shortcode-values-status').text(message);
                         return;
                     }
 
@@ -221,15 +223,15 @@ function smp_vp_discover_shortcodes() {
     $items = [];
 
     foreach ( smp_vp_scan_php_shortcodes() as $tag => $data ) {
-        $items[ $tag ] = $data;
+        smp_vp_merge_shortcode_catalog_item( $items, $tag, $data );
     }
 
     $providers = [
-        __NAMESPACE__ . '\\get_verified_profile_shortcodes',
-        __NAMESPACE__ . '\\get_muckrack_shortcodes',
+        __NAMESPACE__ . '\\get_verified_profile_shortcodes' => 'Verified profile provider',
+        __NAMESPACE__ . '\\get_muckrack_shortcodes'         => 'MuckRack provider',
     ];
 
-    foreach ( $providers as $provider ) {
+    foreach ( $providers as $provider => $provider_label ) {
         if ( ! is_callable( $provider ) ) {
             continue;
         }
@@ -239,25 +241,144 @@ function smp_vp_discover_shortcodes() {
             continue;
         }
 
-        foreach ( array_keys( $provided ) as $tag ) {
-            if ( ! isset( $items[ $tag ] ) ) {
-                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [], 'callback' => '' ];
-            }
-            $items[ $tag ]['sources'][] = 'provider';
-            $items[ $tag ]['callback']  = $provided[ $tag ];
+        foreach ( $provided as $tag => $callback ) {
+            smp_vp_merge_shortcode_catalog_item(
+                $items,
+                (string) $tag,
+                [
+                    'callback' => is_string( $callback ) ? $callback : '',
+                    'provider' => $provider_label,
+                    'sources'  => [ 'provider:' . basename( str_replace( '\\', '/', $provider ) ) ],
+                ]
+            );
         }
     }
 
+    foreach ( array_keys( smp_vp_shortcode_metadata_map() ) as $tag ) {
+        smp_vp_merge_shortcode_catalog_item( $items, (string) $tag, [ 'sources' => [ 'metadata' ] ] );
+    }
+
     foreach ( array_keys( $items ) as $tag ) {
-        $meta = smp_vp_shortcode_metadata( $tag );
-        $items[ $tag ]['description'] = $meta['description'];
-        $items[ $tag ]['example']     = $meta['example'];
-        $items[ $tag ]['sources']     = array_values( array_unique( $items[ $tag ]['sources'] ) );
+        $meta   = smp_vp_shortcode_metadata( $tag );
+        $source = array_values( array_unique( $items[ $tag ]['sources'] ?? [] ) );
+
+        $items[ $tag ] = array_merge(
+            [
+                'tag'             => $tag,
+                'callback'        => '',
+                'provider'        => '',
+                'sources'         => [],
+                'label'           => smp_vp_shortcode_label( $tag ),
+                'description'     => '',
+                'example'         => '[' . $tag . ']',
+                'examples'        => [],
+                'parameters'      => [],
+                'group'           => smp_vp_infer_shortcode_group( $tag, $source ),
+                'status'          => 'missing',
+                'status_label'    => 'Missing callback',
+                'registered'      => false,
+                'callback_exists' => false,
+            ],
+            $items[ $tag ],
+            $meta
+        );
+
+        $items[ $tag ]['sources']         = $source;
+        $items[ $tag ]['source']          = implode( ', ', $source );
+        $items[ $tag ]['registered']      = shortcode_exists( $tag );
+        $items[ $tag ]['callback_exists'] = ! empty( $items[ $tag ]['callback'] ) && is_callable( $items[ $tag ]['callback'] );
+
+        if ( $items[ $tag ]['registered'] ) {
+            $items[ $tag ]['status']       = 'registered';
+            $items[ $tag ]['status_label'] = 'Registered';
+        } elseif ( $items[ $tag ]['callback_exists'] ) {
+            $items[ $tag ]['status']       = 'callable';
+            $items[ $tag ]['status_label'] = 'Callable, not registered';
+        } else {
+            $items[ $tag ]['status']       = 'missing';
+            $items[ $tag ]['status_label'] = 'Missing callback';
+        }
+
+        if ( empty( $items[ $tag ]['examples'] ) ) {
+            $items[ $tag ]['examples'] = [
+                [
+                    'label'       => 'Primary',
+                    'shortcode'   => (string) $items[ $tag ]['example'],
+                    'description' => '',
+                    'parameters'  => $items[ $tag ]['parameters'],
+                ],
+            ];
+        }
     }
 
     ksort( $items, SORT_NATURAL | SORT_FLAG_CASE );
 
     return $cache = array_values( $items );
+}
+
+/**
+ * Build a Hexa Core registry for all discovered Verified Profiles shortcodes.
+ *
+ * @param array<int,array<string,mixed>>|null $shortcodes Discovered shortcode catalog.
+ */
+function smp_vp_shortcode_registry( ?array $shortcodes = null ): ShortcodeRegistry {
+    $registry   = new ShortcodeRegistry();
+    $shortcodes = $shortcodes ?? smp_vp_discover_shortcodes();
+
+    foreach ( $shortcodes as $shortcode ) {
+        $tag = isset( $shortcode['tag'] ) ? (string) $shortcode['tag'] : '';
+        if ( '' === $tag ) {
+            continue;
+        }
+
+        $registry->add(
+            new ShortcodeDefinition(
+                $tag,
+                isset( $shortcode['label'] ) ? (string) $shortcode['label'] : smp_vp_shortcode_label( $tag ),
+                isset( $shortcode['example'] ) ? (string) $shortcode['example'] : '[' . $tag . ']',
+                isset( $shortcode['description'] ) ? (string) $shortcode['description'] : '',
+                isset( $shortcode['status_label'] ) ? (string) $shortcode['status_label'] : ''
+            )
+        );
+    }
+
+    return $registry;
+}
+
+/**
+ * Merge one discovered shortcode source into the catalog without losing earlier source details.
+ *
+ * @param array<string,array<string,mixed>> $items Catalog by tag.
+ * @param string                           $tag Shortcode tag.
+ * @param array<string,mixed>              $data Source data.
+ */
+function smp_vp_merge_shortcode_catalog_item( array &$items, string $tag, array $data ): void {
+    if ( '' === $tag ) {
+        return;
+    }
+
+    if ( ! isset( $items[ $tag ] ) ) {
+        $items[ $tag ] = [
+            'tag'      => $tag,
+            'sources'  => [],
+            'callback' => '',
+            'provider' => '',
+        ];
+    }
+
+    if ( ! empty( $data['callback'] ) && is_string( $data['callback'] ) ) {
+        $items[ $tag ]['callback'] = $data['callback'];
+    }
+
+    if ( ! empty( $data['provider'] ) && is_string( $data['provider'] ) ) {
+        $items[ $tag ]['provider'] = $data['provider'];
+    }
+
+    foreach ( (array) ( $data['sources'] ?? [] ) as $source ) {
+        if ( is_scalar( $source ) && '' !== (string) $source ) {
+            $items[ $tag ]['sources'][] = (string) $source;
+        }
+    }
 }
 
 /**
@@ -278,6 +399,10 @@ function smp_vp_scan_php_shortcodes() {
         }
 
         $path = $file->getPathname();
+        if ( str_contains( $path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'hexa-wordpress-plugin-core' . DIRECTORY_SEPARATOR ) ) {
+            continue;
+        }
+
         $code = file_get_contents( $path );
         if ( $code === false ) {
             continue;
@@ -312,7 +437,7 @@ function smp_vp_scan_php_shortcodes() {
  * @return string
  */
 function smp_vp_parse_shortcode_callback_expression( $expression ) {
-    if ( preg_match( '/__NAMESPACE__\s*\.\s*[\'"]\\\\\\\\?([a-zA-Z0-9_]+)[\'"]/', $expression, $matches ) ) {
+    if ( preg_match( '/__NAMESPACE__\s*\.\s*[\'"]\\\\*([a-zA-Z0-9_]+)[\'"]/', $expression, $matches ) ) {
         return __NAMESPACE__ . '\\' . $matches[1];
     }
 
@@ -321,6 +446,272 @@ function smp_vp_parse_shortcode_callback_expression( $expression ) {
     }
 
     return '';
+}
+
+/**
+ * Known shortcode tags from legacy docs and provider maps.
+ *
+ * @return array<string,bool>
+ */
+function smp_vp_shortcode_metadata_map(): array {
+    return array_fill_keys(
+        [
+            'acf_author_field',
+            'contributor_network',
+            'display_homepage_profiles',
+            'display_post_mentions',
+            'display_profile_contributing_articles',
+            'display_profile_council_banner',
+            'display_profile_current_residence',
+            'display_profile_education',
+            'display_profile_internal_features',
+            'display_profile_location_born',
+            'display_profile_muckrack_verified',
+            'display_profile_notable_mentions',
+            'display_profile_organizations_founded',
+            'display_profile_press_releases',
+            'display_profile_quick_contact',
+            'display_profile_quick_online_profiles',
+            'display_profile_validate_schema_button',
+            'display_profiles_featured_in_single_post',
+            'display_single_post_mentioned_in_article',
+            'display_single_profile_article_written_by',
+            'display_single_profile_articles_featured_in',
+            'display_single_profile_education',
+            'display_single_profile_organizations_founded',
+            'display_single_profile_press_releases',
+            'display_single_profile_text_based_social_profiles',
+            'display_single_profile_validate_schema_button',
+            'display_theme_footer_text_social_links',
+            'display_website_footer_external_profiles',
+            'featured_in_posts',
+            'get_profile_field',
+            'muckrack_verified',
+            'post_mentioned_vocabulary',
+            'profiles_in_articles',
+            'verified_author',
+            'verified_icon_author',
+            'verified_icon_single',
+            'verified_profile',
+            'verified_single',
+            'vocabulary_mentioned_posts',
+            'wiki_mentioned_posts',
+            'woocommerce_account_dashboard',
+        ],
+        true
+    );
+}
+
+function smp_vp_shortcode_label( string $tag ): string {
+    $tag = preg_replace( '/^(display_|shortcode_)/', '', $tag );
+    $tag = str_replace( [ 'acf', 'wp', '_' ], [ 'ACF', 'WP', ' ' ], (string) $tag );
+
+    return ucwords( trim( preg_replace( '/\s+/', ' ', $tag ) ) );
+}
+
+/**
+ * @param array<int,string> $sources
+ */
+function smp_vp_infer_shortcode_group( string $tag, array $sources = [] ): string {
+    $source_text = implode( ' ', $sources );
+
+    if ( str_contains( $source_text, 'snippet-woocommerce' ) || str_starts_with( $tag, 'woocommerce_' ) ) {
+        return 'woocommerce';
+    }
+
+    if ( in_array( $tag, [ 'acf_author_field', 'muckrack_verified', 'verified_author', 'verified_icon_author', 'verified_icon_single', 'verified_single', 'display_profile_muckrack_verified' ], true ) ) {
+        return 'author_muckrack';
+    }
+
+    if ( in_array( $tag, [ 'contributor_network', 'verified_profile', 'display_theme_footer_text_social_links', 'display_website_footer_external_profiles' ], true ) ) {
+        return 'global_options';
+    }
+
+    if ( in_array( $tag, [ 'post_mentioned_vocabulary', 'profiles_in_articles', 'vocabulary_mentioned_posts', 'wiki_mentioned_posts', 'display_profiles_featured_in_single_post', 'display_single_post_mentioned_in_article' ], true ) ) {
+        return 'article_entities';
+    }
+
+    if ( in_array( $tag, [ 'display_post_mentions', 'display_profile_internal_features' ], true ) ) {
+        return 'legacy';
+    }
+
+    if ( 'get_profile_field' === $tag || str_starts_with( $tag, 'display_profile_' ) || str_starts_with( $tag, 'display_single_profile_' ) || 'display_homepage_profiles' === $tag || 'featured_in_posts' === $tag ) {
+        return 'profile_display';
+    }
+
+    return 'legacy';
+}
+
+/**
+ * @return array<string,array{label:string,description:string}>
+ */
+function smp_vp_shortcode_groups(): array {
+    return [
+        'profile_display' => [
+            'label'       => 'Profile Display',
+            'description' => 'Shortcodes that render fields, profile sections, profile loops, and single-profile template fragments.',
+        ],
+        'article_entities' => [
+            'label'       => 'Article And Entity Relationships',
+            'description' => 'Shortcodes that render profiles/entities mentioned by posts, article relationships, and entity reverse lookups.',
+        ],
+        'author_muckrack' => [
+            'label'       => 'Author And MuckRack Verification',
+            'description' => 'Author-context and MuckRack verification shortcodes. Most resolve from the current post author or author archive context.',
+        ],
+        'global_options' => [
+            'label'       => 'Global Options',
+            'description' => 'Shortcodes for Verified Profile and Contributor Network option groups, page IDs, template IDs, and site-wide links.',
+        ],
+        'woocommerce' => [
+            'label'       => 'WooCommerce',
+            'description' => 'Commerce-related shortcodes registered by the optional WooCommerce snippet.',
+        ],
+        'legacy' => [
+            'label'       => 'Legacy Or Missing',
+            'description' => 'Legacy tags discovered in older snippet files or metadata. Missing callbacks are shown explicitly instead of hidden.',
+        ],
+    ];
+}
+
+/**
+ * @param array<int,array<string,mixed>> $shortcodes
+ * @return array<string,array<int,array<string,mixed>>>
+ */
+function smp_vp_group_shortcode_catalog( array $shortcodes ): array {
+    $groups = [];
+
+    foreach ( $shortcodes as $shortcode ) {
+        $group = isset( $shortcode['group'] ) ? (string) $shortcode['group'] : 'legacy';
+        $groups[ $group ][] = $shortcode;
+    }
+
+    foreach ( $groups as &$items ) {
+        usort(
+            $items,
+            static fn( array $a, array $b ): int => strnatcasecmp( (string) ( $a['label'] ?? $a['tag'] ?? '' ), (string) ( $b['label'] ?? $b['tag'] ?? '' ) )
+        );
+    }
+
+    return $groups;
+}
+
+/**
+ * @param array<int,array<string,mixed>> $shortcodes
+ * @return array{total:int,registered:int,missing:int,callable:int}
+ */
+function smp_vp_shortcode_catalog_summary( array $shortcodes ): array {
+    $registered = 0;
+    $callable   = 0;
+    $missing    = 0;
+
+    foreach ( $shortcodes as $shortcode ) {
+        if ( ! empty( $shortcode['registered'] ) ) {
+            $registered++;
+        } elseif ( ! empty( $shortcode['callback_exists'] ) ) {
+            $callable++;
+        } else {
+            $missing++;
+        }
+    }
+
+    return [
+        'total'      => count( $shortcodes ),
+        'registered' => $registered,
+        'callable'   => $callable,
+        'missing'    => $missing,
+    ];
+}
+
+/**
+ * Convert catalog rows to Hexa Core ShortcodeDisplayRenderer items.
+ *
+ * @param array<int,array<string,mixed>> $items
+ * @return array<int,array<string,mixed>>
+ */
+function smp_vp_shortcode_render_items( array $items ): array {
+    $render_items = [];
+
+    foreach ( $items as $item ) {
+        $tag      = (string) ( $item['tag'] ?? '' );
+        $example  = (string) ( $item['example'] ?? '[' . $tag . ']' );
+        $status   = (string) ( $item['status_label'] ?? '' );
+        $callback = (string) ( $item['callback'] ?? '' );
+
+        $render_items[] = [
+            'tag'         => $tag,
+            'label'       => (string) ( $item['label'] ?? smp_vp_shortcode_label( $tag ) ),
+            'shortcode'   => $example,
+            'description' => (string) ( $item['description'] ?? '' ),
+            'provider'    => (string) ( $item['provider'] ?? '' ),
+            'source'      => (string) ( $item['source'] ?? '' ),
+            'test_method' => '' !== $callback ? $status . ' / ' . $callback : $status,
+            'examples'    => isset( $item['examples'] ) && is_array( $item['examples'] ) ? $item['examples'] : [ $example ],
+            'parameters'  => isset( $item['parameters'] ) && is_array( $item['parameters'] ) ? $item['parameters'] : [],
+            'evaluate'    => false,
+            'output_html' => smp_vp_shortcode_status_html( $item ),
+        ];
+    }
+
+    return $render_items;
+}
+
+/**
+ * @param array<string,mixed> $item
+ */
+function smp_vp_shortcode_status_html( array $item ): string {
+    $status = (string) ( $item['status'] ?? 'missing' );
+    $tone   = match ( $status ) {
+        'registered' => 'success',
+        'callable'   => 'warning',
+        default      => 'danger',
+    };
+
+    $html = '<div class="smp-vp-shortcode-status">';
+    $html .= CoreUi::pill( (string) ( $item['status_label'] ?? 'Missing callback' ), $tone );
+
+    if ( ! empty( $item['callback_exists'] ) && empty( $item['registered'] ) ) {
+        $html .= '<p>Callback exists, but WordPress has not registered the shortcode in this request.</p>';
+    } elseif ( empty( $item['callback_exists'] ) && empty( $item['registered'] ) ) {
+        $html .= '<p>Discovered from source or metadata, but no callable callback is loaded.</p>';
+    } else {
+        $html .= '<p>Registered in the current WordPress runtime.</p>';
+    }
+
+    $html .= '</div>';
+
+    return $html;
+}
+
+function smp_vp_render_shortcode_dashboard_styles(): void {
+    static $rendered = false;
+
+    if ( $rendered ) {
+        return;
+    }
+
+    $rendered = true;
+    ?>
+    <style>
+        .smp-vp-shortcodes{display:grid;gap:14px}
+        .smp-vp-shortcodes-head{align-items:flex-start;display:flex;gap:16px;justify-content:space-between}
+        .smp-vp-shortcodes-head h2{font-size:20px;margin:0 0 7px}
+        .smp-vp-shortcodes-head p{color:#4b5563;line-height:1.55;margin:0;max-width:780px}
+        .smp-vp-shortcodes-pills{align-items:center;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+        .smp-vp-shortcode-group-description{color:#4b5563;line-height:1.55;margin:0 0 14px}
+        .smp-vp-shortcode-group .hpc-shortcode-display-head{display:none}
+        .smp-vp-shortcode-group .hpc-shortcode-list{gap:10px}
+        .smp-vp-shortcode-group .hpc-shortcode-row{grid-template-columns:minmax(260px,1.1fr) minmax(260px,.9fr)}
+        .smp-vp-shortcode-status{display:grid;gap:8px}
+        .smp-vp-shortcode-status p{color:#4b5563;margin:0}
+        .smp-vp-shortcode-profile-controls{align-items:center;display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+        .smp-vp-shortcode-profile-controls select{min-width:320px}
+        .smp-vp-shortcode-values-status{color:#64748b;margin:12px 0}
+        #smp-vp-shortcode-values code{white-space:nowrap}
+        #smp-vp-shortcode-values .smp-shortcode-value{max-width:560px;overflow-wrap:anywhere}
+        @media(max-width:900px){.smp-vp-shortcodes-head{display:grid}.smp-vp-shortcodes-pills{justify-content:flex-start}.smp-vp-shortcode-profile-controls select{min-width:0;width:100%}}
+    </style>
+    <?php
 }
 
 /**

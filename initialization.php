@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.14
+ * Version: 6.5.16
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.12";
+    public static $plugin_version = "6.5.16";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -192,6 +192,8 @@ function smp_vp_is_settings_dashboard_request(): bool {
             [
                 'smp_vp_load_tab',
                 'smp_vp_toggle_snippet',
+                'smp_vp_test_snippet',
+                'smp_vp_shortcode_profile_values',
                 'smp_verified_profiles_toggle_snippet',
                 'smp_verified_profiles_modify_wp_config_constants',
                 'smp_verified_profiles_execute_function',
@@ -223,7 +225,7 @@ function smp_vp_is_relevant_admin_request(): bool {
     }
 
     if ( wp_doing_ajax() ) {
-        return in_array( smp_vp_request_value( 'action' ), [ 'get_unclaimed_profiles', 'send_email', 'refresh_user' ], true );
+        return in_array( smp_vp_request_value( 'action' ), [ 'get_unclaimed_profiles', 'send_email', 'refresh_user', 'smp_vp_shortcode_profile_values' ], true );
     }
 
     return false;
