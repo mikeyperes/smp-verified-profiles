@@ -21,6 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+include_once __DIR__ . '/verified-profile-display-templates.php';
+
 /**
  * Register settings page in WordPress admin menu
  * Adds the plugin settings page under Settings menu
@@ -48,6 +50,7 @@ function smp_vp_dashboard_tabs() {
         'snippets'      => 'Snippets',
         'shortcodes'    => 'Shortcodes',
         'emails'        => 'Emails',
+        'display-cards' => 'Display Cards',
     ] );
 }
 
@@ -98,6 +101,12 @@ function smp_vp_render_dashboard_tab( $tab_id ) {
 
         case 'emails':
             display_settings_emails();
+            break;
+
+        case 'display-cards':
+            if ( function_exists( __NAMESPACE__ . '\smp_vp_display_render_settings' ) ) {
+                smp_vp_display_render_settings();
+            }
             break;
 
         default:
