@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.19
+ * Version: 6.5.31
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.19";
+    public static $plugin_version = "6.5.31";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -198,6 +198,9 @@ function smp_vp_is_settings_dashboard_request(): bool {
                 'smp_vp_force_plugin_update_check',
                 'smp_vp_display_save_settings',
                 'smp_vp_display_import_elementor',
+                'smp_vp_display_create_loop_item',
+                'smp_vp_display_save_loop_item',
+                'smp_vp_display_delete_loop_item',
             ],
             true
         );
@@ -234,9 +237,14 @@ function smp_vp_is_relevant_admin_request(): bool {
                 'smp_vp_spawn_save_settings',
                 'smp_vp_spawn_test_api',
                 'smp_vp_spawn_propose',
+                'smp_vp_spawn_detect_existing',
+                'smp_vp_spawn_profile_state',
                 'smp_vp_spawn_approve',
                 'smp_vp_display_save_settings',
                 'smp_vp_display_import_elementor',
+                'smp_vp_display_create_loop_item',
+                'smp_vp_display_save_loop_item',
+                'smp_vp_display_delete_loop_item',
             ],
             true
         );

@@ -835,199 +835,30 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
     );
 }
 
-// Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_homepage_profiles')) {
-    /**
-     * Displays the most recent profiles for the homepage using JetEngine's Listing Grid.
-     *
-     * @return string HTML of recent profiles or a message if none are found.
-     */
-    function display_homepage_profiles() {
-
-        $no_results = "nothing";
-
-        if (!class_exists('Jet_Engine_Render_Listing_Grid')) {
-            return 'JetEngine is not active or the required class is not available.';
+// Shared verified profile card renderer fallback.
+if (!function_exists(__NAMESPACE__ . chr(92) . "display_homepage_profiles")) {
+    function display_homepage_profiles($atts = []) {
+        include_once __DIR__ . "/verified-profile-display-templates.php";
+        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_display_render_loop_item")) {
+            return "<style>.display_home_profiles{display:none!important}</style>";
         }
-
-        // Fetch the listing ID dynamically from the ACF field 'home_profile_archive'
-        $listing_id = get_field('home_profile_archive', 'option');
-
-        if (!$listing_id) {
-            return 'No listing ID found in the ACF field.';
-        }
-
-        $args = [
-            'post_type' => 'profile',
-            'posts_per_page' => 30,
-            'post_status' => 'publish',
-            'orderby' => 'modified',
-            'order' => 'DESC'
-        ];
-        $recent_profiles = get_posts($args);
-
-        if (!empty($recent_profiles)) {
-            $profile_ids = [];
-            foreach ($recent_profiles as $profile) {
-                if ($profile->ID && has_post_thumbnail($profile->ID)) {
-                    $profile_ids[] = $profile->ID;
-                    if (count($profile_ids) >= 7) {
-                        break;
-                    }
-                }
-            }
-        } else {
-            return $no_results;
-        }
-
-        $content = '<div class="display_home_profiles">';
-
-        // Settings for JetEngine Listing Grid
-        $settings = [
-            'listing_id' => $listing_id,
-            'lisitng_id'  => $listing_id,
-            'columns' => 7,
-            'lazy_load' => false,
-            'columns_tablet' => 4,
-            'columns_mobile' => 2,
-            'post_status' => ['publish'],
-            'posts_num' => count($profile_ids),
-            'posts_query' => [
-                [
-                    'type' => 'posts_params',
-                    'posts_in' => $profile_ids,
-                    'post_type' => 'profile'
-                ]
-            ],
-            'custom_query' => false,
-            'custom_query_id' => null
-        ];
-
-        // Create and render the listing grid
-        $listing_grid = new \Jet_Engine_Render_Listing_Grid($settings);
-        ob_start();
-        $listing_grid->render();
-        $content .= ob_get_clean();
-        $content .= '</div>';
-        return $content;
+        $settings = smp_vp_display_settings();
+        $atts = shortcode_atts(["limit" => $settings["profile_limit"], "template" => $settings["homepage_template"], "title" => "Verified Profiles"], (array) $atts, "display_homepage_profiles");
+        return smp_vp_display_render_loop_item("homepage", (array) $atts);
     }
 } else {
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
+    write_log("Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
 }
 
-if ( ! function_exists( __NAMESPACE__ . '\\display_single_post_mentioned_in_article' ) ) {
-    /**
-     * Shortcode: [display_single_post_mentioned_in_article must_have_thumbnail="true|false"]
-     *
-     * Displays profiles mentioned in a post in a 6-column grid (2 cols on mobile),
-     * pulling an Elementor loop-item template with its CSS inline.
-     *
-     * @param array $atts {
-     *   @type bool $must_have_thumbnail If true, only include profiles that have a featured image.
-     * }
-     * @return string HTML or inline style to hide container.
-     */
-    function display_single_post_mentioned_in_article( $atts = [] ) {
-
-        $content = "";
-        $empty_response = '<style>.display_single_post_mentioned_in_article{display:none !important;}</style>';
-
-        // 1) Parse shortcode attributes
-        $atts = shortcode_atts( [
-            'must_have_thumbnail' => false,
-        ], $atts, 'display_single_post_mentioned_in_article' );
-        $must_thumb = filter_var( $atts['must_have_thumbnail'], FILTER_VALIDATE_BOOLEAN );
-
-        // 2) Only run on single post pages
-        if ( ! is_single() ) {
-            return 'This shortcode is only for single post pages.';
+if (!function_exists(__NAMESPACE__ . chr(92) . "display_single_post_mentioned_in_article")) {
+    function display_single_post_mentioned_in_article($atts = []) {
+        include_once __DIR__ . "/verified-profile-display-templates.php";
+        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_display_render_loop_item")) {
+            return "<style>.display_single_post_mentioned_in_article{display:none!important}</style>";
         }
-
-        global $post;
-
-        // 3) Fetch the Verified Profile options group
-        $vp = get_field( 'verified_profile', 'option' );
-        if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
-            return $empty_response;
-        }
-
-        // 4) Extract and normalize the Elementor template ID
-        $raw = $vp['loop_items']['display_single_post_mentioned_in_article'] ?? null;
-        if ( is_object( $raw ) && isset( $raw->ID ) ) {
-            $template_id = $raw->ID;
-        } elseif ( is_array( $raw ) && isset( $raw['ID'] ) ) {
-            $template_id = (int) $raw['ID'];
-        } else {
-            $template_id = (int) $raw;
-        }
-        if ( ! $template_id ) {
-            return $empty_response;
-        }
-
-        // 5) Gather profile IDs from the 'profiles' repeater
-        $profile_ids = [];
-
-        if ( have_rows( 'profiles', $post->ID ) ) {
-            while ( have_rows( 'profiles', $post->ID ) ) {
-                the_row();
-                $pid = get_sub_field( 'profile' );
-                if ( is_object( $pid ) && isset( $pid->ID ) ) {
-                    $pid = $pid->ID;
-                } else {
-                    $pid = (int) $pid;
-                }
-                if ( ! $pid ) {
-                    continue;
-                }
-                if ( $must_thumb && ! has_post_thumbnail( $pid ) ) {
-                    continue;
-                }
-                $profile_ids[] = $pid;
-            }
-        }
-        if ( empty( $profile_ids ) ) {
-            return $empty_response;
-        }
-
-        // 6) Render the Elementor template for each profile
-        $original_post = $post;
-        $frontend      = \Elementor\Plugin::instance()->frontend;
-        ob_start();
-        ?>
-        <style>
-        .display_single_post_mentioned_in_article{width:100%;display:block}
-        .display_single_post_mentioned_in_article .shortcode {
-          width:100%;
-          display:grid;
-          grid-template-columns:repeat(6,1fr);
-          gap:1rem;
-        }
-        @media (max-width:600px){
-          .display_single_post_mentioned_in_article .shortcode {
-            grid-template-columns:repeat(2,1fr)!important;
-          }
-        }
-        </style>
-        <div class="display_single_post_mentioned_in_article">
-          <div class="shortcode">
-        <?php
-        foreach ( $profile_ids as $pid ) {
-            $profile_post = get_post( $pid );
-            if ( ! $profile_post ) {
-                continue;
-            }
-            $GLOBALS['post'] = $profile_post;
-            setup_postdata( $profile_post );
-            echo $frontend->get_builder_content_for_display( $template_id, true );
-        }
-        ?>
-          </div>
-        </div>
-        <?php
-        wp_reset_postdata();
-        $GLOBALS['post'] = $original_post;
-
-        return ob_get_clean();
+        $settings = smp_vp_display_settings();
+        $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "title" => "Verified Profiles", "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
+        return smp_vp_display_render_loop_item("single-post", (array) $atts);
     }
 }
 

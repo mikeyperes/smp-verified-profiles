@@ -199,6 +199,12 @@ function add_edit_profile_links_inside_label() {
  */
 add_action('add_meta_boxes_post', __NAMESPACE__ . '\\add_find_profiles_metabox');
 function add_find_profiles_metabox($post) {
+    if ( function_exists( __NAMESPACE__ . '\\smp_vp_spawn_settings' ) ) {
+        $settings = smp_vp_spawn_settings();
+        if ( ! empty( $settings['enabled'] ) ) {
+            return;
+        }
+    }
     add_meta_box(
         'smpvp_find_profiles',
         __('Verified Profiles', 'smpvp'),

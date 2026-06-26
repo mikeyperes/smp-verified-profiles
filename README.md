@@ -2,12 +2,35 @@
 
 A comprehensive WordPress plugin for managing verified profiles on Scale My Publication systems. This plugin provides complete profile verification, management, and display functionality with ACF (Advanced Custom Fields) integration.
 
-![Version](https://img.shields.io/badge/version-6.5.16-blue.svg)
+![Version](https://img.shields.io/badge/version-6.5.28-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-green.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
 
 ---
+
+## 6.5.28 Updates
+
+- Added current attached profiles and pending profile panels inside the consolidated post editor Verified Profiles card.
+- Added AJAX profile-state refresh with live and backend links for each attached profile.
+- Hid the old ACF-only Post - Verified Profile - Admin box in the editor UI when the consolidated card is enabled.
+
+## 6.5.27 Updates
+
+- Consolidated the post editor Verified Profiles workflow so the legacy Find Profiles box no longer duplicates the new spawner when the spawner is enabled.
+- Added fast existing-profile detection, manual name entry, per-entity attach-existing versus spawn-new selection, and strict/default detection controls.
+- Updated approval to attach existing local verified profiles by default and only spawn new entities when explicitly selected.
+
+## 6.5.26 Updates
+
+- Improved HexaWP Core Dynamic Button loading state with a larger visible custom spinner.
+- Added detailed Verified Profiles spawner error reporting for AJAX, WordPress, and upstream API failures.
+
+## 6.5.25 Updates
+
+- Reworked the post editor verified-profile spawning metabox into a step-based flow with a top-level Scan and auto approve action.
+- Added HexaWP Core Dynamic Button support for spinner, success, and error states.
+- Added JavaScript-rendered spawned profile cards with frontend/backend links and persisted Hexa Core field-report subcards.
 
 ## Table of Contents
 
