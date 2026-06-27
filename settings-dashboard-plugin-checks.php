@@ -1,345 +1,128 @@
-<?php namespace smp_verified_profiles;
+<?php
 
-// Import functions from the hws_base_tools namespace
+namespace smp_verified_profiles;
 
+defined( 'ABSPATH' ) || exit;
 
- 
-function display_settings_check_plugins() {
-   // Get the last time WordPress checked for plugin updates
-   $update_plugins = get_site_transient('update_plugins');
-   $last_checked_timestamp = isset($update_plugins->last_checked) ? $update_plugins->last_checked : false;
-   $last_checked = $last_checked_timestamp ? date('Y-m-d H:i:s', $last_checked_timestamp) : 'Never';
+/**
+ * Required plugin definitions consumed by Hexa WP Core PluginChecks.
+ *
+ * @return array<int,array<string,mixed>>
+ */
+function smp_vp_plugin_check_definitions(): array {
+    $upload_url = function_exists( 'admin_url' ) ? admin_url( 'plugin-install.php?tab=upload' ) : '';
 
-   // Use get_plugin_updates() to reliably get plugins with updates
-   $plugin_updates = get_plugin_updates();
-   $plugins_with_updates = count($plugin_updates);
-   $plugins_list = [];
-
-   if (!empty($plugin_updates)) {
-       foreach ($plugin_updates as $plugin_file => $plugin_data) {
-           $plugin_name = $plugin_data->Name;
-           $plugins_list[] = $plugin_name;
-       }
-   }
-
-   $cron_name = 'wp_version_check'; // The cron job responsible for updates
-   ?>
-
-    <!-- Plugins Status Panel --> 
-    <div class="panel">
-        <h2 class="panel-title">Plugins Status</h2>
-        <small>
-    <a href="<?= admin_url('plugins.php'); ?>" target="_blank">view plugin page</a>
-</small>
-        <h3>Force WordPress to Check for Plugin Updates (Execute Cron)</h3>
-       <?php
-// Generate the dynamic URL
-$update_check_url = admin_url('update-core.php?force-check=1');
-
-// Output the button with the dynamic URL
-?>
-        <p>Last checked: <span id="last-checked"><?= esc_html($last_checked) ?></span></p>
-        <p>Number of plugins with available updates: <span id="plugins-with-updates"><?= esc_html($plugins_with_updates) ?></span></p>
-        <?php if ($plugins_with_updates > 0): ?>
-            <p>Plugins with updates available:</p>
-            <ul id="plugins-list">
-                <?php foreach ($plugins_list as $plugin_name): ?>
-                    <li><span style="color:red"><?= esc_html($plugin_name) ?></span></li>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
-        <p>Cron job name: <span id="cron-name"><?= esc_html($cron_name) ?></span></p>
-        <button id="force-update-check" class="button button-primary">Force WordPress to Check for Plugin Updates</button>
-    
-        <div style="margin-top:10px;"><a href="<?= esc_url($update_check_url); ?>" target="_blank" class="button">Force WordPress to Perform an Update Check</a></div>
-        <div class="panel-content">
-            <?php
-            // Get the list of plugins
-            $plugins = hws_ct_get_plugins_list();
-            $plugins_page_url = admin_url('plugins.php'); // Define the variable before the loop
-$installed_plugins = get_plugins(); // Get the list of all installed plugins
-$plugin_updates = get_plugin_updates(); // Get plugins that have updates available
-
-// The main loop to display plugin status and additional info
-foreach ($plugins as $plugin) {
-    $is_installed = isset($installed_plugins[$plugin['id']]);
-    $should_be_installed = $plugin['approved_constraints']['is_installed'];
-    $is_active = is_plugin_active($plugin['id']);
-    $should_be_active = $plugin['approved_constraints']['is_active'];
-    $is_auto_update_enabled = $plugin['approved_constraints']['is_auto_update_enabled'];
-
-    echo "<div><strong>{$plugin['name']}:</strong></div>";
-
-    if ($is_installed) {
-        $current_version = $installed_plugins[$plugin['id']]['Version'] ?? 'Unknown';
-
-        // Check for updates
-        if (isset($plugin_updates[$plugin['id']])) {
-            $new_version = $plugin_updates[$plugin['id']]->update->new_version;
-            echo "<div style='color:red; font-size:small;'>v $current_version -> $new_version</div>";
-            echo "<small><i><span style='color:red'><a href='$plugins_page_url' target='_blank'>click here to update.</a></span></i></small>";
-        } else {
-            echo "<div style='font-size:small;'>v $current_version</div>";
-        }
-
-        // Check if the plugin is installed when it shouldn't be
-        if (!$should_be_installed) {
-            echo "<p style='color: red;'>&#x274C; Installed (This plugin should not be used)</p>";
-        } else {
-            echo "<p style='color: green;'>&#x2705; Installed</p>";
-        }
-
-        // Activation status
-        if ($is_active) {
-            if ($should_be_active) {
-                echo "<p style='color: green;'>&#x2705; Enabled</p>";
-            } else {
-                echo "<p style='color: red;'>&#x274C; Enabled (Should be Inactive)</p>";
-             }
-        } else {
-            if ($should_be_active) {
-                echo "<p style='color: red;'>&#x274C; Not Enabled (Should be Active)</p>";
-            } else {
-                echo "<p style='color: green;'>&#x2705; Not Enabled (Correct)</p>";
-            }
-        }
-
-  // Use the new function to check auto-update status
-  if (is_plugin_auto_update_enabled($plugin['id'])) {
-    echo "<p style='color: green;'>&#x2705; Auto-update Enabled</p>";
-} else {
-    echo "<p style='color: red;'>&#x274C; Auto-update Disabled</p>";
-}
-
-        // Activation/Deactivation links
-        if ($is_active) {
-            $deactivate_url = wp_nonce_url(admin_url('plugins.php?action=deactivate&plugin=' . $plugin['id']), 'deactivate-plugin_' . $plugin['id']);
-            echo "<p><a href='$deactivate_url' target='_blank'>Deactivate plugin</a></p>";
-        } else {
-            $activate_url = wp_nonce_url(admin_url('plugins.php?action=activate&plugin=' . $plugin['id']), 'activate-plugin_' . $plugin['id']);
-            echo "<p><a href='$activate_url' target='_blank'>Activate plugin</a></p>";
-        }
-    } else {
-        // If the plugin is not installed and it's supposed to be, show a warning
-        if ($should_be_installed) {
-            echo "<p style='color: red;'>&#x274C; Not Installed (This plugin should be installed)</p>";
-            echo "<p>{$plugin['additional_info']}</p>";
-        } else {
-            echo "<p style='color: green;'>&#x2705; Not Installed (Correct)</p>";
-            echo "<p>⚠️ This plugin should not be used.</p>";
-        }
-    }
-
-    echo "<hr>";
-}
-
-?>
-        </div>
-    </div>
-    <script type="text/javascript">
-    jQuery(document).ready(function($) {
-        $('#force-update-check').on('click', function() {
-            var $button = $(this);
-            $button.prop('disabled', true).text('Checking...');
-
-            $.post(
-                window.ajaxurl,
-                {
-                    action: 'smp_vp_force_plugin_update_check',
-                    nonce: window.smpVP ? smpVP.nonce : ''
-                }, 
-                function(response) {
-                    if (!response || !response.success || !response.data) {
-                        $button.prop('disabled', false).text('Failed to Check');
-                        return;
-                    }
-
-                    var data = response.data;
-                    $('#last-checked').text(data.last_checked);
-                    $('#plugins-with-updates').text(data.plugins_with_updates);
-
-                    // Update the plugins list
-                    var $pluginsList = $('#plugins-list');
-                    $pluginsList.empty();
-                    if (data.plugins_with_updates > 0) {
-                        $.each(data.plugins_list, function(index, pluginName) {
-                            $pluginsList.append('<li>' + pluginName + '</li>');
-                        });
-                    }
-
-                    $button.prop('disabled', false).text('Force WordPress to Check for Plugin Updates');
-                }
-            , 'json').fail(function() {
-                $button.prop('disabled', false).text('Failed to Check');
-            });
-        });
-    });
-    </script>
-
-<?php }
-
-function hws_ct_plugin_info_determine_plugin_download_message($plugin_id, $plugin_name, $upload_manually = false) {
-    if ($upload_manually) {
-        return 'Upload the plugin manually';
-    } else {
-        $base_url = admin_url('plugin-install.php');
-        $search_term = urlencode($plugin_name);
-        $search_url = "{$base_url}?s={$search_term}&tab=search&type=term";
-        return '<a href="' . esc_url($search_url) . '" target="_blank">Download ' . esc_html($plugin_name) . '</a>';
-    }
-}
- 
-
-// Function to get the plugins list with dynamic download messages
-function hws_ct_get_plugins_list() {
     return [
-
- 
- 
         [
-            'id' => 'hws-base-tools/initialization.php',
-            'name' => 'HWS Base Tools',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('hws-base-tools/initialization.php', 'HWS Base Tools')
+            'id'          => 'hws-base-tools',
+            'name'        => 'HWS Base Tools',
+            'plugin_file' => 'hws-base-tools/initialization.php',
+            'slug'        => 'hws-base-tools',
+            'source'      => 'github',
+            'github_repo' => 'mikeyperes/hws-base-tools',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
+            'notes'       => 'Shared Hexa tooling used by the publication stack.',
         ],
         [
-            'id' => 'elementor/elementor.php',
-            'name' => 'Elementor',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('elementor/elementor.php', 'Elementor')
-        ],
-
-        [
-            'id' => 'classic-editor/classic-editor.php',
-            'name' => 'Classic Editor',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('classic-editor/classic-editor.php', 'Classic Editor')
+            'id'          => 'elementor',
+            'name'        => 'Elementor',
+            'plugin_file' => 'elementor/elementor.php',
+            'slug'        => 'elementor',
+            'source'      => 'wordpress_org',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'woo-checkout-field-editor-pro/checkout-form-designer.php',
-            'name' => 'WooCommerce Checkout Field Editor Pro',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('woo-checkout-field-editor-pro/checkout-form-designer.php', 'WooCommerce Checkout Field Editor Pro')
+            'id'          => 'classic-editor',
+            'name'        => 'Classic Editor',
+            'plugin_file' => 'classic-editor/classic-editor.php',
+            'slug'        => 'classic-editor',
+            'source'      => 'wordpress_org',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'jet-engine/jet-engine.php',
-            'name' => 'JetEngine',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('jet-engine/jet-engine.php', 'JetEngine')
+            'id'             => 'woocommerce-checkout-field-editor-pro',
+            'name'           => 'WooCommerce Checkout Field Editor Pro',
+            'plugin_file'    => 'woo-checkout-field-editor-pro/checkout-form-designer.php',
+            'slug'           => 'woo-checkout-field-editor-pro',
+            'source'         => 'pro',
+            'download_url'   => $upload_url,
+            'download_label' => 'Upload pro plugin',
+            'checks'         => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'woocommerce/woocommerce.php',
-            'name' => 'WooCommerce',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('woocommerce/woocommerce.php', 'WooCommerce')
+            'id'             => 'jet-engine',
+            'name'           => 'JetEngine',
+            'plugin_file'    => 'jet-engine/jet-engine.php',
+            'slug'           => 'jet-engine',
+            'source'         => 'pro',
+            'download_url'   => 'https://crocoblock.com/plugins/jetengine/',
+            'download_label' => 'Download from Crocoblock',
+            'checks'         => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'woocommerce-subscriptions/woocommerce-subscriptions.php',
-            'name' => 'WooCommerce Subscriptions',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('woocommerce-subscriptions/woocommerce-subscriptions.php', 'WooCommerce Subscriptions')
-        ],
-
-        [
-            'id' => 'wp-mail-smtp/wp_mail_smtp.php',
-            'name' => 'WP Mail SMTP',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('wp-mail-smtp/wp_mail_smtp.php', 'WP Mail SMTP')
+            'id'          => 'woocommerce',
+            'name'        => 'WooCommerce',
+            'plugin_file' => 'woocommerce/woocommerce.php',
+            'slug'        => 'woocommerce',
+            'source'      => 'wordpress_org',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'wp-user-avatars/wp-user-avatars.php',
-            'name' => 'WP User Avatars',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('wp-user-avatars/wp-user-avatars.php', 'WP User Avatars')
+            'id'             => 'woocommerce-subscriptions',
+            'name'           => 'WooCommerce Subscriptions',
+            'plugin_file'    => 'woocommerce-subscriptions/woocommerce-subscriptions.php',
+            'slug'           => 'woocommerce-subscriptions',
+            'source'         => 'pro',
+            'download_url'   => 'https://woocommerce.com/products/woocommerce-subscriptions/',
+            'download_label' => 'Download from WooCommerce',
+            'checks'         => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
         [
-            'id' => 'advanced-custom-fields-pro/acf.php',
-            'name' => 'Advanced Custom Fields Pro',
-            'approved_constraints' => [
-                'is_installed' => true,
-                'is_active' => true,
-                'is_auto_update_enabled' => true
-            ],
-            'additional_info' => hws_ct_plugin_info_determine_plugin_download_message('advanced-custom-fields-pro/acf.php', 'Advanced Custom Fields Pro', true)
+            'id'          => 'wp-mail-smtp',
+            'name'        => 'WP Mail SMTP',
+            'plugin_file' => 'wp-mail-smtp/wp_mail_smtp.php',
+            'slug'        => 'wp-mail-smtp',
+            'source'      => 'wordpress_org',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
+        ],
+        [
+            'id'          => 'wp-user-avatars',
+            'name'        => 'WP User Avatars',
+            'plugin_file' => 'wp-user-avatars/wp-user-avatars.php',
+            'slug'        => 'wp-user-avatars',
+            'source'      => 'wordpress_org',
+            'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
+        ],
+        [
+            'id'             => 'advanced-custom-fields-pro',
+            'name'           => 'Advanced Custom Fields Pro',
+            'plugin_file'    => 'advanced-custom-fields-pro/acf.php',
+            'slug'           => 'advanced-custom-fields-pro',
+            'source'         => 'pro',
+            'download_url'   => 'https://www.advancedcustomfields.com/pro/',
+            'download_label' => 'Download ACF Pro',
+            'checks'         => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
+            'notes'          => 'Required for Verified Profiles field groups and profile metadata.',
         ],
     ];
 }
 
-
-
-
-// Handle the AJAX request to force the update check
-
-
-function hws_ct_force_update_check() {
-    if ( ! current_user_can( 'update_plugins' ) ) {
-        wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
+function display_settings_check_plugins(): void {
+    if ( ! class_exists( '\\Hexa\\PluginCore\\PluginChecks\\PluginChecksRenderer' ) ) {
+        echo '<div class="notice notice-error"><p>' . esc_html__( 'Hexa WP Core Plugin Checks are not available.', 'smp-verified-profiles' ) . '</p></div>';
+        return;
     }
 
-    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-    // Force WordPress to check for plugin and theme updates
-    wp_clean_update_cache();
-    wp_update_plugins();
-    wp_update_themes();
-
-    // Get the updated last checked time and plugins with updates using get_plugin_updates()
-    $plugin_updates = get_plugin_updates();
-    $last_checked_timestamp = time();
-    $last_checked = date('Y-m-d H:i:s', $last_checked_timestamp);
-    $plugins_with_updates = count($plugin_updates);
-    $plugins_list = [];
- 
-    if (!empty($plugin_updates)) {
-        foreach ($plugin_updates as $plugin_file => $plugin_data) {
-            $plugin_name = $plugin_data->Name;
-            $plugins_list[] = $plugin_name;
-        }
-    }
- 
-    // Send back the last checked time, number of plugins with updates, and their names
-    echo json_encode([
-        'last_checked' => $last_checked,
-        'plugins_with_updates' => $plugins_with_updates,
-        'plugins_list' => $plugins_list,
-    ]);
-    wp_die();
+    echo ( new \Hexa\PluginCore\PluginChecks\PluginChecksRenderer() )->render(
+        smp_vp_plugin_check_definitions(),
+        [
+            'title'         => 'Verified Profiles Plugin Checks',
+            'eyebrow'       => 'Verified Profiles',
+            'description'   => 'Check the plugins this integration expects, install supported missing plugins, activate inactive plugins, and refresh update status without leaving the page.',
+            'ajax_url'      => admin_url( 'admin-ajax.php' ),
+            'nonce'         => smp_vp_ajax_nonce(),
+            'nonce_field'   => Config::$ajax_nonce_field,
+            'action_prefix' => 'smp_vp_plugin_checks',
+        ]
+    );
 }
-
-?>

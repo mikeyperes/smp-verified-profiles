@@ -35,6 +35,7 @@ hexa-wordpress-plugin-core/
     FieldStructures/    -> Hexa\PluginCore\FieldStructures
     FaqSets/            -> Hexa\PluginCore\FaqSets
     LogFiles/           -> Hexa\PluginCore\LogFiles
+    PluginChecks/       -> Hexa\PluginCore\PluginChecks
     PluginProvisioning/ -> Hexa\PluginCore\PluginProvisioning
     PluginUpdates/      -> Hexa\PluginCore\PluginUpdates
     SnippetRegistry/    -> Hexa\PluginCore\SnippetRegistry
@@ -66,9 +67,10 @@ Do not create `HWS\BaseTools\PluginCore`, `HexaWordPressPluginCore`, `Hexa\Core`
 - `FieldStructures`: reusable displays and status checks for ACF groups, custom post types, taxonomies, and option-backed feature structures.
 - `FaqSets`: shared FAQ set sanitizing, item normalization, primary-set resolution, safe answer links, FAQPage schema, and reusable list or accordion output.
 - `LogFiles`: shared error-log source definitions, tail readers, classifiers, search/highlight UI, and renderers.
+- `PluginChecks`: shared required-plugin definition checks, status renderer, AJAX install/activate actions, update-cache refresh, and activity-log UI.
 - `PluginProvisioning`: shared plugin discovery, status checks, WordPress.org installs, GitHub ZIP installs, folder normalization, and activation.
 - `PluginUpdates`: shared GitHub/update configuration objects and host plugin updater.
-- `SnippetRegistry`: shared snippet definitions, option toggles, test rules, related snippets, related shortcodes, basic README rendering, and generic AJAX handlers.
+- `SnippetRegistry`: shared snippet definitions, option toggles, test rules, related snippets, related shortcodes, basic README rendering, generic AJAX handlers, and the canonical snippets table UI.
 - `ShortcodeRegistry`: shortcode definition registry, dashboard display renderer, examples, live output, and test runner contracts.
 - `SiteStructure`: reusable critical page blueprint management, assigned page storage, WordPress navigation menu creation, custom menu-item creation, add-all-assigned-pages actions, menu structure attachment, and page-to-menu-item tools.
 - `SchemaDetection`: reusable JSON-LD URL scans, source detection, duplicate schema conflict checks, FAQ validation, and dark admin report rendering.

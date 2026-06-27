@@ -3,6 +3,7 @@ namespace smp_verified_profiles;
 
 use Hexa\PluginCore\CorePackageUpdates\CorePackageAjaxController;
 use Hexa\PluginCore\CorePackageUpdates\CorePackageConfig;
+use Hexa\PluginCore\PluginChecks\PluginChecksAjaxController;
 use Hexa\PluginCore\PluginUpdates\GitHubPluginUpdater;
 use Hexa\PluginCore\PluginUpdates\UpdaterAjaxController;
 use Hexa\PluginCore\PluginUpdates\UpdaterConfig;
@@ -120,6 +121,19 @@ function smp_vp_boot_hexa_core_admin(): void {
         $core_config = smp_vp_core_package_config();
         if ( $core_config instanceof CorePackageConfig && class_exists( CorePackageAjaxController::class ) ) {
             ( new CorePackageAjaxController( $core_config ) )->register();
+        }
+
+        include_once __DIR__ . '/settings-dashboard-plugin-checks.php';
+        if ( class_exists( PluginChecksAjaxController::class ) && function_exists( __NAMESPACE__ . '\\smp_vp_plugin_check_definitions' ) ) {
+            ( new PluginChecksAjaxController(
+                smp_vp_plugin_check_definitions(),
+                [
+                    'capability'    => 'update_plugins',
+                    'nonce_action'  => Config::$ajax_nonce_action,
+                    'nonce_field'   => Config::$ajax_nonce_field,
+                    'action_prefix' => 'smp_vp_plugin_checks',
+                ]
+            ) )->register();
         }
     }
 
