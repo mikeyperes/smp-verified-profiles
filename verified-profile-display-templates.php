@@ -368,6 +368,53 @@ function smp_vp_display_detailed_color_picker(array $args): string {
         . '</div>';
 }
 
+function smp_vp_display_color_palette(array $settings): string {
+    $colors = [];
+    foreach (["primary_color" => "Primary color", "secondary_color" => "Secondary color", "ink_color" => "Text", "muted_color" => "Muted", "line_color" => "Line", "soft_color" => "Soft background"] as $key => $label) {
+        $colors[] = [
+            "key" => $key,
+            "label" => $label,
+            "value" => (string) ($settings[$key] ?? "#000000"),
+            "id" => "smp-vp-" . str_replace("_", "-", $key),
+            "control_class" => "smp-vp-global-color-control",
+            "hex_input_class" => "smp-vp-global-color smp-vp-global-" . str_replace("_", "-", $key),
+            "picker_class" => "smp-vp-global-color-picker",
+        ];
+    }
+
+    if (class_exists("\Hexa\PluginCore\WpAdminComponents\ColorPalette")) {
+        return \Hexa\PluginCore\WpAdminComponents\ColorPalette::render([
+            "id" => "smp-vp-card-palette",
+            "title" => "Colors",
+            "description" => "Card palette for the verified-profiles display. Primary and secondary are seeded from Hexa WP Core. Edit any value and Save.",
+            "colors" => $colors,
+            "elementor_detector" => [
+                "id" => "smp-vp-elementor-palette",
+                "title" => "Elementor palette",
+                "button_label" => "Load Elementor colors",
+                "description" => "Reference only. This never changes your saved colors. Load your Elementor site colors, then use Copy hex to paste any value into a field above.",
+                "empty_label" => "Click \"Load Elementor colors\" to show your Elementor palette.",
+            ],
+        ]);
+    }
+
+    ob_start();
+    ?>
+    <section class="smp-vp-section">
+        <h3 class="smp-vp-section-title">Colors</h3>
+        <p class="smp-vp-section-note">Card palette for the verified-profiles display. Primary and secondary are seeded from Hexa WP Core. Edit any value and Save.</p>
+        <div class="smp-vp-color-list">
+            <?php foreach ($colors as $color) : ?>
+                <div class="smp-vp-color-field">
+                    <?php echo smp_vp_display_color_control((string) $color["key"], (string) $color["label"], (string) $color["value"], $color); ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php
+    return (string) ob_get_clean();
+}
+
 function smp_vp_display_css(): string {
     return ".smp-vp-display{--vp-red:#b3272d;--vp-secondary:#151515;--vp-ink:#151515;--vp-muted:#747474;--vp-line:#e6e1de;--vp-soft:#faf7f5;--vp-items-per-row:3;max-width:1080px;margin:0 auto;padding:34px 0}.smp-vp-display .vp-head{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--vp-line)}.smp-vp-display .lbl,.smp-vp-display .all,.smp-vp-display .vp-role,.smp-vp-display .vp-cta{font-size:var(--vp-role-size,11px);letter-spacing:.14em;text-transform:uppercase}.smp-vp-display .lbl,.smp-vp-display .vp-role,.smp-vp-display .all{color:var(--vp-muted)}.smp-vp-display a{text-decoration:none}.smp-vp-display svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}.smp-vp-display .vp-av{position:relative;flex-shrink:0}.smp-vp-display .vp-av img{border-radius:50%;object-fit:cover;filter:grayscale(100%);display:block;background:#f3f3f3}.smp-vp-display .vp-card:hover img{filter:grayscale(0)}.smp-vp-display .vp-badge{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;background:#fff;border-radius:50%;color:var(--vp-red);display:flex;align-items:center;justify-content:center}.smp-vp-display .vp-name{font-family:Playfair Display,Georgia,serif;font-weight:700;font-size:var(--vp-name-size,18px);color:var(--vp-ink);line-height:1.2}.smp-vp-display .vp-card:hover .vp-name,.smp-vp-display .vp-cta{color:var(--vp-red)}.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-d,.smp-vp-display .vp-e{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));gap:20px;padding:32px 0}.smp-vp-display .vp-c{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,1),minmax(0,1fr));gap:0 24px;padding:14px 0 32px}.smp-vp-display .vp-d{gap:6px 28px}.smp-vp-display .vp-a .vp-card{display:flex;align-items:center;gap:18px;border:1px solid var(--vp-line);background:#fff;padding:20px}.smp-vp-display .vp-b .vp-card{display:flex;flex-direction:column;align-items:center;text-align:center;border:1px solid var(--vp-line);background:#fff;padding:30px 20px}.smp-vp-display .vp-c{padding:14px 0 32px}.smp-vp-display .vp-c .vp-card{display:flex;align-items:center;gap:18px;padding:18px 4px;border-bottom:1px solid var(--vp-line)}.smp-vp-display .vp-c .vp-meta{flex:1}.smp-vp-display .vp-d .vp-card{display:flex;align-items:center;gap:14px;padding:18px 2px;border-top:1px solid var(--vp-line)}.smp-vp-display .vp-e .vp-card{display:flex;align-items:center;gap:20px;background:var(--vp-soft);border-left:3px solid var(--vp-red);padding:22px 24px}.smp-vp-display .vp-a img{width:66px;height:66px}.smp-vp-display .vp-b img{width:84px;height:84px}.smp-vp-display .vp-c img{width:58px;height:58px}.smp-vp-display .vp-d img{width:52px;height:52px}.smp-vp-display .vp-e img{width:88px;height:88px}.smp-vp-display .all{color:var(--vp-secondary)}@media(max-width:900px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:1fr}}";
 }
@@ -398,6 +445,14 @@ function smp_vp_display_render_settings(): void {
     <style>
         <?php echo smp_vp_display_css(); ?>
         .smp-vp-display-admin{max-width:1260px;color:#1d2327}.smp-vp-display-admin *{box-sizing:border-box}.smp-vp-display-admin .smp-vp-panel{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;overflow:hidden}.smp-vp-display-admin .smp-vp-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #eceff3}.smp-vp-display-admin .smp-vp-panel-head h2{margin:0 0 4px;font-size:20px;line-height:1.2}.smp-vp-display-admin .smp-vp-panel-head p{margin:0;color:#646970}.smp-vp-display-admin .smp-vp-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:18px 20px}.smp-vp-display-admin label{font-weight:700;display:block;margin-bottom:6px}.smp-vp-display-admin input[type=text]:not(.hpc-color-hex-input),.smp-vp-display-admin input[type=number]{width:100%;min-height:38px}.smp-vp-display-admin input[type=color]:not(.hpc-color-picker){width:100%;height:38px;padding:2px}.smp-vp-color-field,.smp-vp-loop-color-slot{min-width:0}.smp-vp-display-admin .hpc-color-control{min-width:0}.smp-vp-display-admin .hpc-color-control h3{font-size:12px;margin:0}.smp-vp-display-admin .hpc-color-control p{font-size:12px}.smp-vp-display-admin .hpc-color-row{gap:8px}.smp-vp-display-admin .hpc-color-picker-shell,.smp-vp-display-admin .hpc-color-hex-shell,.smp-vp-display-admin .hpc-color-value{display:grid;margin-bottom:0}.smp-vp-display-admin .hpc-button{min-height:36px}.smp-vp-color-fallback-swatch{border:1px solid #cbd5e1;border-radius:8px;display:inline-block;height:34px;margin-left:8px;vertical-align:middle;width:34px}.smp-vp-display-admin .smp-vp-checks{display:flex;gap:16px;flex-wrap:wrap;padding:0 20px 18px}.smp-vp-display-admin .smp-vp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;background:#f6f7f7;border-top:1px solid #eceff3}.smp-vp-display-admin .smp-vp-log{min-height:38px;min-width:280px;border:1px solid #dcdcde;background:#fff;border-radius:6px;padding:9px 12px;font-family:Menlo,Consolas,monospace;color:#3c434a}.smp-vp-display-admin .smp-vp-current{display:flex;gap:10px;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;padding:7px 11px}.smp-vp-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:20px}.smp-vp-template-card{border:1px solid #dcdcde;border-radius:10px;background:#fff;overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease}.smp-vp-template-card.is-homepage,.smp-vp-template-card.is-post{border-color:#b3272d;box-shadow:0 0 0 1px rgba(179,39,45,.18)}.smp-vp-template-card-head{display:flex;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef0f3}.smp-vp-template-card h3{margin:0;font-size:16px}.smp-vp-template-card p{margin:4px 0 0;color:#646970}.smp-vp-template-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.smp-vp-template-badge{display:none;border-radius:999px;background:#f7e5e7;color:#8a1b20;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;white-space:nowrap}.smp-vp-template-card.is-homepage .smp-vp-template-badge-home,.smp-vp-template-card.is-post .smp-vp-template-badge-post{display:inline-flex}.smp-vp-preview-frame{padding:18px;background:#fbfaf9;min-height:190px;border-bottom:1px solid #eef0f3}.smp-vp-preview-frame .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-preview-frame .smp-vp-display .vp-head{display:none}.smp-vp-preview-frame .smp-vp-display .vp-a,.smp-vp-preview-frame .smp-vp-display .vp-b,.smp-vp-preview-frame .smp-vp-display .vp-d,.smp-vp-preview-frame .smp-vp-display .vp-e{grid-template-columns:minmax(0,1fr);padding:12px 0}.smp-vp-preview-frame .smp-vp-display .vp-c{padding:12px 0}.smp-vp-template-actions{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px}.smp-vp-template-action.is-active{background:#b3272d;border-color:#b3272d;color:#fff}.smp-vp-display-admin .screen-reader-selects{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}@media(max-width:980px){.smp-vp-template-grid,.smp-vp-display-admin .smp-vp-settings-grid{grid-template-columns:1fr}}
+        .smp-vp-display-admin .smp-vp-sections{display:grid;gap:20px;padding:20px}
+        .smp-vp-display-admin .smp-vp-section{border:1px solid #e6e9ee;border-radius:10px;background:#fff;padding:16px 18px}
+        .smp-vp-display-admin .smp-vp-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+        .smp-vp-display-admin .smp-vp-section-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#1d2327;margin:0 0 14px}
+        .smp-vp-display-admin .smp-vp-section-head .smp-vp-section-title{margin:0}
+        .smp-vp-display-admin .smp-vp-section-note{color:#646970;font-size:12.5px;margin:0 0 14px}
+        .smp-vp-display-admin .smp-vp-fields{display:grid;gap:14px;max-width:540px}
+        .smp-vp-display-admin .hpc-color-head h3{font-size:12px;margin:0;color:#1d2327}
         .smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:span 2}.smp-vp-display-admin .hpc-detailed-color-picker{height:100%}@media(max-width:980px){.smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:auto}}
         .smp-vp-loop-section{border-top:1px solid #eceff3;padding:20px}.smp-vp-loop-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.smp-vp-loop-section-head h3{margin:0 0 4px;font-size:17px}.smp-vp-loop-section-head p{margin:0;color:#646970}.smp-vp-feature-instructions{background:#f8fbff;border:1px solid #cfe0ff;border-left:4px solid #3157d5;border-radius:8px;margin:0 0 16px;padding:13px 15px}.smp-vp-feature-instructions h3{font-size:15px;margin:0 0 6px}.smp-vp-feature-instructions p{color:#3f4d63;margin:0 0 10px}.smp-vp-feature-instructions code{background:#eef0f3;border-radius:5px;display:block;white-space:pre-wrap;padding:10px}.smp-vp-loop-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) 180px 220px auto;gap:10px;align-items:end;background:#f6f7f7;border:1px solid #dcdcde;border-radius:8px;padding:14px;margin-bottom:16px}.smp-vp-loop-toolbar select,.smp-vp-loop-card select{width:100%;min-height:38px}.smp-vp-loop-list{display:grid;gap:14px}.smp-vp-loop-card{border:1px solid #dcdcde;border-radius:8px;background:#fff;overflow:hidden}.smp-vp-loop-card-head{display:flex;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid #eef0f3}.smp-vp-loop-card-head h4{margin:0;font-size:15px}.smp-vp-loop-card-head p{margin:4px 0 0;color:#646970}.smp-vp-loop-chip{display:inline-flex;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:5px 8px;white-space:nowrap}.smp-vp-loop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px}.smp-vp-loop-grid .wide{grid-column:span 2}.smp-vp-loop-template-buttons{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding:2px 0 0}.smp-vp-loop-template-pick.is-active{background:#b3272d;border-color:#b3272d;color:#fff}.smp-vp-loop-output-count{min-height:38px;border:1px solid #dcdcde;background:#f6f7f7;border-radius:4px;padding:8px 10px;color:#3c434a}.smp-vp-loop-output-count strong{font-size:15px;color:#1d2327}.smp-vp-loop-preview{grid-column:1/-1;border:1px solid #dcdcde;background:#fbfaf9;border-radius:8px;padding:14px;margin-top:2px;overflow:auto}.smp-vp-loop-preview .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-loop-preview .smp-vp-display .vp-head{display:none}.smp-vp-loop-preview .smp-vp-display .vp-a,.smp-vp-loop-preview .smp-vp-display .vp-b,.smp-vp-loop-preview .smp-vp-display .vp-c,.smp-vp-loop-preview .smp-vp-display .vp-d,.smp-vp-loop-preview .smp-vp-display .vp-e{grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));padding:10px 0}.smp-vp-loop-preview .smp-vp-display .vp-card{min-height:0}.smp-vp-loop-preview-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#646970;margin-bottom:10px}.smp-vp-loop-card-response{margin:0 16px 14px;padding:11px 13px;border-radius:7px;font-weight:800;border:1px solid transparent}.smp-vp-loop-card-response.is-success{background:#ecfdf3;border-color:#9ad6ad;color:#116329}.smp-vp-loop-card-response.is-error{background:#fff1f0;border-color:#f0aaaa;color:#9f1d1d}.smp-vp-loop-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:#f6f7f7;border-top:1px solid #eef0f3}.smp-vp-loop-actions .smp-vp-loop-shortcode{max-width:360px;font-family:Menlo,Consolas,monospace;background:#fff}.smp-vp-loop-copy-status{color:#646970}@media(max-width:980px){.smp-vp-loop-toolbar,.smp-vp-loop-grid{grid-template-columns:1fr}.smp-vp-loop-grid .wide{grid-column:auto}}
     </style>
@@ -417,49 +472,22 @@ function smp_vp_display_render_settings(): void {
                 <input id="smp-vp-homepage-template" type="hidden" value="<?php echo esc_attr($settings["homepage_template"]); ?>">
                 <input id="smp-vp-post-template" type="hidden" value="<?php echo esc_attr($settings["post_template"]); ?>">
             </div>
-            <div class="smp-vp-settings-grid">
-                <div><label for="smp-vp-profile-limit">Homepage limit</label><input id="smp-vp-profile-limit" type="number" min="1" max="30" value="<?php echo esc_attr($settings["profile_limit"]); ?>"></div>
-                <div><label for="smp-vp-archive-url">Archive URL</label><input id="smp-vp-archive-url" type="text" value="<?php echo esc_attr($settings["archive_url"]); ?>"></div>
-                <div class="wide smp-vp-color-field">
-                    <?php echo smp_vp_display_detailed_color_picker([
-                        "id" => "smp-vp-global-detailed-colors",
-                        "title" => "Detailed Color Picker",
-                        "description" => "Primary and secondary colors come from Hexa WP Core and can import Elementor site colors.",
-                        "show_elementor_import" => true,
-                        "show_fonts" => false,
-                        "primary" => [
-                            "key" => "primary_color",
-                            "label" => "Primary color",
-                            "value" => (string) $settings["primary_color"],
-                            "id" => "smp-vp-primary-color",
-                            "control_class" => "smp-vp-global-color-control",
-                            "hex_input_class" => "smp-vp-global-color smp-vp-global-primary-color",
-                            "picker_class" => "smp-vp-global-color-picker",
-                        ],
-                        "secondary" => [
-                            "key" => "secondary_color",
-                            "label" => "Secondary color",
-                            "value" => (string) $settings["secondary_color"],
-                            "id" => "smp-vp-secondary-color",
-                            "control_class" => "smp-vp-global-color-control",
-                            "hex_input_class" => "smp-vp-global-color smp-vp-global-secondary-color",
-                            "picker_class" => "smp-vp-global-color-picker",
-                        ],
-                    ]); ?>
-                </div>
-                <div><label for="smp-vp-name-font-size">Name font size</label><input id="smp-vp-name-font-size" type="number" min="12" max="32" value="<?php echo esc_attr($settings["name_font_size"] ?? 18); ?>"></div>
-                <div><label for="smp-vp-role-font-size">Role font size</label><input id="smp-vp-role-font-size" type="number" min="8" max="24" value="<?php echo esc_attr($settings["role_font_size"] ?? 10); ?>"></div>
-                <?php foreach (["ink_color" => "Text", "muted_color" => "Muted", "line_color" => "Line", "soft_color" => "Soft background"] as $key => $label) : ?>
-                    <div class="smp-vp-color-field">
-                        <?php echo smp_vp_display_color_control($key, $label, (string) $settings[$key], [
-                            "id" => "smp-vp-" . str_replace("_", "-", $key),
-                            "control_class" => "smp-vp-global-color-control",
-                            "hex_input_class" => "smp-vp-global-color smp-vp-global-" . str_replace("_", "-", $key),
-                            "picker_class" => "smp-vp-global-color-picker",
-                            "description" => in_array($key, ["primary_color", "secondary_color"], true) ? "Use the Elementor import button below to pull the site primary and secondary color pair." : "",
-                        ]); ?>
+            <div class="smp-vp-sections">
+                <section class="smp-vp-section">
+                    <h3 class="smp-vp-section-title">General</h3>
+                    <div class="smp-vp-fields">
+                        <div><label for="smp-vp-profile-limit">Homepage limit</label><input id="smp-vp-profile-limit" type="number" min="1" max="30" value="<?php echo esc_attr($settings["profile_limit"]); ?>"></div>
+                        <div><label for="smp-vp-archive-url">Archive URL</label><input id="smp-vp-archive-url" type="text" value="<?php echo esc_attr($settings["archive_url"]); ?>"></div>
                     </div>
-                <?php endforeach; ?>
+                </section>
+                <section class="smp-vp-section">
+                    <h3 class="smp-vp-section-title">Typography</h3>
+                    <div class="smp-vp-fields">
+                        <div><label for="smp-vp-name-font-size">Name font size</label><input id="smp-vp-name-font-size" type="number" min="12" max="32" value="<?php echo esc_attr($settings["name_font_size"] ?? 18); ?>"></div>
+                        <div><label for="smp-vp-role-font-size">Role font size</label><input id="smp-vp-role-font-size" type="number" min="8" max="24" value="<?php echo esc_attr($settings["role_font_size"] ?? 10); ?>"></div>
+                    </div>
+                </section>
+                <?php echo smp_vp_display_color_palette($settings); ?>
             </div>
             <div class="smp-vp-checks">
                 <label><input id="smp-vp-display-enabled" type="checkbox" <?php checked($settings["enabled"]); ?>> Enable cards</label>
@@ -468,7 +496,6 @@ function smp_vp_display_render_settings(): void {
             </div>
             <div class="smp-vp-actions">
                 <button type="button" class="button button-primary" id="smp-vp-display-save">Save Feature Settings</button>
-                <button type="button" class="button" id="smp-vp-import-elementor">Import Elementor primary/secondary</button>
                 <div class="smp-vp-log" id="smp-vp-display-log">Ready.</div>
             </div>
             <div class="smp-vp-loop-section">
@@ -724,22 +751,9 @@ function smp_vp_display_render_settings(): void {
                 save(this, "Template selection saved.", target);
             });
             $("#smp-vp-display-save").on("click", function(){ save(this); });
-            $("#smp-vp-import-elementor").on("click", function(){
-                const $button = $(this);
-                const original = $button.text();
-                $button.prop("disabled", true).text("Importing...");
-                log("Importing Elementor colors...");
-                $.post(ajaxurl, { action: "smp_vp_display_import_elementor", nonce: $root.data("nonce") })
-                    .done(function(response){
-                        if (response && response.success) {
-                            applyGlobalColors(response.data.colors || response.data.settings || {});
-                            log(response.data.message || "Elementor colors imported.");
-                            return;
-                        }
-                        log((response && response.data && response.data.message) || "Import failed.");
-                    })
-                    .fail(function(){ log("Import request failed."); })
-                    .always(function(){ $button.prop("disabled", false).text(original); });
+            $root.on("hexa:elementorPaletteLoaded", "[data-hpc-elementor-palette]", function(event){
+                const count = event.originalEvent && event.originalEvent.detail && event.originalEvent.detail.palette ? event.originalEvent.detail.palette.length : 0;
+                log(count ? "Elementor palette loaded. Your saved colors were not changed." : "No Elementor colors found.");
             });
             $("#smp-vp-loop-create").on("click", function(){
                 const $button = $(this);
@@ -1025,7 +1039,7 @@ function smp_vp_ajax_display_import_elementor(): void {
     }
 
     if (! empty($_POST["preview_only"])) {
-        wp_send_json_success(["message" => "Elementor colors loaded.", "colors" => $colors]);
+        wp_send_json_success(["message" => "Elementor colors loaded.", "colors" => $colors, "palette" => smp_vp_display_elementor_palette()]);
     }
 
     $settings = array_replace(smp_vp_display_settings(), $colors);
@@ -1034,6 +1048,16 @@ function smp_vp_ajax_display_import_elementor(): void {
 }
 
 function smp_vp_display_elementor_colors(): array {
+    if (class_exists("\Hexa\PluginCore\BrandColors\BrandColorProvider")) {
+        $colors = \Hexa\PluginCore\BrandColors\BrandColorProvider::elementor_colors();
+        return array_filter([
+            "primary_color" => $colors["primary_color"] ?? null,
+            "secondary_color" => $colors["secondary_color"] ?? null,
+            "ink_color" => $colors["text_color"] ?? ($colors["secondary_color"] ?? null),
+            "muted_color" => $colors["secondary_color"] ?? null,
+        ]);
+    }
+
     $kit = absint(get_option("elementor_active_kit"));
     if (! $kit) {
         return [];
@@ -1062,6 +1086,37 @@ function smp_vp_display_elementor_colors(): array {
         "ink_color" => $flat["text"] ?? $secondary,
         "muted_color" => $secondary,
     ]);
+}
+
+function smp_vp_display_elementor_palette(): array {
+    if (class_exists("\Hexa\PluginCore\BrandColors\BrandColorProvider")) {
+        return \Hexa\PluginCore\BrandColors\BrandColorProvider::elementor_palette();
+    }
+
+    $kit = absint(get_option("elementor_active_kit"));
+    if (! $kit) {
+        return [];
+    }
+    $raw = get_post_meta($kit, "_elementor_page_settings", true);
+    if (! is_array($raw)) {
+        return [];
+    }
+    $palette = [];
+    foreach (["system_colors" => "System", "custom_colors" => "Custom"] as $group => $group_label) {
+        foreach ((array) ($raw[$group] ?? []) as $color) {
+            $hex = sanitize_hex_color((string) ($color["color"] ?? ""));
+            if (! $hex) {
+                continue;
+            }
+            $palette[] = [
+                "id" => sanitize_key((string) ($color["_id"] ?? $hex)),
+                "label" => (string) ($color["title"] ?? ($color["_id"] ?? "Color")),
+                "group" => $group_label,
+                "hex" => $hex,
+            ];
+        }
+    }
+    return $palette;
 }
 
 function smp_vp_display_preview_profiles(int $count = 1): array {
