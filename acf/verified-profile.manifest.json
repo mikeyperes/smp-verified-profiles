@@ -1,0 +1,210 @@
+{
+  "manifest_version": "2026.06.28.1",
+  "plugin_slug": "smp-verified-profiles",
+  "plugin_version": "6.5.35",
+  "source": {
+    "repo": "mikeyperes/smp-verified-profiles",
+    "ref": "main",
+    "definition_file": "register-acf-verified-profile.php"
+  },
+  "post_type": "profile",
+  "field_group": {
+    "key": "group_67e39e4171b16",
+    "title": "Verified Profile",
+    "location": [
+      {
+        "param": "post_type",
+        "operator": "==",
+        "value": "profile"
+      }
+    ]
+  },
+  "fields": [
+    {
+      "key": "field_67e47e841bef5",
+      "label": "Title",
+      "name": "title",
+      "path": "title",
+      "type": "text",
+      "control": "text",
+      "description": "Primary local title field used by the verified profile record."
+    },
+    {
+      "key": "field_67e39e414527f",
+      "label": "Featured",
+      "name": "featured",
+      "path": "featured",
+      "type": "true_false",
+      "control": "boolean",
+      "description": "Featured flag for display modules."
+    },
+    {
+      "key": "field_smp_vp_profile_type",
+      "label": "Profile Type",
+      "name": "profile_type",
+      "path": "profile_type",
+      "type": "select",
+      "control": "select",
+      "choices": {
+        "person": "Person",
+        "company": "Company"
+      },
+      "description": "Determines whether the profile represents a person or company."
+    },
+    {
+      "key": "field_smp_vp_company_details",
+      "label": "Company Details",
+      "name": "company_details",
+      "path": "company_details",
+      "type": "group",
+      "control": "group",
+      "description": "Company-only fields for display and Organization schema output.",
+      "fields": [
+        {
+          "key": "field_smp_vp_company_organization_name",
+          "label": "Company Name",
+          "name": "organization_name",
+          "path": "company_details.organization_name",
+          "type": "text",
+          "control": "text",
+          "description": "Organization schema name."
+        },
+        {
+          "key": "field_smp_vp_company_legal_name",
+          "label": "Legal Name",
+          "name": "legal_name",
+          "path": "company_details.legal_name",
+          "type": "text",
+          "control": "text",
+          "description": "Optional Organization schema legalName."
+        },
+        {
+          "key": "field_smp_vp_company_founder_profile",
+          "label": "Founded By",
+          "name": "founder_profile",
+          "path": "company_details.founder_profile",
+          "type": "post_object",
+          "control": "relationship",
+          "description": "Person verified profile selected as founder."
+        },
+        {
+          "key": "field_smp_vp_company_founding_date",
+          "label": "Founding Date",
+          "name": "founding_date",
+          "path": "company_details.founding_date",
+          "type": "text",
+          "control": "text",
+          "description": "Organization schema foundingDate."
+        },
+        {
+          "key": "field_smp_vp_company_employees",
+          "label": "Number of Employees",
+          "name": "number_of_employees",
+          "path": "company_details.number_of_employees",
+          "type": "number",
+          "control": "number",
+          "description": "Optional Organization schema numberOfEmployees."
+        }
+      ]
+    },
+    {
+      "key": "field_67e3a0f205af6",
+      "label": "URL",
+      "name": "url",
+      "path": "url",
+      "type": "group",
+      "control": "group",
+      "structure_key": "social_urls",
+      "description": "Verified profile social and authority URLs.",
+      "fields": [
+        {"key": "field_67e3a10405af7", "label": "Wikipedia", "name": "wikipedia", "path": "url.wikipedia", "type": "text", "control": "url", "description": "Wikipedia profile URL."},
+        {"key": "field_67e3a10b05af8", "label": "Facebook", "name": "facebook", "path": "url.facebook", "type": "text", "control": "url", "description": "Facebook profile URL."},
+        {"key": "field_67e3a11305af9", "label": "Instagram", "name": "instagram", "path": "url.instagram", "type": "text", "control": "url", "description": "Instagram profile URL."},
+        {"key": "field_67e3a11a05afa", "label": "LinkedIn", "name": "linkedin", "path": "url.linkedin", "type": "text", "control": "url", "description": "LinkedIn profile URL."},
+        {"key": "field_67e4a6ee588f1", "label": "Website", "name": "website", "path": "url.website", "type": "text", "control": "url", "description": "Official website URL."},
+        {"key": "field_67e4a6ee588f2", "label": "SoundCloud", "name": "soundcloud", "path": "url.soundcloud", "type": "text", "control": "url", "description": "SoundCloud profile URL."},
+        {"key": "field_67e4a6ee588f3", "label": "IMDB", "name": "imdb", "path": "url.imdb", "type": "text", "control": "url", "description": "IMDB profile URL."},
+        {"key": "field_67e4a6ee588f4", "label": "TikTok", "name": "tiktok", "path": "url.tiktok", "type": "text", "control": "url", "description": "TikTok profile URL."},
+        {"key": "field_67e4a6ee588f5", "label": "YouTube", "name": "youtube", "path": "url.youtube", "type": "text", "control": "url", "description": "YouTube profile URL."},
+        {"key": "field_67e4a6ee588f6", "label": "Amazon", "name": "amazon", "path": "url.amazon", "type": "text", "control": "url", "description": "Amazon author or storefront URL."},
+        {"key": "field_67e4a6ee588f7", "label": "X", "name": "x", "path": "url.x", "type": "text", "control": "url", "description": "X/Twitter profile URL."},
+        {"key": "field_67e4a6ee588f8", "label": "Audible", "name": "audible", "path": "url.audible", "type": "text", "control": "url", "description": "Audible profile URL."},
+        {"key": "field_67e4a6ee588f9", "label": "GitHub", "name": "github", "path": "url.github", "type": "text", "control": "url", "description": "GitHub profile URL."},
+        {"key": "field_67e4a6ee588fa", "label": "F6S", "name": "f6s", "path": "url.f6s", "type": "text", "control": "url", "description": "F6S profile URL."},
+        {"key": "field_67e4a6ee588fb", "label": "Crunchbase", "name": "crunchbase", "path": "url.crunchbase", "type": "text", "control": "url", "description": "Crunchbase profile URL."},
+        {"key": "field_67e4a6ee588fc", "label": "Muckrack", "name": "muckrack", "path": "url.muckrack", "type": "text", "control": "url", "description": "Muck Rack profile URL."},
+        {"key": "field_67e4a6ee588fd", "label": "AngelList", "name": "angellist", "path": "url.angellist", "type": "text", "control": "url", "description": "AngelList profile URL."}
+      ]
+    },
+    {
+      "key": "field_67e4d7f8ed086",
+      "label": "Title",
+      "name": "title",
+      "path": "title",
+      "type": "text",
+      "control": "text",
+      "description": "Display title field registered later in the ACF group."
+    },
+    {
+      "key": "field_67fa08231bd34",
+      "label": "Biography",
+      "name": "biography",
+      "path": "biography",
+      "type": "wysiwyg",
+      "control": "textarea",
+      "rich_editor": true,
+      "description": "Full biography HTML/content."
+    },
+    {
+      "key": "field_67fa082b1bd35",
+      "label": "Biography Short",
+      "name": "biography_short",
+      "path": "biography_short",
+      "type": "wysiwyg",
+      "control": "textarea",
+      "rich_editor": true,
+      "description": "Short biography HTML/content."
+    },
+    {
+      "key": "field_smp_vp_photo_gallery",
+      "label": "Photo Gallery",
+      "name": "photo_gallery",
+      "path": "photo_gallery",
+      "type": "gallery",
+      "control": "gallery",
+      "description": "Profile gallery photos for modules, shortcodes, and media output."
+    },
+    {
+      "key": "field_smp_vp_personal_education",
+      "label": "Personal Education",
+      "name": "personal_education",
+      "path": "personal_education",
+      "type": "repeater",
+      "control": "repeater",
+      "structure_key": "personal_education",
+      "description": "Education entries for display and schema output.",
+      "fields": [
+        {"key": "field_smp_vp_personal_education_school", "label": "School", "name": "school", "path": "personal_education.school", "type": "text", "control": "text", "description": "School, university, college, bootcamp, certification body, or educational organization name."},
+        {"key": "field_smp_vp_personal_education_degree", "label": "Degree / Credential", "name": "degree", "path": "personal_education.degree", "type": "text", "control": "text", "description": "Degree, certification, credential, course, program, or education label."},
+        {"key": "field_smp_vp_personal_education_field_of_study", "label": "Field of Study", "name": "field_of_study", "path": "personal_education.field_of_study", "type": "text", "control": "text", "description": "Major, concentration, discipline, or subject area."},
+        {"key": "field_smp_vp_personal_education_start_date", "label": "Start Date", "name": "start_date", "path": "personal_education.start_date", "type": "text", "control": "text", "description": "Start year or date."},
+        {"key": "field_smp_vp_personal_education_end_date", "label": "End Date", "name": "end_date", "path": "personal_education.end_date", "type": "text", "control": "text", "description": "End year/date or graduation date."},
+        {"key": "field_smp_vp_personal_education_url", "label": "School URL", "name": "url", "path": "personal_education.url", "type": "url", "control": "url", "description": "Official school or credential URL."},
+        {"key": "field_smp_vp_personal_education_wikipedia_url", "label": "Wikipedia URL", "name": "wikipedia_url", "path": "personal_education.wikipedia_url", "type": "url", "control": "url", "description": "Wikipedia page for the school or organization."},
+        {"key": "field_smp_vp_personal_education_same_as", "label": "SameAs URLs", "name": "same_as", "path": "personal_education.same_as", "type": "textarea", "control": "textarea", "description": "Additional schema sameAs URLs, one per line."},
+        {"key": "field_smp_vp_personal_education_description", "label": "Description", "name": "description", "path": "personal_education.description", "type": "textarea", "control": "textarea", "description": "Optional education note for display and schema description."}
+      ]
+    },
+    {
+      "key": "field_67fa082b1bd36",
+      "label": "Schema Markup",
+      "name": "schema_markup",
+      "path": "schema_markup",
+      "type": "textarea",
+      "control": "textarea",
+      "read_only": true,
+      "collapsed_by_default": true,
+      "description": "Read-only schema markup JSON-LD output."
+    }
+  ]
+}
