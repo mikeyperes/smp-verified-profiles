@@ -90,58 +90,112 @@ function custom_post_admin_footer_scripts() {
  * @param bool $update Whether this is an existing post being updated.
  */
 function process_profiles_on_save($post_id, $post, $update) {
-    // Skip autosave and if not a 'post' post type or ACF plugin is inactive
-    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE || $post->post_type !== 'post' || !check_plugin_acf()) {
+    // Skip autosave and if not a 'post' post type or ACF plugin is inactive.
+    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || $post->post_type !== 'post' || !check_plugin_acf()) {
         return;
     }
 
-    // Get pending profiles
     $pending_profiles = get_field('pending_profiles', $post_id);
-
-    if (!empty($pending_profiles)) {
-        $existing_profile_names = [];
-        $existing_profiles = get_field('profiles', $post_id);
-
-        // Collect names of existing profiles
-        if (!empty($existing_profiles)) {
-            foreach ($existing_profiles as $existing_profile) {
-                if (isset($existing_profile['profile']) && $existing_profile['profile'] instanceof WP_Post) {
-                    $existing_profile_names[] = get_the_title($existing_profile['profile']->ID);
-                }
-            }
-        }
-
-        // Assign 'unclaimed' user as post author
-        $user = get_user_by('slug', 'unclaimed');
-        $user_id = $user->ID;
-
-        // Process pending profiles
-        foreach ($pending_profiles as $profile_data) {
-            $name = sanitize_text_field($profile_data['name']);
-
-            // Check if profile is new
-            if (!in_array($name, $existing_profile_names)) {
-                $new_post_id = wp_insert_post([
-                    'post_title'  => $name,
-                    'post_type'   => 'profile',
-                    'post_status' => 'publish',
-                    'post_author' => $user_id, // Set the author of the post
-                ]);
-
-                // If profile was successfully created, update its fields
-                if ($new_post_id) {
-                    update_field('field_key_for_profile_type', sanitize_text_field($profile_data['type']), $new_post_id);
-                    update_field('field_key_for_url', esc_url_raw($profile_data['url']), $new_post_id);
-
-                    // Add new profile to the 'profiles' ACF repeater
-                    add_row('profiles', ['profile' => $new_post_id], $post_id);
-                }
-            }
-        }
-
-        // Clear pending profiles
-        update_field('pending_profiles', [], $post_id);
+    if (empty($pending_profiles) || !is_array($pending_profiles)) {
+        return;
     }
+
+    $attach_rows = [];
+    $spawn_entities = [];
+    $remaining_pending = [];
+    $seen_names = [];
+
+    foreach ($pending_profiles as $profile_data) {
+        if (!is_array($profile_data)) {
+            continue;
+        }
+
+        $name = sanitize_text_field($profile_data['name'] ?? '');
+        $type = sanitize_key((string) ($profile_data['type'] ?? $profile_data['profile_type'] ?? 'entity'));
+        $url = esc_url_raw($profile_data['url'] ?? $profile_data['primary_url'] ?? '');
+        $master_id = sanitize_text_field($profile_data['master_verified_profile_id'] ?? $profile_data['smp_master_verified_profile_id'] ?? '');
+        if ('' === $name) {
+            continue;
+        }
+
+        $name_key = strtolower($name);
+        if (isset($seen_names[$name_key])) {
+            continue;
+        }
+        $seen_names[$name_key] = true;
+
+        $entity = [
+            'name' => $name,
+            'entity_type' => $type ?: 'entity',
+            'profile_type' => $type ?: 'entity',
+            'primary_url' => $url,
+            'url' => $url,
+            'master_verified_profile_id' => $master_id,
+            'smp_master_verified_profile_id' => $master_id,
+            'source' => 'pending_profiles',
+            'resolution' => 'spawn_new',
+        ];
+
+        $existing_profile_id = 0;
+        if (function_exists(__NAMESPACE__ . '\\smp_vp_spawn_find_existing_profile_for_entity')) {
+            $existing_profile = smp_vp_spawn_find_existing_profile_for_entity($entity);
+            $existing_profile_id = is_array($existing_profile) ? (int) ($existing_profile['id'] ?? 0) : 0;
+        }
+        if ($existing_profile_id <= 0 && function_exists(__NAMESPACE__ . '\\smp_vp_spawn_find_existing_profile')) {
+            $existing_profile = smp_vp_spawn_find_existing_profile($name);
+            $existing_profile_id = is_array($existing_profile) ? (int) ($existing_profile['id'] ?? 0) : 0;
+        }
+
+        if ($existing_profile_id > 0 && function_exists(__NAMESPACE__ . '\\smp_vp_spawn_existing_profile_result')) {
+            $attach_rows[] = smp_vp_spawn_existing_profile_result($existing_profile_id, $entity);
+            continue;
+        }
+
+        $spawn_entities[] = $entity;
+        $remaining_pending[] = $profile_data;
+    }
+
+    if ($spawn_entities && function_exists(__NAMESPACE__ . '\\smp_vp_spawn_api_request')) {
+        $settings = function_exists(__NAMESPACE__ . '\\smp_vp_spawn_settings') ? smp_vp_spawn_settings() : [];
+        $api_payload = [
+            'site_url' => home_url(),
+            'mode' => 'filled',
+            'strictness' => (string) ($settings['default_strictness'] ?? 'default'),
+            'status' => (string) ($settings['default_status'] ?? 'publish'),
+            'post_id' => (int) $post_id,
+            'post_type' => (string) $post->post_type,
+            'title' => (string) $post->post_title,
+            'url' => get_permalink($post_id),
+            'content' => (string) $post->post_content,
+            'links' => [],
+            'entities' => $spawn_entities,
+        ];
+
+        $result = smp_vp_spawn_api_request('POST', '/entities/approve', $api_payload);
+        if (!empty($result['success']) || !empty($result['partial_success'])) {
+            $created = (array) ($result['created'] ?? []);
+            if (function_exists(__NAMESPACE__ . '\\smp_vp_spawn_enrich_created_profiles')) {
+                $created = smp_vp_spawn_enrich_created_profiles($created);
+            }
+            $attach_rows = array_merge($attach_rows, $created);
+            $remaining_pending = [];
+        }
+    }
+
+    if ($attach_rows) {
+        if (function_exists(__NAMESPACE__ . '\\smp_vp_spawn_attach_profiles_to_post')) {
+            smp_vp_spawn_attach_profiles_to_post((int) $post_id, $attach_rows);
+        } elseif (function_exists('add_row')) {
+            foreach ($attach_rows as $row) {
+                $profile_id = (int) (is_array($row) ? ($row['wp_post_id'] ?? $row['post_id'] ?? 0) : 0);
+                if ($profile_id > 0) {
+                    add_row('profiles', ['profile' => $profile_id], $post_id);
+                }
+            }
+        }
+    }
+
+    update_field('pending_profiles', array_values($remaining_pending), $post_id);
 }
 
 /**
