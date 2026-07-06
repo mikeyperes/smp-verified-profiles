@@ -1689,6 +1689,44 @@ function smp_vp_display_post_declares_loop(int $post_id): bool {
     return false;
 }
 
+function smp_vp_display_elementor_single_template_declares_loop(): bool {
+    static $has_single_loop = null;
+    if ($has_single_loop !== null) {
+        return $has_single_loop;
+    }
+
+    global $wpdb;
+    if (! $wpdb instanceof \wpdb) {
+        $has_single_loop = false;
+        return false;
+    }
+
+    $patterns = [
+        "%verified_profiles_loop%single-post%",
+        "%smp_verified_profiles_loop%single-post%",
+        "%display_single_post_mentioned_in_article%",
+        "%display_profiles_featured_in_single_post%",
+    ];
+    $conditions = [];
+    foreach ($patterns as $pattern) {
+        $conditions[] = $wpdb->prepare("pm.meta_value LIKE %s", $pattern);
+    }
+
+    $sql = "
+        SELECT 1
+        FROM {$wpdb->postmeta} pm
+        INNER JOIN {$wpdb->posts} p ON p.ID = pm.post_id
+        WHERE pm.meta_key = '_elementor_data'
+          AND p.post_type = 'elementor_library'
+          AND p.post_status = 'publish'
+          AND (" . implode(" OR ", $conditions) . ")
+        LIMIT 1
+    ";
+
+    $has_single_loop = (bool) $wpdb->get_var($sql);
+    return $has_single_loop;
+}
+
 function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
     try {
         $atts = shortcode_atts([
@@ -1722,7 +1760,7 @@ function smp_vp_display_append_to_content(string $content): string {
     }
 
     $post_id = get_the_ID();
-    if (smp_vp_display_content_has_loop($content) || smp_vp_display_post_declares_loop((int) $post_id)) {
+    if (smp_vp_display_content_has_loop($content) || smp_vp_display_post_declares_loop((int) $post_id) || smp_vp_display_elementor_single_template_declares_loop()) {
         return $content;
     }
 
