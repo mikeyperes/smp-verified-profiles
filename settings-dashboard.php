@@ -22,6 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 include_once __DIR__ . '/verified-profile-display-templates.php';
+include_once __DIR__ . '/verified-profile-page-templates.php';
 
 /**
  * Register settings page in WordPress admin menu

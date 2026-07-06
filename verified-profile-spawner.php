@@ -18,6 +18,7 @@ add_action( 'wp_ajax_smp_vp_spawn_propose', __NAMESPACE__ . '\\smp_vp_ajax_spawn
 add_action( 'wp_ajax_smp_vp_spawn_detect_existing', __NAMESPACE__ . '\\smp_vp_ajax_spawn_detect_existing' );
 add_action( 'wp_ajax_smp_vp_spawn_profile_state', __NAMESPACE__ . '\\smp_vp_ajax_spawn_profile_state' );
 add_action( 'wp_ajax_smp_vp_spawn_approve', __NAMESPACE__ . '\\smp_vp_ajax_spawn_approve' );
+add_action( 'wp_ajax_smp_vp_spawn_attach_existing', __NAMESPACE__ . '\\smp_vp_ajax_spawn_attach_existing' );
 
 function smp_vp_spawn_dashboard_tab( array $tabs ): array {
     $tabs['spawning-api'] = 'Spawning API';
@@ -96,6 +97,25 @@ function smp_vp_dynamic_button( array $args ): string {
     }
 
     return '<button type="button"' . ( '' !== $id ? ' id="' . esc_attr( $id ) . '"' : '' ) . ' class="' . esc_attr( $class ) . '" data-hpc-dynamic-button' . $attrs . '>' . esc_html( $label ) . '</button>';
+}
+
+function smp_vp_spawn_smart_profile_search(): void {
+    if ( class_exists( '\\Hexa\\PluginCore\\SmartSearch\\SmartSearchRenderer' ) ) {
+        ( new \Hexa\PluginCore\SmartSearch\SmartSearchRenderer() )->render(
+            [
+                'id'          => 'smp-vp-spawn-manual-search',
+                'label'       => 'Find or add profile',
+                'placeholder' => 'Type a person or company name',
+                'source'      => 'posts',
+                'post_type'   => smp_vp_spawn_profile_post_type(),
+                'min_chars'   => 2,
+                'limit'       => 10,
+            ]
+        );
+        return;
+    }
+
+    echo '<label class="smp-vp-spawn-field"><span class="smp-vp-spawn-field-label">Find or add profile</span><input type="text" id="smp-vp-spawn-manual-name" placeholder="Type a person or company name"></label>';
 }
 
 function smp_vp_spawn_render_settings(): void {
@@ -262,8 +282,8 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
         #smp-vp-spawn-box .hpc-button{border-radius:8px;font-weight:800;min-height:42px}
         #smp-vp-spawn-box .smp-vp-spawn-field{display:grid;gap:7px}
         #smp-vp-spawn-box .smp-vp-spawn-field-label{color:var(--svp-text);font-size:13px;font-weight:800}
-        #smp-vp-spawn-box input[type="text"],#smp-vp-spawn-box select{border:1px solid #9aa4b2;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(24,33,51,.02);box-sizing:border-box;color:var(--svp-text);font-size:15px;min-height:44px;padding:8px 12px;width:100%}
-        #smp-vp-spawn-box input[type="text"]:focus,#smp-vp-spawn-box select:focus{border-color:var(--svp-blue);box-shadow:0 0 0 3px rgba(64,89,217,.14);outline:0}
+        #smp-vp-spawn-box input[type="text"],#smp-vp-spawn-box input[type="search"],#smp-vp-spawn-box select{border:1px solid #9aa4b2;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(24,33,51,.02);box-sizing:border-box;color:var(--svp-text);font-size:15px;min-height:44px;padding:8px 12px;width:100%}
+        #smp-vp-spawn-box input[type="text"]:focus,#smp-vp-spawn-box input[type="search"]:focus,#smp-vp-spawn-box select:focus{border-color:var(--svp-blue);box-shadow:0 0 0 3px rgba(64,89,217,.14);outline:0}
         #smp-vp-spawn-box select{appearance:auto;background:#fff;font-weight:700;padding-right:38px}
         #smp-vp-spawn-box .smp-vp-spawn-check{align-items:center;background:#f9fbff;border:1px solid var(--svp-line);border-radius:10px;color:var(--svp-text);display:inline-flex;font-weight:800;gap:10px;min-height:44px;padding:0 14px}
         #smp-vp-spawn-box .smp-vp-spawn-check input{margin:0}
@@ -276,6 +296,22 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
         #smp-vp-spawn-box .smp-vp-state-actions a{font-size:12px}
         #smp-vp-spawn-box .smp-vp-spawn-inline{align-items:end;display:grid;gap:12px;grid-template-columns:minmax(220px,1fr) auto}
         #smp-vp-spawn-box .smp-vp-spawn-inline input,#smp-vp-spawn-box .smp-vp-spawn-inline select{min-height:44px;width:100%}
+        #smp-vp-spawn-box .smp-vp-manual-search-wrap{min-width:0}
+        #smp-vp-spawn-box .hpc-smart-search{position:relative}
+        #smp-vp-spawn-box .hpc-smart-search .hpc-field{display:grid;gap:7px;margin:0}
+        #smp-vp-spawn-box .hpc-smart-search .hpc-field span{color:var(--svp-text);font-size:13px;font-weight:800}
+        #smp-vp-spawn-box .hpc-smart-search-status{color:var(--svp-muted);font-size:12px;margin-top:7px}
+        #smp-vp-spawn-box .hpc-smart-search-results{background:#fff;border:1px solid var(--svp-line-strong);border-radius:10px;box-shadow:0 14px 32px rgba(24,33,51,.14);display:grid;gap:4px;left:0;margin-top:8px;max-height:280px;overflow:auto;padding:6px;position:absolute;right:0;z-index:30}
+        #smp-vp-spawn-box .hpc-smart-search-results[hidden]{display:none}
+        #smp-vp-spawn-box .hpc-smart-search-result{background:#fff;border:0;border-radius:8px;cursor:pointer;display:grid;gap:2px;padding:10px 12px;text-align:left;width:100%}
+        #smp-vp-spawn-box .hpc-smart-search-result.active,#smp-vp-spawn-box .hpc-smart-search-result:hover{background:#eef4ff}
+        #smp-vp-spawn-box .hpc-smart-search-result strong{color:var(--svp-text);font-size:13px}
+        #smp-vp-spawn-box .hpc-smart-search-result span,#smp-vp-spawn-box .hpc-smart-search-result em{color:var(--svp-muted);font-size:12px;font-style:normal}
+        #smp-vp-spawn-box .hpc-smart-search-selected{align-items:center;display:flex;gap:8px;margin-top:8px}
+        #smp-vp-spawn-box .hpc-smart-search-selected[hidden]{display:none}
+        #smp-vp-spawn-box .smp-vp-manual-intent{background:#f8fafc;border:1px solid #e3e8f0;border-radius:8px;color:var(--svp-muted);font-size:12px;margin-top:8px;padding:9px 10px}
+        #smp-vp-spawn-box .smp-vp-manual-intent.is-selected{background:#eaf8ef;border-color:#c7ecd4;color:#176c36;font-weight:700}
+        #smp-vp-spawn-box .smp-vp-manual-intent.is-new{background:#fff7e6;border-color:#f5ddac;color:#8a5700;font-weight:700}
         #smp-vp-spawn-box .smp-vp-spawn-toggles{align-items:end;display:grid;gap:14px;grid-template-columns:minmax(180px,max-content) minmax(220px,320px);margin:16px 0}
         #smp-vp-spawn-box .smp-vp-spawn-log-panel{border:1px solid #202b3f;border-radius:12px;background:#111827;box-shadow:0 1px 2px rgba(24,33,51,.08);overflow:hidden}
         #smp-vp-spawn-box .smp-vp-spawn-log-head{align-items:center;background:#172033;border-bottom:1px solid #263349;display:flex;gap:12px;justify-content:space-between;padding:12px 14px}
@@ -371,12 +407,13 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
 
             <div class="smp-vp-spawn-step smp-vp-spawn-manual">
                 <h4>Manual Add</h4>
-                <p class="smp-vp-entity-meta">Add a missed person or company to the review list without changing the scan flow.</p>
+                <p class="smp-vp-entity-meta">Search existing verified profiles first. Selecting a match attaches it to this article immediately; leave no selection and use Spawn new profile for a new profile from the typed name.</p>
                 <div class="smp-vp-spawn-inline">
-                    <label class="smp-vp-spawn-field"><span class="smp-vp-spawn-field-label">Manual name</span>
-                        <input type="text" id="smp-vp-spawn-manual-name" placeholder="Type a person or company name">
-                    </label>
-                    <?php echo smp_vp_dynamic_button( [ 'id' => 'smp-vp-spawn-manual-add', 'label' => 'Add name', 'working_label' => 'Adding...', 'success_label' => 'Added', 'error_label' => 'Add failed', 'class' => 'hpc-button secondary', 'attrs' => [ 'data-smp-vp-action' => 'manual' ] ] ); ?>
+                    <div class="smp-vp-manual-search-wrap">
+                        <?php smp_vp_spawn_smart_profile_search(); ?>
+                        <div id="smp-vp-spawn-manual-intent" class="smp-vp-manual-intent">Type to search existing verified profiles.</div>
+                    </div>
+                    <?php echo smp_vp_dynamic_button( [ 'id' => 'smp-vp-spawn-manual-add', 'label' => 'Spawn new profile', 'working_label' => 'Adding...', 'success_label' => 'Added', 'error_label' => 'Add failed', 'class' => 'hpc-button secondary', 'attrs' => [ 'data-smp-vp-action' => 'manual' ] ] ); ?>
                 </div>
             </div>
 
@@ -403,7 +440,7 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
     jQuery(function($){
         var box = $('#smp-vp-spawn-box');
         var dyn = window.HexaWpCoreDynamicButton || {start:function(b,t){$(b).prop('disabled',true).text(t||'Working...')},success:function(b,t){$(b).prop('disabled',false).text(t||'Done')},error:function(b,t){$(b).prop('disabled',false).text(t||'Failed')},reset:function(b){$(b).prop('disabled',false)},enable:function(b){$(b).prop('disabled',false)},disable:function(b){$(b).prop('disabled',true)}};
-        var state = {entities:[], busy:false, profileState:{current_profiles:[], pending_profiles:[]}};
+        var state = {entities:[], busy:false, profileState:{current_profiles:[], pending_profiles:[]}, manualSelected:null};
         hideLegacyAcfBox();
         function hideLegacyAcfBox(){
             $('.postbox').each(function(){
@@ -418,6 +455,93 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
             var el = $('#smp-vp-spawn-log');
             var current = el.text() === 'Ready.' ? '' : el.text() + "\n";
             el.text(current + '[' + now() + '] ' + line);
+        }
+        function manualSearchRoot(){ return $('#smp-vp-spawn-manual-search'); }
+        function manualSearchInput(){
+            var root = manualSearchRoot();
+            var input = root.length ? root.find('.hpc-smart-search-input') : $();
+            return input.length ? input : $('#smp-vp-spawn-manual-name');
+        }
+        function manualSearchValue(){ return (manualSearchInput().val() || '').trim(); }
+        function setManualSearchValue(value){
+            manualSearchInput().val(value || '');
+            manualSearchRoot().find('.hpc-smart-search-value').val('');
+        }
+        function setManualButtonLabel(label){
+            var btn = document.getElementById('smp-vp-spawn-manual-add');
+            if(!btn) return;
+            btn.dataset.defaultLabel = label;
+            var node = btn.querySelector('.hpc-dynamic-button-label');
+            if(node){ node.textContent = label; } else { btn.textContent = label; }
+        }
+        function setManualIntent(type, text){
+            var intent = $('#smp-vp-spawn-manual-intent');
+            intent.removeClass('is-selected is-new').addClass(type ? 'is-' + type : '').text(text);
+            setManualButtonLabel(type === 'selected' ? 'Attach selected profile' : 'Spawn new profile');
+        }
+        function clearManualSelection(message){
+            state.manualSelected = null;
+            manualSearchRoot().find('.hpc-smart-search-selected').prop('hidden', true).empty();
+            manualSearchRoot().find('.hpc-smart-search-value').val('');
+            setManualIntent('', message || 'Type to search existing verified profiles.');
+        }
+        function entityFromSelectedProfile(item){
+            return {
+                name: item.name || item.label || ('Profile #' + item.id),
+                entity_type: 'entity',
+                confidence: 1,
+                description: 'Selected from existing WordPress verified profiles.',
+                source: 'manual',
+                resolution: 'attach_existing',
+                existing_profile_id: parseInt(item.id || item.value || 0, 10),
+                existing_profile_title: item.name || item.label || '',
+                existing_backend_url: item.edit_url || item.url || '',
+                existing_frontend_url: item.view_url || '',
+                match_type: 'manual_wp_search'
+            };
+        }
+        function attachManualSelectedProfile(item, btn){
+            var profileId = parseInt((item && (item.id || item.value)) || 0, 10);
+            if(!profileId){
+                if(btn){ dyn.error(btn, 'No profile'); }
+                setManualIntent('', 'Select an existing verified profile result, or type a new name to spawn.');
+                return $.Deferred().reject().promise();
+            }
+            clearError();
+            if(btn){ dyn.start(btn, 'Attaching...'); }
+            log('Attaching existing verified profile "' + (item.name || item.label || ('#' + profileId)) + '" to this post...');
+            return $.post(ajaxurl, {
+                action: 'smp_vp_spawn_attach_existing',
+                nonce: $('#smp-vp-spawn-nonce').val(),
+                post_id: box.data('post-id'),
+                profile_id: profileId
+            }).done(function(resp){
+                if(!resp || !resp.success){
+                    showError(resp, 'Manual profile attach failed.', 'Manual attach');
+                    if(btn){ dyn.error(btn); }
+                    return;
+                }
+                var data = resp.data || {};
+                log(data.message || 'Existing verified profile attached.');
+                if(data.created_profiles){ renderCreated(data.created_profiles); }
+                if(data.state){ renderProfileState(data.state); } else { loadProfileState(); }
+                setManualSearchValue('');
+                clearManualSelection('Type to search existing verified profiles.');
+                if(btn){ dyn.success(btn, data.already_attached ? 'Already attached' : 'Attached'); }
+            }).fail(function(resp){
+                showError(resp, 'Manual profile attach request failed.', 'Manual attach');
+                if(btn){ dyn.error(btn); }
+            });
+        }
+        function entityFromManualName(name){
+            return {
+                name: name,
+                entity_type: 'entity',
+                confidence: 0.65,
+                description: 'Manually entered name with no selected local profile match.',
+                source: 'manual',
+                resolution: 'spawn_new'
+            };
         }
         function strictness(){ return $('#smp-vp-spawn-strict').is(':checked') ? 'strict' : 'default'; }
         function setBusy(busy, activeButton){
@@ -516,8 +640,8 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
                 body.append($('<div class="smp-vp-entity-meta">').text([item.type, item.url].filter(Boolean).join(' - ') || 'Pending'));
                 var actions = $('<div class="smp-vp-state-actions">');
                 actions.append($('<button type="button" class="hpc-button secondary">Add to review</button>').on('click', function(){
-                    $('#smp-vp-spawn-manual-name').val(item.name || '');
-                    $('#smp-vp-spawn-manual-add').trigger('click');
+                    setManualSearchValue(item.name || '');
+                    clearManualSelection('Pending name loaded. Select an existing match or spawn it as new.');
                 }));
                 row.append(body).append(actions);
                 pending.append(row);
@@ -720,9 +844,34 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
         $('#smp-vp-spawn-create-empty').on('click', function(){ approve(this, 'empty'); });
         $('#smp-vp-spawn-approve').on('click', function(){ approve(this, 'filled'); });
         $('#smp-vp-spawn-manual-add').on('click', function(){
-            var btn = this, name = ($('#smp-vp-spawn-manual-name').val() || '').trim();
+            var btn = this, name = manualSearchValue();
             if(!name){ dyn.error(btn, 'Name required'); return; }
-            detectExisting(btn, {manual_names:[name]}).done(function(){ $('#smp-vp-spawn-manual-name').val(''); });
+            dyn.start(btn);
+            if(state.manualSelected && parseInt(state.manualSelected.id || state.manualSelected.value || 0, 10) > 0){
+                attachManualSelectedProfile(state.manualSelected, btn);
+                return;
+            }
+            mergeEntities([entityFromManualName(name)]);
+            log('Added "' + name + '" to the review list as a new verified profile.');
+            setManualSearchValue('');
+            clearManualSelection();
+            dyn.success(btn, 'Added');
+        });
+        document.addEventListener('hexa-search-selected', function(event){
+            if(!event.detail || event.detail.component_id !== 'smp-vp-spawn-manual-search') return;
+            state.manualSelected = event.detail.item || null;
+            if(state.manualSelected){
+                setManualIntent('selected', 'Attaching existing verified profile #' + (state.manualSelected.id || state.manualSelected.value || '') + ' ' + (state.manualSelected.name || state.manualSelected.label || '') + '...');
+                attachManualSelectedProfile(state.manualSelected, document.getElementById('smp-vp-spawn-manual-add'));
+            }
+        });
+        manualSearchInput().on('input', function(){
+            var value = manualSearchValue();
+            if(state.manualSelected && value !== (state.manualSelected.name || state.manualSelected.label || '')){
+                clearManualSelection(value ? 'No existing profile selected. Click Spawn new profile to create a new verified profile from this name.' : 'Type to search existing verified profiles.');
+            } else if(!state.manualSelected) {
+                setManualIntent(value ? 'new' : '', value ? 'No existing profile selected. Click Spawn new profile to create a new verified profile from this name.' : 'Type to search existing verified profiles.');
+            }
         });
         $('#smp-vp-spawn-select-all').on('click', function(){ var btn=this; dyn.start(btn); $('.smp-vp-spawn-entity-check').prop('checked', true); log('Selected all proposed entities.'); dyn.success(btn); });
         $('#smp-vp-spawn-clear').on('click', function(){ var btn=this; dyn.start(btn); $('.smp-vp-spawn-entity-check').prop('checked', false); log('Cleared selected entities.'); dyn.success(btn); });
@@ -920,6 +1069,57 @@ function smp_vp_ajax_spawn_profile_state(): void {
     check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
     $post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
     wp_send_json_success( smp_vp_spawn_post_profile_state( $post_id ) );
+}
+
+function smp_vp_ajax_spawn_attach_existing(): void {
+    if ( ! current_user_can( 'edit_posts' ) ) {
+        wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
+    }
+
+    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+
+    $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+    $profile_id = isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0;
+
+    if ( $post_id <= 0 || ! current_user_can( 'edit_post', $post_id ) ) {
+        wp_send_json_error( [ 'message' => 'Invalid or unauthorized post.' ], 403 );
+    }
+
+    if ( $profile_id <= 0 || ! current_user_can( 'edit_post', $profile_id ) ) {
+        wp_send_json_error( [ 'message' => 'Invalid or unauthorized verified profile.' ], 403 );
+    }
+
+    $profile_post = get_post( $profile_id );
+    if ( ! $profile_post || smp_vp_spawn_profile_post_type() !== $profile_post->post_type ) {
+        wp_send_json_error( [ 'message' => 'Selected item is not a verified profile.' ], 200 );
+    }
+
+    $already_attached = smp_vp_spawn_post_has_profile( $post_id, $profile_id );
+    $profile = smp_vp_spawn_existing_profile_result( $profile_id, [ 'entity_type' => 'manual' ] );
+    $attached = smp_vp_spawn_attach_profiles_to_post( $post_id, [ $profile ] );
+
+    if ( ! $already_attached && ! in_array( $profile_id, $attached, true ) ) {
+        wp_send_json_error(
+            [
+                'message' => 'Verified profile could not be attached to the post ACF field.',
+                'state' => smp_vp_spawn_post_profile_state( $post_id ),
+            ],
+            200
+        );
+    }
+
+    wp_send_json_success(
+        [
+            'message' => $already_attached
+                ? get_the_title( $profile_id ) . ' was already attached to this post.'
+                : get_the_title( $profile_id ) . ' attached to this post.',
+            'attached_profile_ids' => $attached,
+            'created_profiles' => [ $profile ],
+            'profile' => $profile,
+            'state' => smp_vp_spawn_post_profile_state( $post_id ),
+            'already_attached' => $already_attached,
+        ]
+    );
 }
 
 function smp_vp_spawn_post_profile_state( int $post_id ): array {
@@ -1347,6 +1547,28 @@ function smp_vp_spawn_preview_value( $value ): string {
         return mb_substr( wp_json_encode( $value ), 0, 260 );
     }
     return '';
+}
+
+function smp_vp_spawn_post_has_profile( int $post_id, int $profile_id ): bool {
+    if ( $post_id <= 0 || $profile_id <= 0 || ! function_exists( 'get_field' ) ) {
+        return false;
+    }
+
+    $rows = get_field( 'profiles', $post_id, false );
+    foreach ( (array) $rows as $row ) {
+        $existing_id = 0;
+        if ( is_array( $row ) ) {
+            $existing_id = (int) ( $row['profile'] ?? $row['field_656c17629ad34'] ?? 0 );
+        } elseif ( is_numeric( $row ) ) {
+            $existing_id = (int) $row;
+        }
+
+        if ( $existing_id === $profile_id ) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function smp_vp_spawn_attach_profiles_to_post( int $post_id, array $created ): array {

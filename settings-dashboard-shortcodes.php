@@ -871,8 +871,45 @@ function smp_vp_shortcode_metadata( $tag ) {
             'example'     => '[profiles_in_articles]',
         ],
         'verified_profile' => [
-            'description' => 'Outputs a field from the Verified Profile options group.',
-            'example'     => '[verified_profile field="program_name"]',
+            'description' => 'Outputs a current verified profile field such as the featured image, or a field from the Verified Profile options group.',
+            'example'     => '[verified_profile field="featured_image" size="large"]',
+            'examples'    => [
+                [
+                    'label'       => 'Featured image URL',
+                    'shortcode'   => '[verified_profile field="featured_image" size="large"]',
+                    'description' => 'Returns the current verified profile featured image URL.',
+                    'parameters'  => [
+                        'field' => 'featured_image',
+                        'size'  => 'thumbnail, medium, medium_large, large, full, or a custom image size',
+                    ],
+                ],
+                [
+                    'label'       => 'Featured image element',
+                    'shortcode'   => '[verified_profile field="featured_image" size="medium_large" output="img" class="profile-headshot"]',
+                    'description' => 'Renders the current verified profile featured image as an img tag with a custom class.',
+                    'parameters'  => [
+                        'field'  => 'featured_image',
+                        'size'   => 'thumbnail, medium, medium_large, large, full, or a custom image size',
+                        'output' => 'url, img, id',
+                        'class'  => 'Optional CSS class for img output',
+                    ],
+                ],
+                [
+                    'label'       => 'Program option value',
+                    'shortcode'   => '[verified_profile field="program_name"]',
+                    'description' => 'Returns a value from the Verified Profile options group.',
+                    'parameters'  => [
+                        'field' => 'program_name, email, logo, loop_items.<field>, pages.<field>',
+                    ],
+                ],
+            ],
+            'parameters'  => [
+                'field'   => 'featured_image, profile_photo, photo, program_name, email, logo, loop_items.<field>, pages.<field>',
+                'size'    => 'Image size for featured_image/logo fields',
+                'output'  => 'url, img, id',
+                'class'   => 'Optional class for img output',
+                'post_id' => 'Optional verified profile post ID; defaults to the current profile',
+            ],
         ],
         'verified_single' => [
             'description' => 'Legacy MuckRack verified text for the current single post context.',

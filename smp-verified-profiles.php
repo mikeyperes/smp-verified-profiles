@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.36
+ * Version: 6.5.37
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -41,7 +41,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.36";
+    public static $plugin_version = "6.5.37";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -180,6 +180,56 @@ function smp_vp_request_value( string $key ): string {
     return '';
 }
 
+function smp_vp_settings_ajax_actions(): array {
+    return [
+        'smp_vp_load_tab',
+        'smp_vp_toggle_snippet',
+        'smp_vp_test_snippet',
+        'smp_verified_profiles_toggle_snippet',
+        'smp_verified_profiles_modify_wp_config_constants',
+        'smp_verified_profiles_execute_function',
+        'smp_vp_force_plugin_update_check',
+        'smp_vp_reprocess_schema',
+        'smp_vp_shortcode_profile_values',
+        'smp_vp_display_save_settings',
+        'smp_vp_display_import_elementor',
+        'smp_vp_display_create_loop_item',
+        'smp_vp_display_save_loop_item',
+        'smp_vp_display_delete_loop_item',
+        'smp_vp_profile_page_save',
+        'smp_vp_pages_assign_page',
+        'smp_vp_pages_create_page',
+        'smp_vp_pages_delete_page',
+        'smp_vp_pages_save_template',
+        'smp_vp_pages_apply_template',
+        'smp_vp_pages_page_details',
+        'smp_vp_pages_update_page_slug',
+    ];
+}
+
+function smp_vp_admin_ajax_actions(): array {
+    return array_values(
+        array_unique(
+            array_merge(
+                [
+                    'get_unclaimed_profiles',
+                    'send_email',
+                    'refresh_user',
+                    'smp_vp_spawn_save_settings',
+                    'smp_vp_spawn_test_api',
+                    'smp_vp_spawn_propose',
+                    'smp_vp_spawn_detect_existing',
+                    'smp_vp_spawn_profile_state',
+                    'smp_vp_spawn_approve',
+                    'smp_vp_spawn_attach_existing',
+                    'smpvp_lookup_profile',
+                ],
+                smp_vp_settings_ajax_actions()
+            )
+        )
+    );
+}
+
 function smp_vp_is_settings_dashboard_request(): bool {
     if ( is_admin() && Config::$settings_page_slug === smp_vp_request_value( 'page' ) ) {
         return true;
@@ -187,23 +237,7 @@ function smp_vp_is_settings_dashboard_request(): bool {
 
     if ( wp_doing_ajax() ) {
         $action = smp_vp_request_value( 'action' );
-        return in_array(
-            $action,
-            [
-                'smp_vp_load_tab',
-                'smp_vp_toggle_snippet',
-                'smp_verified_profiles_toggle_snippet',
-                'smp_verified_profiles_modify_wp_config_constants',
-                'smp_verified_profiles_execute_function',
-                'smp_vp_force_plugin_update_check',
-                'smp_vp_display_save_settings',
-                'smp_vp_display_import_elementor',
-                'smp_vp_display_create_loop_item',
-                'smp_vp_display_save_loop_item',
-                'smp_vp_display_delete_loop_item',
-            ],
-            true
-        );
+        return in_array( $action, smp_vp_settings_ajax_actions(), true );
     }
 
     return false;
@@ -230,22 +264,7 @@ function smp_vp_is_relevant_admin_request(): bool {
     if ( wp_doing_ajax() ) {
         return in_array(
             smp_vp_request_value( 'action' ),
-            [
-                'get_unclaimed_profiles',
-                'send_email',
-                'refresh_user',
-                'smp_vp_spawn_save_settings',
-                'smp_vp_spawn_test_api',
-                'smp_vp_spawn_propose',
-                'smp_vp_spawn_detect_existing',
-                'smp_vp_spawn_profile_state',
-                'smp_vp_spawn_approve',
-                'smp_vp_display_save_settings',
-                'smp_vp_display_import_elementor',
-                'smp_vp_display_create_loop_item',
-                'smp_vp_display_save_loop_item',
-                'smp_vp_display_delete_loop_item',
-            ],
+            smp_vp_admin_ajax_actions(),
             true
         );
     }
@@ -272,7 +291,8 @@ function smp_vp_load_settings_dashboard_files(): void {
     include_once __DIR__ . '/settings-dashboard-shortcodes.php';
     include_once __DIR__ . '/settings-dashboard.php';
     include_once __DIR__ . '/verified-profile-display-templates.php';
-	            include_once __DIR__ . '/verified-profile-spawner.php';
+    include_once __DIR__ . '/verified-profile-page-templates.php';
+    include_once __DIR__ . '/verified-profile-spawner.php';
 
     $loaded = true;
 }
@@ -567,7 +587,8 @@ add_action( 'init', function() {
 	            include_once __DIR__ . '/snippet-wp-admin-user-page-functionality.php';
 	            include_once __DIR__ . '/snippet-post-functionality.php';
 	            include_once __DIR__ . '/verified-profile-display-templates.php';
-    include_once __DIR__ . '/verified-profile-spawner.php';
+	            include_once __DIR__ . '/verified-profile-page-templates.php';
+	            include_once __DIR__ . '/verified-profile-spawner.php';
 	            include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
 	            include_once __DIR__ . '/snippet-wp-admin-user-page-optional-functionality.php';
 	            include_once __DIR__ . '/snippet-disable-password-reset.php';
@@ -592,6 +613,7 @@ add_action( 'init', function() {
     include_once __DIR__ . '/snippet-muckrack-functionality.php';
     include_once __DIR__ . '/verified-profile-display-templates.php';
     include_once __DIR__ . '/shortcodes.php';
+    include_once __DIR__ . '/verified-profile-page-templates.php';
     include_once __DIR__ . '/snippet-shortcodes-entities.php';
     
     // Activate non-admin snippets

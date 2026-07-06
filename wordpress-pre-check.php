@@ -1,4 +1,9 @@
 <?php
+
+namespace smp_verified_profiles;
+
+defined( 'ABSPATH' ) || exit;
+
 // Include the plugin.php file if it hasn't been included yet
 if (!function_exists('is_plugin_active')) {
     require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -89,5 +94,4 @@ function create_verified_profile_categories() {
 }
 
 // Hook the create_verified_profile_categories function to a custom AJAX action
-add_action('wp_ajax_create_verified_profile_categories', 'create_verified_profile_categories');
-?>
+add_action('wp_ajax_create_verified_profile_categories', __NAMESPACE__ . '\\create_verified_profile_categories');

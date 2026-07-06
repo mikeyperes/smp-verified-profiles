@@ -1,5 +1,18 @@
 <?php namespace smp_verified_profiles;
 
+function smp_vp_acf_instruction( string $description, string $shortcode ): string {
+	$description = trim( $description );
+	$shortcode   = trim( $shortcode );
+
+	if ( '' === $shortcode ) {
+		return $description;
+	}
+
+	$example = 'Shortcode: <code>' . esc_html( $shortcode ) . '</code>.';
+
+	return '' !== $description ? $description . ' ' . $example : $example;
+}
+
 function register_verified_profile_custom_fields()
 {
 
@@ -16,16 +29,16 @@ function register_verified_profile_custom_fields()
 	acf_add_local_field_group( array(
 	'key' => 'group_67e39e4171b16',
 	'title' => 'Verified Profile',
-	'fields' => array(
-		array(
-			'key' => 'field_67e47e841bef5',
-			'label' => 'Title',
-			'name' => 'title',
-			'aria-label' => '',
-			'type' => 'text',
-			'instructions' => '',
-			'required' => 0,
-			'conditional_logic' => 0,
+		'fields' => array(
+			array(
+				'key' => 'field_67e47e841bef5',
+				'label' => 'Title',
+				'name' => 'title',
+				'aria-label' => '',
+				'type' => 'text',
+				'instructions' => smp_vp_acf_instruction( 'Profile display title.', '[verified_profile field="title"]' ),
+				'required' => 0,
+				'conditional_logic' => 0,
 			'wrapper' => array(
 				'width' => '',
 				'class' => '',
@@ -37,16 +50,42 @@ function register_verified_profile_custom_fields()
 			'placeholder' => '',
 			'prepend' => '',
 			'append' => '',
-		),
-		array(
-			'key' => 'field_67e39e414527f',
-			'label' => 'Featured',
-			'name' => 'featured',
-			'aria-label' => '',
-			'type' => 'true_false',
-			'instructions' => '',
-			'required' => 0,
-			'conditional_logic' => 0,
+			),
+				array(
+					'key' => 'field_smp_vp_profile_type',
+					'label' => 'Profile Type',
+					'name' => 'profile_type',
+					'aria-label' => '',
+					'type' => 'select',
+					'instructions' => smp_vp_acf_instruction( 'Choose whether this verified profile represents a person or a company. Company-only fields below load when Company is selected.', '[verified_profile field="profile_type"]' ),
+					'required' => 0,
+					'conditional_logic' => 0,
+					'wrapper' => array(
+						'width' => '33',
+						'class' => '',
+						'id' => '',
+					),
+					'choices' => array(
+						'person' => 'Person',
+						'company' => 'Company',
+					),
+					'default_value' => 'person',
+					'return_format' => 'value',
+					'multiple' => 0,
+					'allow_null' => 0,
+					'ui' => 1,
+					'ajax' => 0,
+					'placeholder' => '',
+				),
+				array(
+					'key' => 'field_67e39e414527f',
+					'label' => 'Featured',
+					'name' => 'featured',
+				'aria-label' => '',
+				'type' => 'true_false',
+				'instructions' => smp_vp_acf_instruction( 'Marks this profile as featured.', '[verified_profile field="featured"]' ),
+				'required' => 0,
+				'conditional_logic' => 0,
 			'wrapper' => array(
 				'width' => '',
 				'class' => '',
@@ -55,16 +94,86 @@ function register_verified_profile_custom_fields()
 			'message' => '',
 			'default_value' => 0,
 			'ui' => 0,
-			'ui_on_text' => '',
-			'ui_off_text' => '',
-		),
-		array(
-			'key' => 'field_67e3a0f205af6',
-			'label' => 'URL',
-			'name' => 'url',
+					'ui_on_text' => '',
+					'ui_off_text' => '',
+				),
+				array(
+					'key' => 'field_smp_vp_company_details',
+					'label' => 'Company Details',
+					'name' => 'company_details',
+					'aria-label' => '',
+					'type' => 'group',
+					'instructions' => smp_vp_acf_instruction( 'Company-only fields used for profile display and Organization schema output.', '[verified_profile field="company_details"]' ),
+				'required' => 0,
+				'conditional_logic' => array(
+					array(
+						array(
+							'field' => 'field_smp_vp_profile_type',
+							'operator' => '==',
+							'value' => 'company',
+						),
+					),
+				),
+				'wrapper' => array(
+					'width' => '',
+					'class' => '',
+					'id' => '',
+				),
+				'layout' => 'block',
+				'sub_fields' => array(
+					array(
+						'key' => 'field_smp_vp_company_organization_name',
+						'label' => 'Company Name',
+						'name' => 'organization_name',
+						'type' => 'text',
+						'instructions' => smp_vp_acf_instruction( 'Organization schema name. Falls back to the WordPress profile title when empty.', '[verified_profile field="company_details.organization_name"]' ),
+						'wrapper' => array('width' => '100', 'class' => '', 'id' => ''),
+					),
+					array(
+						'key' => 'field_smp_vp_company_legal_name',
+						'label' => 'Legal Name',
+						'name' => 'legal_name',
+						'type' => 'text',
+						'instructions' => smp_vp_acf_instruction( 'Optional Organization schema legalName.', '[verified_profile field="company_details.legal_name"]' ),
+						'wrapper' => array('width' => '100', 'class' => '', 'id' => ''),
+					),
+					array(
+						'key' => 'field_smp_vp_company_founder_profile',
+						'label' => 'Founded By',
+						'name' => 'founder_profile',
+						'type' => 'post_object',
+						'instructions' => smp_vp_acf_instruction( 'Select the person verified profile that founded this company.', '[verified_profile field="company_details.founder_profile" output="link"]' ),
+						'post_type' => array($verified_profile_settings_slug),
+						'post_status' => array('publish', 'draft', 'pending'),
+						'return_format' => 'id',
+						'ui' => 1,
+						'wrapper' => array('width' => '100', 'class' => '', 'id' => ''),
+					),
+					array(
+						'key' => 'field_smp_vp_company_founding_date',
+						'label' => 'Founding Date',
+						'name' => 'founding_date',
+						'type' => 'text',
+						'instructions' => smp_vp_acf_instruction( 'Organization schema foundingDate. Use a year or ISO date.', '[verified_profile field="company_details.founding_date"]' ),
+						'wrapper' => array('width' => '100', 'class' => '', 'id' => ''),
+					),
+					array(
+						'key' => 'field_smp_vp_company_employees',
+						'label' => 'Number of Employees',
+						'name' => 'number_of_employees',
+						'type' => 'number',
+						'instructions' => smp_vp_acf_instruction( 'Optional Organization schema numberOfEmployees.', '[verified_profile field="company_details.number_of_employees"]' ),
+						'wrapper' => array('width' => '100', 'class' => '', 'id' => ''),
+					),
+				),
+			),
+			array(
+				'key' => 'field_67e3a0f205af6',
+				'label' => 'URL',
+				'name' => 'url',
 			'aria-label' => '',
 			'type' => 'group',
-			'instructions' => '',
+			'instructions' => smp_vp_acf_instruction( 'Profile URL and social URL fields.', '[verified_profile field="url"]' ),
 			'required' => 0,
 			'conditional_logic' => 0,
 			'wrapper' => array(
@@ -80,7 +189,7 @@ function register_verified_profile_custom_fields()
 					'name'         => 'wikipedia',
 					'aria-label'   => '',
 					'type'         => 'text',
-					'instructions' => 'url_wikipedia [get_profile_field field="url_wikipedia"]',
+						'instructions' => smp_vp_acf_instruction( 'Wikipedia URL.', '[verified_profile field="url.wikipedia" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -96,7 +205,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Facebook',
 					'name'         => 'facebook',
 					'type'         => 'text',
-					'instructions' => 'url_facebook [get_profile_field field="url_facebook"]',
+						'instructions' => smp_vp_acf_instruction( 'Facebook URL.', '[verified_profile field="url.facebook" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -112,7 +221,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Instagram',
 					'name'         => 'instagram',
 					'type'         => 'text',
-					'instructions' => 'url_instagram [get_profile_field field="url_instagram"]',
+						'instructions' => smp_vp_acf_instruction( 'Instagram URL.', '[verified_profile field="url.instagram" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -128,7 +237,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'LinkedIn',
 					'name'         => 'linkedin',
 					'type'         => 'text',
-					'instructions' => 'url_linkedin [get_profile_field field="url_linkedin"]',
+						'instructions' => smp_vp_acf_instruction( 'LinkedIn URL.', '[verified_profile field="url.linkedin" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -144,7 +253,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Website',
 					'name'         => 'website',
 					'type'         => 'text',
-					'instructions' => 'url_website [get_profile_field field="url_website"]',
+						'instructions' => smp_vp_acf_instruction( 'Website URL.', '[verified_profile field="url.website" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -160,7 +269,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'SoundCloud',
 					'name'         => 'soundcloud',
 					'type'         => 'text',
-					'instructions' => 'url_soundcloud [get_profile_field field="url_soundcloud"]',
+						'instructions' => smp_vp_acf_instruction( 'SoundCloud URL.', '[verified_profile field="url.soundcloud" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -176,7 +285,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'IMDB',
 					'name'         => 'imdb',
 					'type'         => 'text',
-					'instructions' => 'url_imdb [get_profile_field field="url_imdb"]',
+						'instructions' => smp_vp_acf_instruction( 'IMDb URL.', '[verified_profile field="url.imdb" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -192,7 +301,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'TikTok',
 					'name'         => 'tiktok',
 					'type'         => 'text',
-					'instructions' => 'url_tiktok [get_profile_field field="url_tiktok"]',
+						'instructions' => smp_vp_acf_instruction( 'TikTok URL.', '[verified_profile field="url.tiktok" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -208,7 +317,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'YouTube',
 					'name'         => 'youtube',
 					'type'         => 'text',
-					'instructions' => 'url_youtube [get_profile_field field="url_youtube"]',
+						'instructions' => smp_vp_acf_instruction( 'YouTube URL.', '[verified_profile field="url.youtube" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -224,7 +333,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Amazon',
 					'name'         => 'amazon',
 					'type'         => 'text',
-					'instructions' => 'url_amazon [get_profile_field field="url_amazon"]',
+						'instructions' => smp_vp_acf_instruction( 'Amazon URL.', '[verified_profile field="url.amazon" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -240,7 +349,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'X',
 					'name'         => 'x',
 					'type'         => 'text',
-					'instructions' => 'url_x [get_profile_field field="url_x"]',
+						'instructions' => smp_vp_acf_instruction( 'X URL.', '[verified_profile field="url.x" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -256,7 +365,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Audible',
 					'name'         => 'audible',
 					'type'         => 'text',
-					'instructions' => 'url_audible [get_profile_field field="url_audible"]',
+						'instructions' => smp_vp_acf_instruction( 'Audible URL.', '[verified_profile field="url.audible" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -272,7 +381,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'GitHub',
 					'name'         => 'github',
 					'type'         => 'text',
-					'instructions' => 'url_github [get_profile_field field="url_github"]',
+						'instructions' => smp_vp_acf_instruction( 'GitHub URL.', '[verified_profile field="url.github" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -288,7 +397,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'F6S',
 					'name'         => 'f6s',
 					'type'         => 'text',
-					'instructions' => 'url_f6s [get_profile_field field="url_f6s"]',
+						'instructions' => smp_vp_acf_instruction( 'F6S URL.', '[verified_profile field="url.f6s" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -304,7 +413,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Crunchbase',
 					'name'         => 'crunchbase',
 					'type'         => 'text',
-					'instructions' => 'url_crunchbase [get_profile_field field="url_crunchbase"]',
+						'instructions' => smp_vp_acf_instruction( 'Crunchbase URL.', '[verified_profile field="url.crunchbase" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -320,7 +429,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'Muckrack',
 					'name'         => 'muckrack',
 					'type'         => 'text',
-					'instructions' => 'url_muckrack [get_profile_field field="url_muckrack"]',
+						'instructions' => smp_vp_acf_instruction( 'MuckRack URL.', '[verified_profile field="url.muckrack" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -336,7 +445,7 @@ function register_verified_profile_custom_fields()
 					'label'        => 'AngelList',
 					'name'         => 'angellist',
 					'type'         => 'text',
-					'instructions' => 'url_angellist [get_profile_field field="url_angellist"]',
+						'instructions' => smp_vp_acf_instruction( 'AngelList URL.', '[verified_profile field="url.angellist" output="link"]' ),
 					'required'     => 0,
 					'conditional_logic' => 0,
 					'wrapper'      => array('width'=>'','class'=>'','id'=>''),
@@ -350,13 +459,13 @@ function register_verified_profile_custom_fields()
 			),
 		),
 		
-		array(
-			'key' => 'field_67e4d7f8ed086',
-			'label' => 'Title',
-			'name' => 'title',
-			'aria-label' => '',
-			'type' => 'text',
-			'instructions' => '',
+			array(
+				'key' => 'field_67e4d7f8ed086',
+				'label' => 'Title',
+				'name' => 'title',
+				'aria-label' => '',
+				'type' => 'text',
+				'instructions' => smp_vp_acf_instruction( 'Profile display title.', '[verified_profile field="title"]' ),
 			'required' => 0,
 			'conditional_logic' => 0,
 			'wrapper' => array(
@@ -371,13 +480,13 @@ function register_verified_profile_custom_fields()
 			'prepend' => '',
 			'append' => '',
 		),
-		array(
-			'key' => 'field_67fa08231bd34',
-			'label' => 'Biography',
-			'name' => 'biography',
-			'aria-label' => '',
-			'type' => 'wysiwyg',
-			'instructions' => '',
+			array(
+				'key' => 'field_67fa08231bd34',
+				'label' => 'Biography',
+				'name' => 'biography',
+				'aria-label' => '',
+				'type' => 'wysiwyg',
+				'instructions' => smp_vp_acf_instruction( 'Long-form profile biography.', '[verified_profile field="biography" output="html"]' ),
 			'required' => 0,
 			'conditional_logic' => 0,
 			'wrapper' => array(
@@ -394,11 +503,11 @@ function register_verified_profile_custom_fields()
 		),
 			array(
 				'key' => 'field_67fa082b1bd35',
-				'label' => 'Biography Short',
-				'name' => 'biography_short',
-				'aria-label' => '',
-				'type' => 'wysiwyg',
-				'instructions' => '',
+					'label' => 'Biography Short',
+					'name' => 'biography_short',
+					'aria-label' => '',
+					'type' => 'wysiwyg',
+					'instructions' => smp_vp_acf_instruction( 'Short summary used by cards and profile page templates.', '[verified_profile field="biography_short" output="html"]' ),
 				'required' => 0,
 				'conditional_logic' => 0,
 				'wrapper' => array(
@@ -415,11 +524,11 @@ function register_verified_profile_custom_fields()
 			),
 			array(
 				'key' => 'field_smp_vp_photo_gallery',
-				'label' => 'Photo Gallery',
-				'name' => 'photo_gallery',
-				'aria-label' => '',
-				'type' => 'gallery',
-				'instructions' => 'Add profile gallery photos for display modules, shortcodes, and future schema/media output.',
+					'label' => 'Photo Gallery',
+					'name' => 'photo_gallery',
+					'aria-label' => '',
+					'type' => 'gallery',
+					'instructions' => smp_vp_acf_instruction( 'Add profile gallery photos for display modules, shortcodes, and future schema/media output.', '[verified_profile field="photo_gallery" type="gallery" size="medium" limit="6" columns="3"]' ),
 				'required' => 0,
 				'conditional_logic' => 0,
 				'wrapper' => array(
@@ -442,14 +551,22 @@ function register_verified_profile_custom_fields()
 				'preview_size' => 'medium',
 			),
 			array(
-				'key' => 'field_smp_vp_personal_education',
-				'label' => 'Personal Education',
-				'name' => 'personal_education',
-			'aria-label' => '',
-			'type' => 'repeater',
-			'instructions' => 'Education entries for verified profile display and schema output. Each row represents one school, university, course, bootcamp, certification, or other educational organization.',
-			'required' => 0,
-			'conditional_logic' => 0,
+					'key' => 'field_smp_vp_personal_education',
+					'label' => 'Personal Education',
+					'name' => 'personal_education',
+				'aria-label' => '',
+				'type' => 'repeater',
+				'instructions' => smp_vp_acf_instruction( 'Education entries for verified profile display and schema output. Each row represents one school, university, course, bootcamp, certification, or other educational organization.', '[verified_profile field="personal_education" type="repeater" fields="school,degree,field_of_study"]' ),
+				'required' => 0,
+				'conditional_logic' => array(
+					array(
+						array(
+							'field' => 'field_smp_vp_profile_type',
+							'operator' => '==',
+							'value' => 'person',
+						),
+					),
+				),
 			'wrapper' => array(
 				'width' => '',
 				'class' => '',
@@ -463,17 +580,17 @@ function register_verified_profile_custom_fields()
 			'button_label' => 'Add education entry',
 			'rows_per_page' => 20,
 			'sub_fields' => array(
-				array('key' => 'field_smp_vp_personal_education_school', 'label' => 'School', 'name' => 'school', 'type' => 'text', 'instructions' => 'School, university, college, bootcamp, certification body, or other educational organization name.', 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
-				array('key' => 'field_smp_vp_personal_education_degree', 'label' => 'Degree / Credential', 'name' => 'degree', 'type' => 'text', 'instructions' => 'Degree, certification, credential, course, program, or education label used in profile and schema output.', 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
-				array('key' => 'field_smp_vp_personal_education_field_of_study', 'label' => 'Field of Study', 'name' => 'field_of_study', 'type' => 'text', 'instructions' => 'Major, concentration, discipline, or subject area for schema and profile detail.', 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
-				array('key' => 'field_smp_vp_personal_education_start_date', 'label' => 'Start Date', 'name' => 'start_date', 'type' => 'text', 'instructions' => 'Start year or date. Keep free-form because historical profile data may only have a year.', 'wrapper' => array('width'=>'25','class'=>'','id'=>''), 'placeholder' => '2018'),
-				array('key' => 'field_smp_vp_personal_education_end_date', 'label' => 'End Date', 'name' => 'end_date', 'type' => 'text', 'instructions' => 'End year/date, graduation date, expected graduation date, or leave empty for current education.', 'wrapper' => array('width'=>'25','class'=>'','id'=>''), 'placeholder' => '2022'),
-				array('key' => 'field_smp_vp_personal_education_url', 'label' => 'School URL', 'name' => 'url', 'type' => 'url', 'instructions' => 'Official school or credential URL for schema sameAs/about references.', 'wrapper' => array('width'=>'50','class'=>'','id'=>''), 'placeholder' => 'https://example.edu'),
-				array('key' => 'field_smp_vp_personal_education_wikipedia_url', 'label' => 'Wikipedia URL', 'name' => 'wikipedia_url', 'type' => 'url', 'instructions' => 'Wikipedia page for the school or organization, used when building schema objects.', 'wrapper' => array('width'=>'50','class'=>'','id'=>''), 'placeholder' => 'https://en.wikipedia.org/wiki/...'),
-				array('key' => 'field_smp_vp_personal_education_same_as', 'label' => 'SameAs URLs', 'name' => 'same_as', 'type' => 'textarea', 'instructions' => 'Additional schema sameAs URLs, one per line.', 'rows' => 3, 'new_lines' => ''),
-				array('key' => 'field_smp_vp_personal_education_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea', 'instructions' => 'Optional education note for profile display and schema description.', 'rows' => 3, 'new_lines' => 'wpautop'),
+					array('key' => 'field_smp_vp_personal_education_school', 'label' => 'School', 'name' => 'school', 'type' => 'text', 'instructions' => smp_vp_acf_instruction( 'School, university, college, bootcamp, certification body, or other educational organization name.', '[verified_profile field="personal_education" type="repeater" sub_field="school"]' ), 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
+					array('key' => 'field_smp_vp_personal_education_degree', 'label' => 'Degree / Credential', 'name' => 'degree', 'type' => 'text', 'instructions' => smp_vp_acf_instruction( 'Degree, certification, credential, course, program, or education label used in profile and schema output.', '[verified_profile field="personal_education" type="repeater" sub_field="degree"]' ), 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
+					array('key' => 'field_smp_vp_personal_education_field_of_study', 'label' => 'Field of Study', 'name' => 'field_of_study', 'type' => 'text', 'instructions' => smp_vp_acf_instruction( 'Major, concentration, discipline, or subject area for schema and profile detail.', '[verified_profile field="personal_education" type="repeater" sub_field="field_of_study"]' ), 'wrapper' => array('width'=>'50','class'=>'','id'=>'')),
+					array('key' => 'field_smp_vp_personal_education_start_date', 'label' => 'Start Date', 'name' => 'start_date', 'type' => 'text', 'instructions' => smp_vp_acf_instruction( 'Start year or date. Keep free-form because historical profile data may only have a year.', '[verified_profile field="personal_education" type="repeater" sub_field="start_date"]' ), 'wrapper' => array('width'=>'25','class'=>'','id'=>''), 'placeholder' => '2018'),
+					array('key' => 'field_smp_vp_personal_education_end_date', 'label' => 'End Date', 'name' => 'end_date', 'type' => 'text', 'instructions' => smp_vp_acf_instruction( 'End year/date, graduation date, expected graduation date, or leave empty for current education.', '[verified_profile field="personal_education" type="repeater" sub_field="end_date"]' ), 'wrapper' => array('width'=>'25','class'=>'','id'=>''), 'placeholder' => '2022'),
+					array('key' => 'field_smp_vp_personal_education_url', 'label' => 'School URL', 'name' => 'url', 'type' => 'url', 'instructions' => smp_vp_acf_instruction( 'Official school or credential URL for schema sameAs/about references.', '[verified_profile field="personal_education" type="repeater" sub_field="url" output="link"]' ), 'wrapper' => array('width'=>'50','class'=>'','id'=>''), 'placeholder' => 'https://example.edu'),
+					array('key' => 'field_smp_vp_personal_education_wikipedia_url', 'label' => 'Wikipedia URL', 'name' => 'wikipedia_url', 'type' => 'url', 'instructions' => smp_vp_acf_instruction( 'Wikipedia page for the school or organization, used when building schema objects.', '[verified_profile field="personal_education" type="repeater" sub_field="wikipedia_url" output="link"]' ), 'wrapper' => array('width'=>'50','class'=>'','id'=>''), 'placeholder' => 'https://en.wikipedia.org/wiki/...'),
+					array('key' => 'field_smp_vp_personal_education_same_as', 'label' => 'SameAs URLs', 'name' => 'same_as', 'type' => 'textarea', 'instructions' => smp_vp_acf_instruction( 'Additional schema sameAs URLs, one per line.', '[verified_profile field="personal_education" type="repeater" sub_field="same_as"]' ), 'rows' => 3, 'new_lines' => ''),
+					array('key' => 'field_smp_vp_personal_education_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea', 'instructions' => smp_vp_acf_instruction( 'Optional education note for profile display and schema description.', '[verified_profile field="personal_education" type="repeater" sub_field="description" output="html"]' ), 'rows' => 3, 'new_lines' => 'wpautop'),
+				),
 			),
-		),
         // Append this to your ACF fields array (e.g. right after 'biography_short')
 array(
     'key'               => 'field_67fa082b1bd36',
@@ -517,7 +634,66 @@ array(
 	'active' => true,
 	'description' => '',
 	'show_in_rest' => 0,
-) );
+	) );
 
 
+	}
+
+add_filter( 'acf/fields/post_object/query/key=field_smp_vp_company_founder_profile', __NAMESPACE__ . '\\smp_vp_company_founder_profile_query', 10, 3 );
+
+function smp_vp_company_founder_profile_query( array $args, array $field, int $post_id ): array {
+	$settings = get_verified_profile_settings();
+	$slug     = ! empty( $settings['slug'] ) ? (string) $settings['slug'] : 'profile';
+
+	$args['post_type']   = [ $slug ];
+	$args['post_status'] = [ 'publish', 'draft', 'pending' ];
+
+	$person_ids = smp_vp_company_founder_person_profile_ids( $slug );
+	$args['post__in'] = ! empty( $person_ids ) ? $person_ids : [ 0 ];
+
+	return $args;
+}
+
+function smp_vp_company_founder_person_profile_ids( string $slug ): array {
+	$ids = [];
+
+	$meta_ids = get_posts(
+		[
+			'post_type'      => $slug,
+			'post_status'    => [ 'publish', 'draft', 'pending' ],
+			'fields'         => 'ids',
+			'posts_per_page' => -1,
+			'meta_key'       => 'profile_type',
+			'meta_value'     => 'person',
+		]
+	);
+
+	if ( is_array( $meta_ids ) ) {
+		$ids = array_merge( $ids, array_map( 'absint', $meta_ids ) );
+	}
+
+	$person_term = get_term_by( 'slug', 'person', 'category' );
+	if ( $person_term && ! is_wp_error( $person_term ) ) {
+		$term_ids = get_posts(
+			[
+				'post_type'      => $slug,
+				'post_status'    => [ 'publish', 'draft', 'pending' ],
+				'fields'         => 'ids',
+				'posts_per_page' => -1,
+				'tax_query'      => [
+					[
+						'taxonomy' => 'category',
+						'field'    => 'term_id',
+						'terms'    => [ (int) $person_term->term_id ],
+					],
+				],
+			]
+		);
+
+		if ( is_array( $term_ids ) ) {
+			$ids = array_merge( $ids, array_map( 'absint', $term_ids ) );
+		}
+	}
+
+	return array_values( array_unique( array_filter( $ids ) ) );
 }

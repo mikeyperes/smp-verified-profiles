@@ -6,14 +6,18 @@ defined("ABSPATH") || exit;
 
 const SMP_VP_DISPLAY_OPTION = "smp_vp_display_card_settings";
 const SMP_VP_DISPLAY_NONCE = "smp_vp_display_nonce";
+const SMP_VP_PAGES_NONCE = "smp_vp_pages_nonce";
 
 add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_display_dashboard_tab");
+add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_pages_dashboard_tab");
 add_filter("smp_vp_render_dashboard_tab", __NAMESPACE__ . "\\smp_vp_render_display_dashboard_tab", 10, 2);
+add_filter("smp_vp_render_dashboard_tab", __NAMESPACE__ . "\\smp_vp_render_pages_dashboard_tab", 10, 2);
 add_action("wp_ajax_smp_vp_display_save_settings", __NAMESPACE__ . "\\smp_vp_ajax_display_save_settings");
 add_action("wp_ajax_smp_vp_display_import_elementor", __NAMESPACE__ . "\\smp_vp_ajax_display_import_elementor");
 add_action("wp_ajax_smp_vp_display_create_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_create_loop_item");
 add_action("wp_ajax_smp_vp_display_save_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_save_loop_item");
 add_action("wp_ajax_smp_vp_display_delete_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_delete_loop_item");
+add_action("admin_init", __NAMESPACE__ . "\\smp_vp_register_pages_ajax");
 add_filter("the_content", __NAMESPACE__ . "\\smp_vp_display_append_to_content", 28);
 add_shortcode("verified_profiles_loop", __NAMESPACE__ . "\\smp_vp_verified_profiles_loop_shortcode");
 add_shortcode("smp_verified_profiles_loop", __NAMESPACE__ . "\\smp_vp_verified_profiles_loop_shortcode");
@@ -26,6 +30,11 @@ function smp_vp_display_dashboard_tab(array $tabs): array {
     return $tabs;
 }
 
+function smp_vp_pages_dashboard_tab(array $tabs): array {
+    $tabs["pages"] = "Pages";
+    return $tabs;
+}
+
 function smp_vp_render_display_dashboard_tab($rendered, string $tab_id) {
     if (! in_array($tab_id, ["features", "display-cards"], true)) {
         return $rendered;
@@ -33,6 +42,200 @@ function smp_vp_render_display_dashboard_tab($rendered, string $tab_id) {
 
     smp_vp_display_render_settings();
     return true;
+}
+
+function smp_vp_render_pages_dashboard_tab($rendered, string $tab_id) {
+    if ($tab_id !== "pages") {
+        return $rendered;
+    }
+
+    smp_vp_render_pages_dashboard();
+    return true;
+}
+
+function smp_vp_pages_actions(): array {
+    return [
+        "assign_page" => "smp_vp_pages_assign_page",
+        "create_page" => "smp_vp_pages_create_page",
+        "delete_page" => "smp_vp_pages_delete_page",
+        "save_template" => "smp_vp_pages_save_template",
+        "apply_template" => "smp_vp_pages_apply_template",
+        "page_details" => "smp_vp_pages_page_details",
+        "update_page_slug" => "smp_vp_pages_update_page_slug",
+    ];
+}
+
+function smp_vp_pages_definitions(): array {
+    return [
+        "profiles_archive" => [
+            "title" => "Profiles",
+            "slug" => "profiles",
+            "template" => true,
+            "children" => [],
+        ],
+    ];
+}
+
+function smp_vp_pages_default_templates(): array {
+    return [
+        "profiles_archive" => "<!-- wp:shortcode -->\n[verified_profiles_loop id=\"homepage\"]\n<!-- /wp:shortcode -->",
+    ];
+}
+
+function smp_vp_pages_manager() {
+    if (! class_exists("\\Hexa\\PluginCore\\SiteStructure\\PageStructureManager")) {
+        return null;
+    }
+
+    return new \Hexa\PluginCore\SiteStructure\PageStructureManager([
+        "pages" => smp_vp_pages_definitions(),
+        "default_templates" => smp_vp_pages_default_templates(),
+        "managed_meta_key" => "_smp_vp_managed_page",
+        "managed_key_meta_key" => "_smp_vp_page_key",
+        "created_page_status" => "publish",
+        "select_post_statuses" => ["publish", "draft", "private"],
+        "assignment_statuses" => ["publish", "draft", "private"],
+        "reuse_existing_pages" => true,
+        "assignment_getter" => __NAMESPACE__ . "\\smp_vp_pages_get_assignment",
+        "assignment_saver" => __NAMESPACE__ . "\\smp_vp_pages_save_assignment",
+        "assignment_deleter" => __NAMESPACE__ . "\\smp_vp_pages_delete_assignment",
+        "template_getter" => __NAMESPACE__ . "\\smp_vp_pages_get_template",
+        "template_saver" => __NAMESPACE__ . "\\smp_vp_pages_save_template",
+        "page_detail_renderer" => __NAMESPACE__ . "\\smp_vp_pages_detail_html",
+    ]);
+}
+
+function smp_vp_register_pages_ajax(): void {
+    static $registered = false;
+    if ($registered || ! current_user_can("manage_options")) {
+        return;
+    }
+
+    $manager = smp_vp_pages_manager();
+    if (! $manager || ! class_exists("\\Hexa\\PluginCore\\SiteStructure\\SiteStructureAjaxController")) {
+        return;
+    }
+
+    (new \Hexa\PluginCore\SiteStructure\SiteStructureAjaxController($manager, [
+        "capability" => "manage_options",
+        "nonce_action" => SMP_VP_PAGES_NONCE,
+        "actions" => smp_vp_pages_actions(),
+    ]))->register();
+
+    $registered = true;
+}
+
+function smp_vp_render_pages_dashboard(): void {
+    if (! current_user_can("manage_options")) {
+        ?><div class="notice notice-error"><p>Insufficient permissions.</p></div><?php
+        return;
+    }
+
+    $manager = smp_vp_pages_manager();
+    if (! $manager || ! class_exists("\\Hexa\\PluginCore\\SiteStructure\\SiteStructureRenderer")) {
+        ?><div class="notice notice-error"><p>Hexa WP Core Site Structure is unavailable.</p></div><?php
+        return;
+    }
+
+    ?>
+    <div class="smp-vp-pages-admin">
+        <style>
+            .smp-vp-pages-admin{max-width:1260px}.smp-vp-pages-admin .smp-vp-pages-intro{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;padding:18px 20px}.smp-vp-pages-admin .smp-vp-pages-intro h2{margin:0 0 6px}.smp-vp-pages-admin .smp-vp-pages-intro p{color:#646970;margin:0}.smp-vp-pages-admin .hpc-card{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;padding:18px 20px}.smp-vp-pages-admin .hpc-table{border-collapse:collapse;width:100%}.smp-vp-pages-admin .hpc-table th,.smp-vp-pages-admin .hpc-table td{border-top:1px solid #e5e7eb;padding:12px;text-align:left;vertical-align:middle}.smp-vp-pages-admin .hpc-table thead th{border-top:0;color:#1d2327;font-weight:800}.smp-vp-pages-admin .hpc-card-header{align-items:center;display:flex;gap:8px;margin-bottom:14px}.smp-vp-pages-admin .hpc-card-header h3{font-size:18px;margin:0}
+        </style>
+        <div class="smp-vp-pages-intro">
+            <h2>Verified Profiles Pages</h2>
+            <p>Assign or create the canonical Profiles archive page. The Features tab reads its archive URL from this assignment.</p>
+        </div>
+        <?php
+        echo (new \Hexa\PluginCore\SiteStructure\SiteStructureRenderer($manager, [
+            "instance_id" => "smp-vp-pages-structure",
+            "nonce" => wp_create_nonce(SMP_VP_PAGES_NONCE),
+            "card_class" => "hpc-card",
+            "table_class" => "hpc-table",
+            "show_pages" => true,
+            "show_menus" => false,
+            "show_page_details" => true,
+            "enable_templates" => true,
+            "enable_template_editors" => true,
+            "template_editor_rows" => 5,
+            "actions" => smp_vp_pages_actions(),
+            "labels" => [
+                "pages_title" => "Verified Profiles Pages",
+                "pages_heading" => "Required Pages",
+                "pages_description" => "Create or assign the pages used by the Verified Profiles plugin. Do not type these URLs manually in Features.",
+            ],
+        ]))->render();
+        ?>
+    </div>
+    <?php
+}
+
+function smp_vp_pages_get_assignment(string $page_key): int {
+    $settings = smp_vp_display_settings();
+    return absint($settings["pages"][$page_key] ?? 0);
+}
+
+function smp_vp_pages_save_assignment(string $page_key, int $page_id): void {
+    $settings = smp_vp_display_settings();
+    $settings["pages"] = is_array($settings["pages"] ?? null) ? $settings["pages"] : [];
+    if ($page_id > 0) {
+        $settings["pages"][$page_key] = $page_id;
+    } else {
+        unset($settings["pages"][$page_key]);
+    }
+
+    if ($page_key === "profiles_archive") {
+        $settings["archive_url"] = $page_id > 0 ? (get_permalink($page_id) ?: home_url("/profiles/")) : home_url("/profiles/");
+    }
+
+    update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
+}
+
+function smp_vp_pages_delete_assignment(string $page_key): void {
+    smp_vp_pages_save_assignment($page_key, 0);
+}
+
+function smp_vp_pages_get_template(string $page_key): string {
+    $settings = smp_vp_display_settings();
+    $templates = is_array($settings["page_templates"] ?? null) ? $settings["page_templates"] : [];
+    return (string) ($templates[$page_key] ?? (smp_vp_pages_default_templates()[$page_key] ?? ""));
+}
+
+function smp_vp_pages_save_template(string $page_key, string $template): void {
+    $settings = smp_vp_display_settings();
+    $settings["page_templates"] = is_array($settings["page_templates"] ?? null) ? $settings["page_templates"] : [];
+    $settings["page_templates"][$page_key] = wp_kses_post($template);
+    update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
+}
+
+function smp_vp_pages_detail_html(int $page_id): string {
+    if ($page_id <= 0) {
+        return "";
+    }
+
+    $url = get_permalink($page_id);
+    if (! $url) {
+        return "";
+    }
+
+    return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><strong>Live URL:</strong><a href="' . esc_url($url) . '" target="_blank" rel="noopener">' . esc_html($url) . '</a><code>[verified_profiles_loop id="homepage"]</code></div>';
+}
+
+function smp_vp_display_archive_url(array $settings = []): string {
+    if (! $settings) {
+        $stored = get_option(SMP_VP_DISPLAY_OPTION, []);
+        $settings = is_array($stored) ? $stored : [];
+    }
+
+    $page_id = absint($settings["pages"]["profiles_archive"] ?? 0);
+    if ($page_id > 0) {
+        $url = get_permalink($page_id);
+        if ($url) {
+            return $url;
+        }
+    }
+
+    return esc_url_raw((string) ($settings["archive_url"] ?? home_url("/profiles/")));
 }
 
 function smp_vp_display_templates(): array {
@@ -258,6 +461,7 @@ function smp_vp_display_defaults(): array {
     return [
         "enabled" => true,
         "append_to_content" => true,
+        "single_injection" => "after_content",
         "homepage_template" => "boxed-row",
         "post_template" => "directory-list",
         "profile_limit" => 7,
@@ -272,12 +476,21 @@ function smp_vp_display_defaults(): array {
         "name_font_size" => 18,
         "role_font_size" => 10,
         "loop_items" => [],
+        "pages" => [],
+        "page_templates" => [],
     ];
 }
 
 function smp_vp_display_settings(): array {
     $stored = get_option(SMP_VP_DISPLAY_OPTION, []);
     $settings = array_replace(smp_vp_display_defaults(), is_array($stored) ? $stored : []);
+    if (empty($settings["single_injection"])) {
+        $settings["single_injection"] = ! empty($settings["append_to_content"]) ? "after_content" : "shortcode";
+    }
+    $settings["append_to_content"] = $settings["single_injection"] === "after_content";
+    $settings["pages"] = is_array($settings["pages"] ?? null) ? $settings["pages"] : [];
+    $settings["page_templates"] = is_array($settings["page_templates"] ?? null) ? $settings["page_templates"] : [];
+    $settings["archive_url"] = smp_vp_display_archive_url($settings);
     $settings["loop_items"] = smp_vp_display_sanitize_loop_items($settings["loop_items"] ?? [], $settings, true);
     return $settings;
 }
@@ -287,12 +500,17 @@ function smp_vp_display_sanitize(array $input): array {
     $templates = array_keys(smp_vp_display_templates());
 
     $settings["enabled"] = ! empty($input["enabled"]);
-    $settings["append_to_content"] = ! empty($input["append_to_content"]);
+    $single_injection = sanitize_key((string) ($input["single_injection"] ?? (! empty($input["append_to_content"]) ? "after_content" : "shortcode")));
+    if (! in_array($single_injection, ["after_content", "shortcode"], true)) {
+        $single_injection = "after_content";
+    }
+    $settings["single_injection"] = $single_injection;
+    $settings["append_to_content"] = $single_injection === "after_content";
     $settings["require_thumbnail"] = ! empty($input["require_thumbnail"]);
     $settings["homepage_template"] = in_array((string) ($input["homepage_template"] ?? ""), $templates, true) ? (string) $input["homepage_template"] : $settings["homepage_template"];
     $settings["post_template"] = in_array((string) ($input["post_template"] ?? ""), $templates, true) ? (string) $input["post_template"] : $settings["post_template"];
     $settings["profile_limit"] = smp_vp_display_number($input["profile_limit"] ?? $settings["profile_limit"], (int) $settings["profile_limit"], 1, 30);
-    $settings["archive_url"] = esc_url_raw((string) ($input["archive_url"] ?? $settings["archive_url"]));
+    $settings["archive_url"] = smp_vp_display_archive_url($settings);
     $settings["name_font_size"] = smp_vp_display_number($input["name_font_size"] ?? $settings["name_font_size"], (int) $settings["name_font_size"], 12, 42);
     $settings["role_font_size"] = smp_vp_display_number($input["role_font_size"] ?? $settings["role_font_size"], (int) $settings["role_font_size"], 8, 24);
 
@@ -416,7 +634,7 @@ function smp_vp_display_color_palette(array $settings): string {
 }
 
 function smp_vp_display_css(): string {
-    return ".smp-vp-display{--vp-red:#b3272d;--vp-secondary:#151515;--vp-ink:#151515;--vp-muted:#747474;--vp-line:#e6e1de;--vp-soft:#faf7f5;--vp-items-per-row:3;max-width:1080px;margin:0 auto;padding:34px 0}.smp-vp-display .vp-head{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--vp-line)}.smp-vp-display .lbl,.smp-vp-display .all,.smp-vp-display .vp-role,.smp-vp-display .vp-cta{font-size:var(--vp-role-size,11px);letter-spacing:.14em;text-transform:uppercase}.smp-vp-display .lbl,.smp-vp-display .vp-role,.smp-vp-display .all{color:var(--vp-muted)}.smp-vp-display a{text-decoration:none}.smp-vp-display svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}.smp-vp-display .vp-av{position:relative;flex-shrink:0}.smp-vp-display .vp-av img{border-radius:50%;object-fit:cover;filter:grayscale(100%);display:block;background:#f3f3f3}.smp-vp-display .vp-card:hover img{filter:grayscale(0)}.smp-vp-display .vp-badge{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;background:#fff;border-radius:50%;color:var(--vp-red);display:flex;align-items:center;justify-content:center}.smp-vp-display .vp-name{font-family:Playfair Display,Georgia,serif;font-weight:700;font-size:var(--vp-name-size,18px);color:var(--vp-ink);line-height:1.2}.smp-vp-display .vp-card:hover .vp-name,.smp-vp-display .vp-cta{color:var(--vp-red)}.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-d,.smp-vp-display .vp-e{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));gap:20px;padding:32px 0}.smp-vp-display .vp-c{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,1),minmax(0,1fr));gap:0 24px;padding:14px 0 32px}.smp-vp-display .vp-d{gap:6px 28px}.smp-vp-display .vp-a .vp-card{display:flex;align-items:center;gap:18px;border:1px solid var(--vp-line);background:#fff;padding:20px}.smp-vp-display .vp-b .vp-card{display:flex;flex-direction:column;align-items:center;text-align:center;border:1px solid var(--vp-line);background:#fff;padding:30px 20px}.smp-vp-display .vp-c{padding:14px 0 32px}.smp-vp-display .vp-c .vp-card{display:flex;align-items:center;gap:18px;padding:18px 4px;border-bottom:1px solid var(--vp-line)}.smp-vp-display .vp-c .vp-meta{flex:1}.smp-vp-display .vp-d .vp-card{display:flex;align-items:center;gap:14px;padding:18px 2px;border-top:1px solid var(--vp-line)}.smp-vp-display .vp-e .vp-card{display:flex;align-items:center;gap:20px;background:var(--vp-soft);border-left:3px solid var(--vp-red);padding:22px 24px}.smp-vp-display .vp-a img{width:66px;height:66px}.smp-vp-display .vp-b img{width:84px;height:84px}.smp-vp-display .vp-c img{width:58px;height:58px}.smp-vp-display .vp-d img{width:52px;height:52px}.smp-vp-display .vp-e img{width:88px;height:88px}.smp-vp-display .all{color:var(--vp-secondary)}@media(max-width:900px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:1fr}}";
+    return ".smp-vp-display{--vp-red:#b3272d;--vp-secondary:#151515;--vp-ink:#151515;--vp-muted:#747474;--vp-line:#e6e1de;--vp-soft:#faf7f5;--vp-items-per-row:3;container-type:inline-size;max-width:none;margin:0;padding:0}.smp-vp-display .vp-role,.smp-vp-display .vp-cta{font-size:var(--vp-role-size,11px);letter-spacing:.14em;text-transform:uppercase}.smp-vp-display .vp-role{color:var(--vp-muted)}.smp-vp-display a{text-decoration:none}.smp-vp-display svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}.smp-vp-display .vp-av{position:relative;flex-shrink:0}.smp-vp-display .vp-av img{border-radius:50%;object-fit:cover;filter:grayscale(100%);display:block;background:#f3f3f3}.smp-vp-display .vp-card:hover img{filter:grayscale(0)}.smp-vp-display .vp-badge{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;background:#fff;border-radius:50%;color:var(--vp-red);display:flex;align-items:center;justify-content:center}.smp-vp-display .vp-name{font-family:Playfair Display,Georgia,serif;font-weight:700;font-size:var(--vp-name-size,18px);color:var(--vp-ink);line-height:1.2}.smp-vp-display .vp-card:hover .vp-name,.smp-vp-display .vp-cta{color:var(--vp-red)}.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-d,.smp-vp-display .vp-e{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));gap:20px;padding:0}.smp-vp-display .vp-c{display:grid;grid-template-columns:repeat(var(--vp-items-per-row,1),minmax(0,1fr));gap:0 24px;padding:0}.smp-vp-display .vp-d{gap:6px 28px}.smp-vp-display .vp-a .vp-card{display:flex;align-items:center;gap:18px;border:1px solid var(--vp-line);background:#fff;padding:20px}.smp-vp-display .vp-b .vp-card{display:flex;flex-direction:column;align-items:center;text-align:center;border:1px solid var(--vp-line);background:#fff;padding:30px 20px}.smp-vp-display .vp-c .vp-card{display:flex;align-items:flex-start;gap:18px;padding:18px 4px;border-bottom:1px solid var(--vp-line)}.smp-vp-display .vp-c .vp-meta{flex:1}.smp-vp-display .vp-d .vp-card{display:flex;align-items:flex-start;gap:14px;padding:18px 2px;border-top:1px solid var(--vp-line)}.smp-vp-display .vp-e .vp-card{display:flex;align-items:center;gap:20px;background:var(--vp-soft);border-left:3px solid var(--vp-red);padding:22px 24px}.smp-vp-display .vp-a img{width:66px;height:66px}.smp-vp-display .vp-b img{width:84px;height:84px}.smp-vp-display .vp-c img{width:58px;height:58px}.smp-vp-display .vp-d img{width:52px;height:52px}.smp-vp-display .vp-e img{width:88px;height:88px}@container (max-width:1100px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:repeat(2,minmax(0,1fr))}}@container (max-width:620px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:1fr}}@media(max-width:900px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.smp-vp-display .vp-a,.smp-vp-display .vp-b,.smp-vp-display .vp-c,.smp-vp-display .vp-d,.smp-vp-display .vp-e{grid-template-columns:1fr}}";
 }
 
 function smp_vp_display_empty_section_assets(): string {
@@ -425,6 +643,12 @@ function smp_vp_display_empty_section_assets(): string {
 
 function smp_vp_display_empty_loop_marker(string $id): string {
     return smp_vp_display_empty_section_assets() . '<span class="smp-vp-empty-loop-marker verified-profiles-loop-' . esc_attr($id) . '" data-smp-vp-empty-loop="' . esc_attr($id) . '" hidden></span>';
+}
+
+function smp_vp_display_log_failure(string $context, \Throwable $error): void {
+    if (function_exists('error_log')) {
+        error_log('[smp-verified-profiles] ' . $context . ' failed: ' . $error->getMessage());
+    }
 }
 
 function smp_vp_display_render_settings(): void {
@@ -444,7 +668,7 @@ function smp_vp_display_render_settings(): void {
     ?>
     <style>
         <?php echo smp_vp_display_css(); ?>
-        .smp-vp-display-admin{max-width:1260px;color:#1d2327}.smp-vp-display-admin *{box-sizing:border-box}.smp-vp-display-admin .smp-vp-panel{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;overflow:hidden}.smp-vp-display-admin .smp-vp-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #eceff3}.smp-vp-display-admin .smp-vp-panel-head h2{margin:0 0 4px;font-size:20px;line-height:1.2}.smp-vp-display-admin .smp-vp-panel-head p{margin:0;color:#646970}.smp-vp-display-admin .smp-vp-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:18px 20px}.smp-vp-display-admin label{font-weight:700;display:block;margin-bottom:6px}.smp-vp-display-admin input[type=text]:not(.hpc-color-hex-input),.smp-vp-display-admin input[type=number]{width:100%;min-height:38px}.smp-vp-display-admin input[type=color]:not(.hpc-color-picker){width:100%;height:38px;padding:2px}.smp-vp-color-field,.smp-vp-loop-color-slot{min-width:0}.smp-vp-display-admin .hpc-color-control{min-width:0}.smp-vp-display-admin .hpc-color-control h3{font-size:12px;margin:0}.smp-vp-display-admin .hpc-color-control p{font-size:12px}.smp-vp-display-admin .hpc-color-row{gap:8px}.smp-vp-display-admin .hpc-color-picker-shell,.smp-vp-display-admin .hpc-color-hex-shell,.smp-vp-display-admin .hpc-color-value{display:grid;margin-bottom:0}.smp-vp-display-admin .hpc-button{min-height:36px}.smp-vp-color-fallback-swatch{border:1px solid #cbd5e1;border-radius:8px;display:inline-block;height:34px;margin-left:8px;vertical-align:middle;width:34px}.smp-vp-display-admin .smp-vp-checks{display:flex;gap:16px;flex-wrap:wrap;padding:0 20px 18px}.smp-vp-display-admin .smp-vp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;background:#f6f7f7;border-top:1px solid #eceff3}.smp-vp-display-admin .smp-vp-log{min-height:38px;min-width:280px;border:1px solid #dcdcde;background:#fff;border-radius:6px;padding:9px 12px;font-family:Menlo,Consolas,monospace;color:#3c434a}.smp-vp-display-admin .smp-vp-current{display:flex;gap:10px;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;padding:7px 11px}.smp-vp-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:20px}.smp-vp-template-card{border:1px solid #dcdcde;border-radius:10px;background:#fff;overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease}.smp-vp-template-card.is-homepage,.smp-vp-template-card.is-post{border-color:#b3272d;box-shadow:0 0 0 1px rgba(179,39,45,.18)}.smp-vp-template-card-head{display:flex;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef0f3}.smp-vp-template-card h3{margin:0;font-size:16px}.smp-vp-template-card p{margin:4px 0 0;color:#646970}.smp-vp-template-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.smp-vp-template-badge{display:none;border-radius:999px;background:#f7e5e7;color:#8a1b20;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;white-space:nowrap}.smp-vp-template-card.is-homepage .smp-vp-template-badge-home,.smp-vp-template-card.is-post .smp-vp-template-badge-post{display:inline-flex}.smp-vp-preview-frame{padding:18px;background:#fbfaf9;min-height:190px;border-bottom:1px solid #eef0f3}.smp-vp-preview-frame .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-preview-frame .smp-vp-display .vp-head{display:none}.smp-vp-preview-frame .smp-vp-display .vp-a,.smp-vp-preview-frame .smp-vp-display .vp-b,.smp-vp-preview-frame .smp-vp-display .vp-d,.smp-vp-preview-frame .smp-vp-display .vp-e{grid-template-columns:minmax(0,1fr);padding:12px 0}.smp-vp-preview-frame .smp-vp-display .vp-c{padding:12px 0}.smp-vp-template-actions{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px}.smp-vp-template-action.is-active{background:#b3272d;border-color:#b3272d;color:#fff}.smp-vp-display-admin .screen-reader-selects{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}@media(max-width:980px){.smp-vp-template-grid,.smp-vp-display-admin .smp-vp-settings-grid{grid-template-columns:1fr}}
+        .smp-vp-display-admin{max-width:1260px;color:#1d2327}.smp-vp-display-admin *{box-sizing:border-box}.smp-vp-display-admin .smp-vp-panel{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;overflow:hidden}.smp-vp-display-admin .smp-vp-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #eceff3}.smp-vp-display-admin .smp-vp-panel-head h2{margin:0 0 4px;font-size:20px;line-height:1.2}.smp-vp-display-admin .smp-vp-panel-head p{margin:0;color:#646970}.smp-vp-display-admin .smp-vp-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:18px 20px}.smp-vp-display-admin label{font-weight:700;display:block;margin-bottom:6px}.smp-vp-display-admin select,.smp-vp-display-admin input[type=text]:not(.hpc-color-hex-input),.smp-vp-display-admin input[type=number]{width:100%;min-height:38px}.smp-vp-display-admin input[type=color]:not(.hpc-color-picker){width:100%;height:38px;padding:2px}.smp-vp-color-field,.smp-vp-loop-color-slot{min-width:0}.smp-vp-display-admin .hpc-color-control{min-width:0}.smp-vp-display-admin .hpc-color-control h3{font-size:12px;margin:0}.smp-vp-display-admin .hpc-color-control p{font-size:12px}.smp-vp-display-admin .hpc-color-row{gap:8px}.smp-vp-display-admin .hpc-color-picker-shell,.smp-vp-display-admin .hpc-color-hex-shell,.smp-vp-display-admin .hpc-color-value{display:grid;margin-bottom:0}.smp-vp-display-admin .hpc-button{min-height:36px}.smp-vp-color-fallback-swatch{border:1px solid #cbd5e1;border-radius:8px;display:inline-block;height:34px;margin-left:8px;vertical-align:middle;width:34px}.smp-vp-display-admin .smp-vp-checks{display:flex;gap:16px;flex-wrap:wrap;padding:0 20px 18px}.smp-vp-display-admin .smp-vp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;background:#f6f7f7;border-top:1px solid #eceff3}.smp-vp-display-admin .smp-vp-log{min-height:38px;min-width:280px;border:1px solid #dcdcde;background:#fff;border-radius:6px;padding:9px 12px;font-family:Menlo,Consolas,monospace;color:#3c434a}.smp-vp-display-admin .smp-vp-current{display:flex;gap:10px;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;padding:7px 11px}.smp-vp-template-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:20px}.smp-vp-template-card{border:1px solid #dcdcde;border-radius:10px;background:#fff;overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease}.smp-vp-template-card.is-homepage,.smp-vp-template-card.is-post{border-color:#b3272d;box-shadow:0 0 0 1px rgba(179,39,45,.18)}.smp-vp-template-card-head{display:flex;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #eef0f3}.smp-vp-template-card h3{margin:0;font-size:16px}.smp-vp-template-card p{margin:4px 0 0;color:#646970}.smp-vp-template-badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.smp-vp-template-badge{display:none;border-radius:999px;background:#f7e5e7;color:#8a1b20;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;white-space:nowrap}.smp-vp-template-card.is-homepage .smp-vp-template-badge-home,.smp-vp-template-card.is-post .smp-vp-template-badge-post{display:inline-flex}.smp-vp-preview-frame{padding:18px;background:#fbfaf9;min-height:190px;border-bottom:1px solid #eef0f3}.smp-vp-preview-frame .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-preview-frame .smp-vp-display .vp-a,.smp-vp-preview-frame .smp-vp-display .vp-b,.smp-vp-preview-frame .smp-vp-display .vp-d,.smp-vp-preview-frame .smp-vp-display .vp-e{grid-template-columns:minmax(0,1fr);padding:12px 0}.smp-vp-preview-frame .smp-vp-display .vp-c{padding:12px 0}.smp-vp-template-actions{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px}.smp-vp-template-action.is-active{background:#b3272d;border-color:#b3272d;color:#fff}.smp-vp-display-admin .screen-reader-selects{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}@media(max-width:980px){.smp-vp-template-grid,.smp-vp-display-admin .smp-vp-settings-grid{grid-template-columns:1fr}}
         .smp-vp-display-admin .smp-vp-sections{display:grid;gap:20px;padding:20px}
         .smp-vp-display-admin .smp-vp-section{border:1px solid #e6e9ee;border-radius:10px;background:#fff;padding:16px 18px}
         .smp-vp-display-admin .smp-vp-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -454,7 +678,7 @@ function smp_vp_display_render_settings(): void {
         .smp-vp-display-admin .smp-vp-fields{display:grid;gap:14px;max-width:540px}
         .smp-vp-display-admin .hpc-color-head h3{font-size:12px;margin:0;color:#1d2327}
         .smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:span 2}.smp-vp-display-admin .hpc-detailed-color-picker{height:100%}@media(max-width:980px){.smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:auto}}
-        .smp-vp-loop-section{border-top:1px solid #eceff3;padding:20px}.smp-vp-loop-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.smp-vp-loop-section-head h3{margin:0 0 4px;font-size:17px}.smp-vp-loop-section-head p{margin:0;color:#646970}.smp-vp-feature-instructions{background:#f8fbff;border:1px solid #cfe0ff;border-left:4px solid #3157d5;border-radius:8px;margin:0 0 16px;padding:13px 15px}.smp-vp-feature-instructions h3{font-size:15px;margin:0 0 6px}.smp-vp-feature-instructions p{color:#3f4d63;margin:0 0 10px}.smp-vp-feature-instructions code{background:#eef0f3;border-radius:5px;display:block;white-space:pre-wrap;padding:10px}.smp-vp-loop-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) 180px 220px auto;gap:10px;align-items:end;background:#f6f7f7;border:1px solid #dcdcde;border-radius:8px;padding:14px;margin-bottom:16px}.smp-vp-loop-toolbar select,.smp-vp-loop-card select{width:100%;min-height:38px}.smp-vp-loop-list{display:grid;gap:14px}.smp-vp-loop-card{border:1px solid #dcdcde;border-radius:8px;background:#fff;overflow:hidden}.smp-vp-loop-card-head{display:flex;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid #eef0f3}.smp-vp-loop-card-head h4{margin:0;font-size:15px}.smp-vp-loop-card-head p{margin:4px 0 0;color:#646970}.smp-vp-loop-chip{display:inline-flex;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:5px 8px;white-space:nowrap}.smp-vp-loop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px}.smp-vp-loop-grid .wide{grid-column:span 2}.smp-vp-loop-template-buttons{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding:2px 0 0}.smp-vp-loop-template-pick.is-active{background:#b3272d;border-color:#b3272d;color:#fff}.smp-vp-loop-output-count{min-height:38px;border:1px solid #dcdcde;background:#f6f7f7;border-radius:4px;padding:8px 10px;color:#3c434a}.smp-vp-loop-output-count strong{font-size:15px;color:#1d2327}.smp-vp-loop-preview{grid-column:1/-1;border:1px solid #dcdcde;background:#fbfaf9;border-radius:8px;padding:14px;margin-top:2px;overflow:auto}.smp-vp-loop-preview .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-loop-preview .smp-vp-display .vp-head{display:none}.smp-vp-loop-preview .smp-vp-display .vp-a,.smp-vp-loop-preview .smp-vp-display .vp-b,.smp-vp-loop-preview .smp-vp-display .vp-c,.smp-vp-loop-preview .smp-vp-display .vp-d,.smp-vp-loop-preview .smp-vp-display .vp-e{grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));padding:10px 0}.smp-vp-loop-preview .smp-vp-display .vp-card{min-height:0}.smp-vp-loop-preview-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#646970;margin-bottom:10px}.smp-vp-loop-card-response{margin:0 16px 14px;padding:11px 13px;border-radius:7px;font-weight:800;border:1px solid transparent}.smp-vp-loop-card-response.is-success{background:#ecfdf3;border-color:#9ad6ad;color:#116329}.smp-vp-loop-card-response.is-error{background:#fff1f0;border-color:#f0aaaa;color:#9f1d1d}.smp-vp-loop-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:#f6f7f7;border-top:1px solid #eef0f3}.smp-vp-loop-actions .smp-vp-loop-shortcode{max-width:360px;font-family:Menlo,Consolas,monospace;background:#fff}.smp-vp-loop-copy-status{color:#646970}@media(max-width:980px){.smp-vp-loop-toolbar,.smp-vp-loop-grid{grid-template-columns:1fr}.smp-vp-loop-grid .wide{grid-column:auto}}
+        .smp-vp-loop-section{border-top:1px solid #eceff3;padding:20px}.smp-vp-loop-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.smp-vp-loop-section-head h3{margin:0 0 4px;font-size:17px}.smp-vp-loop-section-head p{margin:0;color:#646970}.smp-vp-feature-instructions{background:#f8fbff;border:1px solid #cfe0ff;border-left:4px solid #3157d5;border-radius:8px;margin:0 0 16px;padding:13px 15px}.smp-vp-feature-instructions h3{font-size:15px;margin:0 0 6px}.smp-vp-feature-instructions p{color:#3f4d63;margin:0 0 10px}.smp-vp-feature-instructions code{background:#eef0f3;border-radius:5px;display:block;white-space:pre-wrap;padding:10px}.smp-vp-loop-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) 180px 220px auto;gap:10px;align-items:end;background:#f6f7f7;border:1px solid #dcdcde;border-radius:8px;padding:14px;margin-bottom:16px}.smp-vp-loop-toolbar select,.smp-vp-loop-card select{width:100%;min-height:38px}.smp-vp-loop-list{display:grid;gap:14px}.smp-vp-loop-card{border:1px solid #dcdcde;border-radius:8px;background:#fff;overflow:hidden}.smp-vp-loop-card-head{display:flex;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid #eef0f3}.smp-vp-loop-card-head h4{margin:0;font-size:15px}.smp-vp-loop-card-head p{margin:4px 0 0;color:#646970}.smp-vp-loop-chip{display:inline-flex;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:5px 8px;white-space:nowrap}.smp-vp-loop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px}.smp-vp-loop-grid .wide{grid-column:span 2}.smp-vp-loop-output-count{min-height:38px;border:1px solid #dcdcde;background:#f6f7f7;border-radius:4px;padding:8px 10px;color:#3c434a}.smp-vp-loop-output-count strong{font-size:15px;color:#1d2327}.smp-vp-loop-preview{grid-column:1/-1;border:1px solid #dcdcde;background:#fbfaf9;border-radius:8px;padding:14px;margin-top:2px;overflow:auto}.smp-vp-loop-preview .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-loop-preview .smp-vp-display .vp-a,.smp-vp-loop-preview .smp-vp-display .vp-b,.smp-vp-loop-preview .smp-vp-display .vp-c,.smp-vp-loop-preview .smp-vp-display .vp-d,.smp-vp-loop-preview .smp-vp-display .vp-e{grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));padding:10px 0}.smp-vp-loop-preview .smp-vp-display .vp-card{min-height:0}.smp-vp-loop-preview-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#646970;margin-bottom:10px}.smp-vp-loop-card-response{margin:0 16px 14px;padding:11px 13px;border-radius:7px;font-weight:800;border:1px solid transparent}.smp-vp-loop-card-response.is-success{background:#ecfdf3;border-color:#9ad6ad;color:#116329}.smp-vp-loop-card-response.is-error{background:#fff1f0;border-color:#f0aaaa;color:#9f1d1d}.smp-vp-loop-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:#f6f7f7;border-top:1px solid #eef0f3}.smp-vp-loop-actions .smp-vp-loop-shortcode{max-width:360px;font-family:Menlo,Consolas,monospace;background:#fff}.smp-vp-loop-copy-status{color:#646970}@media(max-width:980px){.smp-vp-loop-toolbar,.smp-vp-loop-grid{grid-template-columns:1fr}.smp-vp-loop-grid .wide{grid-column:auto}}
     </style>
     <div class="smp-vp-display-admin" id="smp-vp-display-settings" data-nonce="<?php echo esc_attr($nonce); ?>">
         <div class="smp-vp-panel">
@@ -477,7 +701,18 @@ function smp_vp_display_render_settings(): void {
                     <h3 class="smp-vp-section-title">General</h3>
                     <div class="smp-vp-fields">
                         <div><label for="smp-vp-profile-limit">Homepage limit</label><input id="smp-vp-profile-limit" type="number" min="1" max="30" value="<?php echo esc_attr($settings["profile_limit"]); ?>"></div>
-                        <div><label for="smp-vp-archive-url">Archive URL</label><input id="smp-vp-archive-url" type="text" value="<?php echo esc_attr($settings["archive_url"]); ?>"></div>
+                        <div>
+                            <label for="smp-vp-single-injection">Single post placement</label>
+                            <select id="smp-vp-single-injection">
+                                <option value="shortcode" <?php selected($settings["single_injection"], "shortcode"); ?>>Shortcode only - do not auto inject</option>
+                                <option value="after_content" <?php selected($settings["single_injection"], "after_content"); ?>>Auto append after article content</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="smp-vp-archive-url">Archive URL</label>
+                            <input id="smp-vp-archive-url" type="text" readonly value="<?php echo esc_attr($settings["archive_url"]); ?>">
+                            <p class="smp-vp-section-note">Managed in the Pages tab.</p>
+                        </div>
                     </div>
                 </section>
                 <section class="smp-vp-section">
@@ -491,7 +726,6 @@ function smp_vp_display_render_settings(): void {
             </div>
             <div class="smp-vp-checks">
                 <label><input id="smp-vp-display-enabled" type="checkbox" <?php checked($settings["enabled"]); ?>> Enable cards</label>
-                <label><input id="smp-vp-append-content" type="checkbox" <?php checked($settings["append_to_content"]); ?>> Append to posts and press releases</label>
                 <label><input id="smp-vp-require-thumb" type="checkbox" <?php checked($settings["require_thumbnail"]); ?>> Require thumbnails</label>
             </div>
             <div class="smp-vp-actions">
@@ -553,7 +787,7 @@ function smp_vp_display_render_settings(): void {
                             </div>
                         </div>
                         <div class="smp-vp-preview-frame">
-                            <?php echo smp_vp_display_render_collection($preview, ["template" => $key, "show_head" => false]); ?>
+                            <?php echo smp_vp_display_render_collection($preview, ["template" => $key]); ?>
                         </div>
                         <div class="smp-vp-template-actions">
                             <button type="button" class="button smp-vp-template-action" data-target="homepage" data-template="<?php echo esc_attr($key); ?>">Use for homepage</button>
@@ -572,7 +806,8 @@ function smp_vp_display_render_settings(): void {
             function collect(){
                 return {
                     enabled: $("#smp-vp-display-enabled").is(":checked") ? 1 : 0,
-                    append_to_content: $("#smp-vp-append-content").is(":checked") ? 1 : 0,
+                    single_injection: $("#smp-vp-single-injection").val(),
+                    append_to_content: $("#smp-vp-single-injection").val() === "after_content" ? 1 : 0,
                     require_thumbnail: $("#smp-vp-require-thumb").is(":checked") ? 1 : 0,
                     homepage_template: $("#smp-vp-homepage-template").val(),
                     post_template: $("#smp-vp-post-template").val(),
@@ -693,9 +928,6 @@ function smp_vp_display_render_settings(): void {
                 const outputCount = Math.min(48, rows * itemsPerRow);
                 $card.find(".smp-vp-loop-output-count strong").text(outputCount);
                 $card.find(".smp-vp-loop-template-chip").text("Design: " + label);
-                $card.find(".smp-vp-loop-template-pick").each(function(){
-                    $(this).toggleClass("is-active", $(this).data("template") === template);
-                });
                 $card.find(".smp-vp-loop-preview-template").attr("hidden", true);
                 $card.find(".smp-vp-loop-preview-template[data-template-key=\"" + template + "\"]").removeAttr("hidden");
                 $card.find(".smp-vp-loop-preview .smp-vp-display").each(function(){
@@ -766,13 +998,6 @@ function smp_vp_display_render_settings(): void {
                     .always(function(){ $button.prop("disabled", false).text(original); });
             });
             $root.on("click", ".smp-vp-loop-save", function(){ saveLoop(this); });
-            $root.on("click", ".smp-vp-loop-template-pick", function(){
-                const $button = $(this);
-                const $card = $button.closest(".smp-vp-loop-card");
-                $card.find(".smp-vp-loop-template").val($button.data("template"));
-                syncLoopPreview($card);
-                saveLoop(this);
-            });
             $root.on("click", ".smp-vp-loop-import-elementor", function(){
                 const $button = $(this);
                 const $card = $button.closest(".smp-vp-loop-card");
@@ -908,11 +1133,6 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
                     <div><label>Name font size</label><input type="number" min="12" max="42" class="smp-vp-loop-name-font-size" value="<?php echo esc_attr($item["name_font_size"]); ?>"></div>
                     <div><label>Role font size</label><input type="number" min="8" max="24" class="smp-vp-loop-role-font-size" value="<?php echo esc_attr($item["role_font_size"]); ?>"></div>
                     <div><label><input type="checkbox" class="smp-vp-loop-require-thumb" <?php checked($item["require_thumbnail"]); ?>> Require thumbnails</label></div>
-                    <div class="smp-vp-loop-template-buttons" aria-label="Loop item template choices">
-                        <?php foreach ($templates as $key => $template) : ?>
-                            <button type="button" class="button smp-vp-loop-template-pick <?php echo $item["template"] === $key ? "is-active" : ""; ?>" data-template="<?php echo esc_attr($key); ?>"><?php echo esc_html($template["label"]); ?></button>
-                        <?php endforeach; ?>
-                    </div>
                     <?php echo smp_vp_display_render_loop_preview_admin($item, $templates); ?>
                 </div>
                 <div class="smp-vp-loop-card-response" hidden></div>
@@ -934,8 +1154,6 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
 function smp_vp_display_render_loop_preview_admin(array $item, array $templates): string {
     $profiles = smp_vp_display_preview_profiles((int) ($item["limit"] ?? 1));
     $base_args = [
-        "title" => $item["label"] ?? "Verified Profiles",
-        "show_head" => false,
         "primary_color" => $item["primary_color"] ?? "#b3272d",
         "secondary_color" => $item["secondary_color"] ?? "#151515",
         "ink_color" => $item["secondary_color"] ?? "#151515",
@@ -1221,6 +1439,10 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
         $template = "boxed-row";
     }
 
+    $profile_count = count($profiles);
+    $configured_items_per_row = smp_vp_display_number($settings["items_per_row"] ?? smp_vp_display_default_items_per_row((string) $template), smp_vp_display_default_items_per_row((string) $template), 1, 6);
+    $effective_items_per_row = $profile_count > 0 ? min($configured_items_per_row, $profile_count) : $configured_items_per_row;
+
     $vars = sprintf(
         "--vp-red:%s;--vp-secondary:%s;--vp-ink:%s;--vp-muted:%s;--vp-line:%s;--vp-soft:%s;--vp-items-per-row:%d;--vp-name-size:%dpx;--vp-role-size:%dpx;",
         esc_attr($settings["primary_color"]),
@@ -1229,7 +1451,7 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
         esc_attr($settings["muted_color"]),
         esc_attr($settings["line_color"]),
         esc_attr($settings["soft_color"]),
-        smp_vp_display_number($settings["items_per_row"] ?? smp_vp_display_default_items_per_row((string) $template), smp_vp_display_default_items_per_row((string) $template), 1, 6),
+        $effective_items_per_row,
         absint($settings["name_font_size"] ?? 18),
         absint($settings["role_font_size"] ?? 10)
     );
@@ -1238,12 +1460,6 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
     ?>
     <style><?php echo smp_vp_display_css(); ?></style>
     <section class="smp-vp-display" style="<?php echo esc_attr($vars); ?>">
-        <?php if (($settings["show_head"] ?? true)) : ?>
-            <div class="vp-head">
-                <span class="lbl"><?php echo esc_html($settings["title"] ?? "Verified Profiles"); ?></span>
-                <a class="all" href="<?php echo esc_url($settings["archive_url"]); ?>">View Profiles <?php echo smp_vp_display_arrow_svg(); ?></a>
-            </div>
-        <?php endif; ?>
         <div class="vp <?php echo esc_attr($templates[$template]["class"]); ?>">
             <?php foreach ($profiles as $profile) { echo smp_vp_display_render_card($profile, $template); } ?>
         </div>
@@ -1360,7 +1576,22 @@ function smp_vp_display_loop_profile_ids(array $item, array $atts = []): array {
         if (! $post_id) {
             $post_id = absint(get_the_ID());
         }
-        return $post_id ? array_slice(smp_vp_display_post_ids($post_id, $require_thumbnail), 0, $limit) : [];
+        if (! $post_id) {
+            return [];
+        }
+
+        $ids = smp_vp_display_post_ids($post_id, false);
+        if ($require_thumbnail) {
+            $thumbnail_ids = array_values(array_filter($ids, static function ($id) {
+                return has_post_thumbnail($id);
+            }));
+
+            if ($thumbnail_ids) {
+                $ids = $thumbnail_ids;
+            }
+        }
+
+        return array_slice($ids, 0, $limit);
     }
 
     if ($context === "author") {
@@ -1390,18 +1621,8 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
         return smp_vp_display_empty_loop_marker($id);
     }
 
-    $default_show_head = ($id !== "single-post") && (($item["context"] ?? "") !== "single");
-    if (array_key_exists("show_head", $atts)) {
-        $show_head = smp_vp_display_bool($atts["show_head"]);
-    } elseif (array_key_exists("header", $atts)) {
-        $show_head = smp_vp_display_bool($atts["header"]);
-    } else {
-        $show_head = $default_show_head;
-    }
-
     $render_args = array_replace($settings, [
         "template" => $template,
-        "title" => $atts["title"] ?? $item["label"],
         "primary_color" => $item["primary_color"] ?: $settings["primary_color"],
         "secondary_color" => $item["secondary_color"] ?: ($settings["secondary_color"] ?? $settings["ink_color"]),
         "ink_color" => $item["secondary_color"] ?: ($settings["ink_color"] ?? "#151515"),
@@ -1409,59 +1630,85 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
         "rows" => $item["rows"] ?? 1,
         "items_per_row" => $item["items_per_row"] ?? 3,
         "role_font_size" => $item["role_font_size"] ?: $settings["role_font_size"],
-        "show_head" => $show_head,
     ]);
 
     return "<div class=\"verified-profiles-loop verified-profiles-loop-" . esc_attr($id) . "\">" . smp_vp_display_render_collection($ids, $render_args) . "</div>";
 }
 
-function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
-    $atts = shortcode_atts([
-        "id" => "homepage",
-        "context" => "",
-        "limit" => "",
-        "rows" => "",
-        "items_per_row" => "",
-        "per_row" => "",
-        "template" => "",
-        "post_id" => 0,
-        "author_id" => 0,
-        "require_thumbnail" => "",
-        "must_have_thumbnail" => "",
-        "title" => "",
-        "show_head" => "",
-        "header" => "",
-    ], (array) $atts, "verified_profiles_loop");
+function smp_vp_display_content_has_loop(string $content): bool {
+    foreach (["verified_profiles_loop", "smp_verified_profiles_loop", "display_single_post_mentioned_in_article", "display_profiles_featured_in_single_post"] as $shortcode) {
+        if (has_shortcode($content, $shortcode)) {
+            return true;
+        }
+    }
 
-    $id = sanitize_key((string) ($atts["id"] ?: "homepage"));
-    return smp_vp_display_render_loop_item($id, array_filter($atts, static function ($value) {
-        return $value !== "" && $value !== null;
-    }));
+    foreach (["verified-profiles-loop-single-post", "verified-profiles-loop", "data-smp-vp-empty-loop=\"single-post\""] as $needle) {
+        if (false !== strpos($content, $needle)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
+    try {
+        $atts = shortcode_atts([
+            "id" => "homepage",
+            "context" => "",
+            "limit" => "",
+            "rows" => "",
+            "items_per_row" => "",
+            "per_row" => "",
+            "template" => "",
+            "post_id" => 0,
+            "author_id" => 0,
+            "require_thumbnail" => "",
+            "must_have_thumbnail" => "",
+        ], (array) $atts, "verified_profiles_loop");
+
+        $id = sanitize_key((string) ($atts["id"] ?: "homepage"));
+        return smp_vp_display_render_loop_item($id, array_filter($atts, static function ($value) {
+            return $value !== "" && $value !== null;
+        }));
+    } catch (\Throwable $error) {
+        smp_vp_display_log_failure('verified_profiles_loop shortcode', $error);
+        return '';
+    }
 }
 
 function smp_vp_display_append_to_content(string $content): string {
     $settings = smp_vp_display_settings();
-    if (empty($settings["enabled"]) || empty($settings["append_to_content"]) || is_admin() || ! is_singular(["post", "press-release"]) || ! in_the_loop() || ! is_main_query()) {
+    if (empty($settings["enabled"]) || ($settings["single_injection"] ?? "after_content") !== "after_content" || is_admin() || ! is_singular(["post", "press-release"]) || ! in_the_loop() || ! is_main_query()) {
         return $content;
     }
 
-    $rendered = smp_vp_display_render_loop_item("single-post", ["post_id" => get_the_ID()]);
-    return $rendered ? $content . $rendered : $content;
+    if (smp_vp_display_content_has_loop($content)) {
+        return $content;
+    }
+
+    try {
+        $rendered = smp_vp_display_render_loop_item("single-post", ["post_id" => get_the_ID()]);
+        return $rendered ? $content . $rendered : $content;
+    } catch (\Throwable $error) {
+        smp_vp_display_log_failure('single-post content injection', $error);
+        return $content;
+    }
 }
 
 if (! function_exists(__NAMESPACE__ . "\\display_homepage_profiles")) {
     function display_homepage_profiles($atts = []): string {
         $settings = smp_vp_display_settings();
-        $atts = shortcode_atts(["limit" => $settings["profile_limit"], "template" => $settings["homepage_template"], "title" => "Verified Profiles"], (array) $atts, "display_homepage_profiles");
-        return smp_vp_display_render_loop_item("homepage", (array) $atts);
+        $atts = shortcode_atts(["limit" => $settings["profile_limit"], "template" => $settings["homepage_template"]], (array) $atts, "display_homepage_profiles");
+        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "homepage"], (array) $atts));
     }
 }
 
 if (! function_exists(__NAMESPACE__ . "\\display_single_post_mentioned_in_article")) {
     function display_single_post_mentioned_in_article($atts = []): string {
         $settings = smp_vp_display_settings();
-        $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "title" => "Verified Profiles", "post_id" => get_the_ID(), "show_head" => false], (array) $atts, "display_single_post_mentioned_in_article");
-        return smp_vp_display_render_loop_item("single-post", (array) $atts);
+        $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
+        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts));
     }
 }
 

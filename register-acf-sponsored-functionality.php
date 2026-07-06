@@ -1,4 +1,10 @@
-<? /**
+<?php
+
+namespace smp_verified_profiles;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
  * Registers a custom ACF field "sponsored" with yes/no options.
  */
 function register_acf_sponsored_functionality() {
@@ -32,5 +38,5 @@ function register_acf_sponsored_functionality() {
                 ),
             ),
         ));
-    }
-}?>
+	}
+}

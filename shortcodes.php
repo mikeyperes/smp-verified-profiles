@@ -26,7 +26,8 @@ function get_verified_profile_shortcodes() {
         'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
         'display_profile_notable_mentions' => __NAMESPACE__ . '\\get_profile_notable_mentions',
         'get_profile_field' => __NAMESPACE__ . '\\get_profile_field',
-        'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles'
+        'profiles_in_articles' => __NAMESPACE__ . '\\display_profiles_in_articles',
+        'verified_profile_page' => __NAMESPACE__ . '\\smp_vp_verified_profile_page_shortcode',
     ];
 }
 
@@ -839,12 +840,12 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
 if (!function_exists(__NAMESPACE__ . chr(92) . "display_homepage_profiles")) {
     function display_homepage_profiles($atts = []) {
         include_once __DIR__ . "/verified-profile-display-templates.php";
-        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_display_render_loop_item")) {
+        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_verified_profiles_loop_shortcode")) {
             return "<style>.display_home_profiles{display:none!important}</style>";
         }
         $settings = smp_vp_display_settings();
-        $atts = shortcode_atts(["limit" => $settings["profile_limit"], "template" => $settings["homepage_template"], "title" => "Verified Profiles"], (array) $atts, "display_homepage_profiles");
-        return smp_vp_display_render_loop_item("homepage", (array) $atts);
+        $atts = shortcode_atts(["limit" => $settings["profile_limit"], "template" => $settings["homepage_template"]], (array) $atts, "display_homepage_profiles");
+        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "homepage"], (array) $atts));
     }
 } else {
     write_log("Warning: " . __NAMESPACE__ . "\\display_homepage_profiles function is already declared", true);
@@ -853,12 +854,12 @@ if (!function_exists(__NAMESPACE__ . chr(92) . "display_homepage_profiles")) {
 if (!function_exists(__NAMESPACE__ . chr(92) . "display_single_post_mentioned_in_article")) {
     function display_single_post_mentioned_in_article($atts = []) {
         include_once __DIR__ . "/verified-profile-display-templates.php";
-        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_display_render_loop_item")) {
+        if (!function_exists(__NAMESPACE__ . chr(92) . "smp_vp_verified_profiles_loop_shortcode")) {
             return "<style>.display_single_post_mentioned_in_article{display:none!important}</style>";
         }
         $settings = smp_vp_display_settings();
-        $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "title" => "Verified Profiles", "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
-        return smp_vp_display_render_loop_item("single-post", (array) $atts);
+        $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
+        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts));
     }
 }
 
@@ -1017,9 +1018,13 @@ function contributor_network_shortcode( $atts ) {
 }
 
 /**
- * Shortcode: [verified_profile field="program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
+ * Shortcode: [verified_profile field="featured_image|program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
  *
  * Usage examples:
+ *   // current verified profile post image
+ *   [verified_profile field="featured_image" size="large"]
+ *   [verified_profile field="featured_image" size="medium_large" output="img" class="profile-headshot"]
+ *
  *   // top-level fields
  *   [verified_profile field="program_name"]
  *   [verified_profile field="email"]
@@ -1036,11 +1041,279 @@ function contributor_network_shortcode( $atts ) {
  *   // example returning permalink
  *   [verified_profile field="pages.verified_profiles_apply"]
  */
-function verified_profile_shortcode( $atts ) {
-    $atts  = shortcode_atts([
-        'field' => '',
-        'size'  => 'thumbnail',
-    ], $atts, 'verified_profile');
+function smp_vp_shortcode_profile_post_id( array $atts ): int {
+    $post_id = absint( $atts['post_id'] ?? 0 );
+    if ( ! $post_id ) {
+        $post_id = get_the_ID();
+    }
+
+    $post = $post_id ? get_post( $post_id ) : null;
+    if ( ! $post instanceof \WP_Post ) {
+        return 0;
+    }
+
+    $settings = function_exists( __NAMESPACE__ . '\\get_verified_profile_settings' ) ? get_verified_profile_settings() : [];
+    $slug     = isset( $settings['slug'] ) && '' !== (string) $settings['slug'] ? (string) $settings['slug'] : 'profile';
+
+    return $post->post_type === $slug ? (int) $post->ID : 0;
+}
+
+function smp_vp_shortcode_class_attr( string $class ): string {
+    $classes = array_filter(
+        array_map(
+            'sanitize_html_class',
+            preg_split( '/\s+/', trim( $class ) ) ?: []
+        )
+    );
+
+    return implode( ' ', array_unique( $classes ) );
+}
+
+function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string {
+    $post_id = smp_vp_shortcode_profile_post_id( $atts );
+    if ( ! $post_id ) {
+        return '';
+    }
+
+    $size   = sanitize_key( (string) ( $atts['size'] ?? 'thumbnail' ) );
+    $size   = '' !== $size ? $size : 'thumbnail';
+    $output = sanitize_key( (string) ( $atts['output'] ?? 'url' ) );
+    $url    = get_the_post_thumbnail_url( $post_id, $size );
+
+    if ( ! $url ) {
+        return '';
+    }
+
+    if ( in_array( $output, [ 'id', 'attachment_id' ], true ) ) {
+        return (string) get_post_thumbnail_id( $post_id );
+    }
+
+    if ( in_array( $output, [ 'img', 'image', 'html' ], true ) ) {
+        $class = smp_vp_shortcode_class_attr( (string) ( $atts['class'] ?? '' ) );
+        $alt   = '' !== trim( (string) ( $atts['alt'] ?? '' ) ) ? (string) $atts['alt'] : get_the_title( $post_id );
+
+        return sprintf(
+            '<img%s src="%s" alt="%s" loading="lazy">',
+            '' !== $class ? ' class="' . esc_attr( $class ) . '"' : '',
+            esc_url( $url ),
+            esc_attr( $alt )
+        );
+    }
+
+	    return esc_url( $url );
+	}
+
+	function smp_vp_verified_profile_current_field_value( int $post_id, string $field ) {
+	    if ( ! $post_id || '' === $field ) {
+	        return null;
+	    }
+
+	    if ( 'title' === $field ) {
+	        $value = function_exists( 'get_field' ) ? get_field( 'title', $post_id ) : '';
+	        return '' !== (string) $value ? $value : get_the_title( $post_id );
+	    }
+
+	    if ( false !== strpos( $field, '.' ) ) {
+	        [ $parent, $child ] = explode( '.', $field, 2 );
+	        $value = function_exists( 'get_field' ) ? get_field( $parent, $post_id ) : null;
+	        if ( is_array( $value ) && array_key_exists( $child, $value ) ) {
+	            return $value[ $child ];
+	        }
+
+	        $legacy_key = $parent . '_' . str_replace( '.', '_', $child );
+	        $legacy     = function_exists( 'get_field' ) ? get_field( $legacy_key, $post_id ) : null;
+	        if ( null !== $legacy && false !== $legacy && '' !== $legacy && [] !== $legacy ) {
+	            return $legacy;
+	        }
+
+	        $meta = get_post_meta( $post_id, $legacy_key, true );
+	        return '' !== $meta ? $meta : null;
+	    }
+
+	    $value = function_exists( 'get_field' ) ? get_field( $field, $post_id ) : null;
+	    if ( null !== $value && false !== $value && '' !== $value && [] !== $value ) {
+	        return $value;
+	    }
+
+	    $meta = get_post_meta( $post_id, $field, true );
+	    return '' !== $meta ? $meta : null;
+	}
+
+	function smp_vp_verified_profile_output_link( $value, string $label = '' ): string {
+	    if ( $value instanceof \WP_Post ) {
+	        $url   = get_permalink( $value );
+	        $label = '' !== $label ? $label : get_the_title( $value );
+	        return $url ? '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>' : '';
+	    }
+
+	    if ( is_numeric( $value ) ) {
+	        $post = get_post( (int) $value );
+	        if ( $post instanceof \WP_Post ) {
+	            $url   = get_permalink( $post );
+	            $label = '' !== $label ? $label : get_the_title( $post );
+	            return $url ? '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>' : '';
+	        }
+	    }
+
+	    $url = trim( (string) $value );
+	    if ( '' === $url ) {
+	        return '';
+	    }
+
+	    $href = preg_match( '#^https?://#i', $url ) ? $url : 'https://' . $url;
+	    return '<a href="' . esc_url( $href ) . '" target="_blank" rel="nofollow noopener">' . esc_html( '' !== $label ? $label : $url ) . '</a>';
+	}
+
+	function smp_vp_verified_profile_output_gallery( array $items, array $atts ): string {
+	    $output = sanitize_key( (string) ( $atts['output'] ?? 'html' ) );
+	    $size   = sanitize_key( (string) ( $atts['size'] ?? 'medium' ) );
+	    $limit  = absint( $atts['limit'] ?? 0 );
+	    $items  = $limit > 0 ? array_slice( $items, 0, $limit ) : $items;
+	    $urls   = [];
+	    $ids    = [];
+
+	    foreach ( $items as $item ) {
+	        $id = 0;
+	        if ( is_array( $item ) ) {
+	            $id = absint( $item['ID'] ?? $item['id'] ?? 0 );
+	        } elseif ( is_numeric( $item ) ) {
+	            $id = absint( $item );
+	        }
+
+	        if ( ! $id ) {
+	            continue;
+	        }
+
+	        $ids[]  = $id;
+	        $url    = wp_get_attachment_image_url( $id, $size );
+	        $urls[] = $url ?: '';
+	    }
+
+	    $urls = array_values( array_filter( $urls ) );
+	    if ( 'count' === $output ) {
+	        return (string) count( $ids );
+	    }
+	    if ( in_array( $output, [ 'ids', 'id' ], true ) ) {
+	        return esc_html( implode( ',', $ids ) );
+	    }
+	    if ( in_array( $output, [ 'urls', 'url' ], true ) ) {
+	        return esc_html( implode( "\n", $urls ) );
+	    }
+
+	    $columns = max( 1, min( 8, absint( $atts['columns'] ?? 3 ) ) );
+	    $class   = smp_vp_shortcode_class_attr( (string) ( $atts['class'] ?? '' ) );
+	    $html    = '<div class="smp-vp-shortcode-gallery' . ( '' !== $class ? ' ' . esc_attr( $class ) : '' ) . '" style="display:grid;grid-template-columns:repeat(' . esc_attr( (string) $columns ) . ',minmax(0,1fr));gap:12px">';
+	    foreach ( $ids as $id ) {
+	        $image = wp_get_attachment_image( $id, $size );
+	        if ( $image ) {
+	            $html .= '<figure class="smp-vp-shortcode-gallery__item">' . $image . '</figure>';
+	        }
+	    }
+	    return $html . '</div>';
+	}
+
+	function smp_vp_verified_profile_output_repeater( array $rows, array $atts ): string {
+	    $output    = sanitize_key( (string) ( $atts['output'] ?? 'inline' ) );
+	    $sub_field = sanitize_key( (string) ( $atts['sub_field'] ?? '' ) );
+	    $fields    = array_filter( array_map( 'sanitize_key', array_map( 'trim', explode( ',', (string) ( $atts['fields'] ?? '' ) ) ) ) );
+	    $limit     = absint( $atts['limit'] ?? 0 );
+	    $index     = isset( $atts['index'] ) && '' !== (string) $atts['index'] ? absint( $atts['index'] ) : null;
+
+	    if ( null !== $index ) {
+	        $rows = isset( $rows[ $index ] ) ? [ $rows[ $index ] ] : [];
+	    }
+	    $rows = $limit > 0 ? array_slice( $rows, 0, $limit ) : $rows;
+
+	    if ( 'count' === $output ) {
+	        return (string) count( $rows );
+	    }
+	    if ( 'json' === $output ) {
+	        return esc_html( wp_json_encode( $rows ) );
+	    }
+
+	    $lines = [];
+	    foreach ( $rows as $row ) {
+	        if ( ! is_array( $row ) ) {
+	            continue;
+	        }
+	        if ( '' !== $sub_field ) {
+	            $lines[] = isset( $row[ $sub_field ] ) ? trim( wp_strip_all_tags( (string) $row[ $sub_field ] ) ) : '';
+	            continue;
+	        }
+	        $parts = [];
+	        foreach ( $fields ?: array_keys( $row ) as $key ) {
+	            if ( isset( $row[ $key ] ) && '' !== trim( wp_strip_all_tags( (string) $row[ $key ] ) ) ) {
+	                $parts[] = trim( wp_strip_all_tags( (string) $row[ $key ] ) );
+	            }
+	        }
+	        $lines[] = implode( ' - ', $parts );
+	    }
+
+	    $lines = array_values( array_filter( $lines ) );
+	    if ( 'html' === $output ) {
+	        return '<ul class="smp-vp-shortcode-repeater"><li>' . implode( '</li><li>', array_map( 'esc_html', $lines ) ) . '</li></ul>';
+	    }
+
+	    return esc_html( implode( ', ', $lines ) );
+	}
+
+	function smp_vp_verified_profile_format_value( $value, array $atts ): string {
+	    $output = sanitize_key( (string) ( $atts['output'] ?? 'text' ) );
+	    $type   = sanitize_key( (string) ( $atts['type'] ?? 'auto' ) );
+
+	    if ( null === $value || false === $value || '' === $value || [] === $value ) {
+	        return isset( $atts['empty'] ) ? wp_kses_post( (string) $atts['empty'] ) : '';
+	    }
+
+	    if ( is_array( $value ) && ( 'gallery' === $type || isset( $value[0]['ID'] ) || isset( $value[0]['id'] ) ) ) {
+	        return smp_vp_verified_profile_output_gallery( $value, $atts );
+	    }
+
+	    if ( is_array( $value ) && ( 'repeater' === $type || isset( $atts['sub_field'] ) || isset( $atts['fields'] ) ) ) {
+	        return smp_vp_verified_profile_output_repeater( $value, $atts );
+	    }
+
+	    if ( 'json' === $output ) {
+	        return esc_html( wp_json_encode( $value ) );
+	    }
+
+	    if ( 'link' === $output ) {
+	        return smp_vp_verified_profile_output_link( $value, (string) ( $atts['label'] ?? '' ) );
+	    }
+
+	    if ( in_array( $output, [ 'html', 'wysiwyg' ], true ) ) {
+	        return wp_kses_post( (string) $value );
+	    }
+
+	    if ( $value instanceof \WP_Post ) {
+	        return esc_html( get_the_title( $value ) );
+	    }
+
+	    if ( is_array( $value ) ) {
+	        return esc_html( wp_json_encode( $value ) );
+	    }
+
+	    return esc_html( (string) $value );
+	}
+
+		function verified_profile_shortcode( $atts ) {
+		    try {
+		    $atts  = shortcode_atts([
+		        'field'   => '',
+		        'type'    => 'auto',
+	        'size'    => 'thumbnail',
+	        'output'  => 'text',
+	        'class'   => '',
+	        'post_id' => 0,
+	        'alt'     => '',
+	        'limit'   => 0,
+	        'columns' => 3,
+	        'fields'  => '',
+	        'sub_field' => '',
+	        'index'   => '',
+	        'label'   => '',
+	        'empty'   => '',
+	    ], $atts, 'verified_profile');
 
     $field = sanitize_text_field( $atts['field'] );
     $size  = sanitize_key(       $atts['size'] );
@@ -1048,8 +1321,20 @@ function verified_profile_shortcode( $atts ) {
         return '';
     }
 
-    $group = get_field( 'verified_profile', 'option' );
-    if ( ! is_array( $group ) ) {
+	    if ( in_array( $field, [ 'featured_image', 'profile_photo', 'photo' ], true ) ) {
+	        return smp_vp_verified_profile_featured_image_shortcode( $atts );
+	    }
+
+	    $post_id = smp_vp_shortcode_profile_post_id( $atts );
+	    if ( $post_id ) {
+	        $profile_value = smp_vp_verified_profile_current_field_value( $post_id, $field );
+	        if ( null !== $profile_value && false !== $profile_value && '' !== $profile_value && [] !== $profile_value ) {
+	            return smp_vp_verified_profile_format_value( $profile_value, $atts );
+	        }
+	    }
+
+	    $group = get_field( 'verified_profile', 'option' );
+	    if ( ! is_array( $group ) ) {
         return '';
     }
 
@@ -1095,8 +1380,14 @@ function verified_profile_shortcode( $atts ) {
         return (string) $post_id;
     }
 
-    return esc_html( $val );
-}
+	    return esc_html( $val );
+		    } catch ( \Throwable $error ) {
+		        if ( function_exists( 'error_log' ) ) {
+		            error_log( '[smp-verified-profiles] verified_profile shortcode failed: ' . $error->getMessage() );
+		        }
+		        return '';
+		    }
+	}
 
 // -----------------------------------------------------------------------------
 // posts_where modifier for ACF repeater wildcard
@@ -1216,6 +1507,14 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
 \add_filter( "the_content", __NAMESPACE__ . "\\smp_vp_append_single_profile_frontend_fields", 20 );
 
 function smp_vp_append_single_profile_frontend_fields( $content ) {
+    if ( function_exists( __NAMESPACE__ . "\\smp_vp_profile_page_should_render_auto" ) && smp_vp_profile_page_should_render_auto() ) {
+        return $content;
+    }
+
+    if ( function_exists( __NAMESPACE__ . "\\smp_vp_profile_page_preview_template" ) && "" !== smp_vp_profile_page_preview_template() ) {
+        return $content;
+    }
+
     if ( \is_admin() || ! \is_singular( "profile" ) || ! \in_the_loop() || ! \is_main_query() ) {
         return $content;
     }

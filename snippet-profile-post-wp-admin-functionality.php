@@ -75,10 +75,17 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
             return;
         }
 
-        $post_categories = get_the_category($post_id);
-        $category_slugs   = array_map(function($category) {
-            return $category->slug;
-        }, $post_categories);
+	        $post_categories = get_the_category($post_id);
+	        $category_slugs   = array_map(function($category) {
+	            return $category->slug;
+	        }, $post_categories);
+	        $profile_type = function_exists('get_field') ? sanitize_key((string) get_field('profile_type', $post_id)) : '';
+	        if ('company' === $profile_type) {
+	            $profile_type = 'organization';
+	        }
+	        if (in_array($profile_type, ['person', 'organization'], true) && !in_array($profile_type, $category_slugs, true)) {
+	            $category_slugs[] = $profile_type;
+	        }
 
         $schema = [];
       
@@ -230,23 +237,46 @@ $bio = wp_strip_all_tags( $raw_bio );
 
 
  elseif ( in_array( 'organization', $category_slugs, true ) ) {
-    // Fetch ACF fields (adjust keys below if your ACF field names differ)
-    $org_name            = get_field( 'organization_name', $post_id );
-    $url_website      = get_field( 'url_website',    $post_id );  // <-- Website URL
-    $legal_name          = get_field( 'legal_name',         $post_id );
-    $naics               = get_field( 'naics',              $post_id );
-    $email               = get_field( 'email',              $post_id );
-    $acf_description     = get_field( 'description',        $post_id );
+	    $company_details     = get_field( 'field_smp_vp_company_details', $post_id );
+	    if ( ! is_array( $company_details ) ) {
+	        $company_details = get_field( 'company_details', $post_id );
+	    }
+	    $company_details     = is_array( $company_details ) ? $company_details : [];
+
+	    // Fetch ACF fields (adjust keys below if your ACF field names differ)
+	    $org_name            = get_field( 'organization_name', $post_id ) ?: ( $company_details['organization_name'] ?? '' );
+	    $url_website      = get_field( 'url_website',    $post_id );  // <-- Website URL
+	    if ( function_exists( __NAMESPACE__ . '\\smp_vp_profile_page_resolved_url' ) ) {
+	        $url_website = smp_vp_profile_page_resolved_url( $post_id, 'website', (string) $url_website );
+	    }
+	    $legal_name          = get_field( 'legal_name',         $post_id ) ?: ( $company_details['legal_name'] ?? '' );
+	    $naics               = get_field( 'naics',              $post_id );
+	    $email               = get_field( 'email',              $post_id );
+	    $acf_description     = get_field( 'description',        $post_id );
     $alternate_name      = get_field( 'alternate_name',     $post_id );
     $logo                = get_field( 'logo',               $post_id );
     $award               = get_field( 'award',              $post_id );
     $brand               = get_field( 'brand',              $post_id );
-    $founder_id          = get_field( 'founder_id',         $post_id );
-    $founder_url         = get_field( 'founder_url',        $post_id );
-    $founder_name        = get_field( 'founder_name',       $post_id );
-    $founding_date       = get_field( 'founding_date',      $post_id );
-    $number_of_employees = get_field( 'number_of_employees',$post_id );
-    $seeks               = get_field( 'seeks',              $post_id );
+	    $founder_profile     = get_field( 'founder_profile',    $post_id ) ?: ( $company_details['founder_profile'] ?? 0 );
+	    $founder_id          = '';
+	    $founder_url         = '';
+	    $founder_name        = '';
+	    $founding_date       = get_field( 'founding_date',      $post_id ) ?: ( $company_details['founding_date'] ?? '' );
+	    $number_of_employees = get_field( 'number_of_employees',$post_id ) ?: ( $company_details['number_of_employees'] ?? '' );
+	    $seeks               = get_field( 'seeks',              $post_id );
+	    if ( $founder_profile instanceof \WP_Post ) {
+	        $founder_profile = $founder_profile->ID;
+	    }
+	    $founder_profile = absint( $founder_profile );
+	    if ( $founder_profile ) {
+	        $founder_name = get_the_title( $founder_profile );
+	        $founder_url  = get_permalink( $founder_profile );
+	        $founder_id   = trailingslashit( $founder_url ) . '#person';
+	    } else {
+	        $founder_id   = get_field( 'founder_id',   $post_id ) ?: ( $company_details['founder_id'] ?? '' );
+	        $founder_url  = get_field( 'founder_url',  $post_id ) ?: ( $company_details['founder_url'] ?? '' );
+	        $founder_name = get_field( 'founder_name', $post_id ) ?: ( $company_details['founder_name'] ?? '' );
+	    }
 
     // Collect and filter url profile URLs for sameAs
     $url_ = array_filter([
