@@ -1651,6 +1651,44 @@ function smp_vp_display_content_has_loop(string $content): bool {
     return false;
 }
 
+function smp_vp_display_post_declares_loop(int $post_id): bool {
+    if ($post_id <= 0) {
+        return false;
+    }
+
+    $post = get_post($post_id);
+    if ($post && smp_vp_display_content_has_loop((string) $post->post_content)) {
+        return true;
+    }
+
+    $needles = [
+        "verified_profiles_loop",
+        "smp_verified_profiles_loop",
+        "display_single_post_mentioned_in_article",
+        "display_profiles_featured_in_single_post",
+    ];
+
+    foreach (["_elementor_data", "_elementor_page_settings"] as $meta_key) {
+        $value = get_post_meta($post_id, $meta_key, true);
+        if (is_array($value)) {
+            $value = wp_json_encode($value);
+        }
+
+        $value = is_string($value) ? $value : "";
+        if ($value === "") {
+            continue;
+        }
+
+        foreach ($needles as $needle) {
+            if (false !== strpos($value, $needle)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
     try {
         $atts = shortcode_atts([
@@ -1683,12 +1721,13 @@ function smp_vp_display_append_to_content(string $content): string {
         return $content;
     }
 
-    if (smp_vp_display_content_has_loop($content)) {
+    $post_id = get_the_ID();
+    if (smp_vp_display_content_has_loop($content) || smp_vp_display_post_declares_loop((int) $post_id)) {
         return $content;
     }
 
     try {
-        $rendered = smp_vp_display_render_loop_item("single-post", ["post_id" => get_the_ID()]);
+        $rendered = smp_vp_display_render_loop_item("single-post", ["post_id" => $post_id]);
         return $rendered ? $content . $rendered : $content;
     } catch (\Throwable $error) {
         smp_vp_display_log_failure('single-post content injection', $error);
