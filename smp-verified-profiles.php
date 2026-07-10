@@ -4,12 +4,13 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.39
+ * Version: 6.5.40
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
  * GitHub Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
  * GitHub Branch: main
+ * Requires PHP: 8.0
  */
 
 namespace smp_verified_profiles;
@@ -41,7 +42,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.39";
+    public static $plugin_version = "6.5.40";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -317,39 +318,11 @@ function smp_vp_register_settings_menu(): void {
 add_action( 'admin_menu', __NAMESPACE__ . '\\smp_vp_register_settings_menu' );
 
 // ============================================================================
-// HEXA WORDPRESS PLUGIN CORE AUTOLOADER
+// HEXA WORDPRESS PLUGIN CORE PACKAGE CANDIDATE
 // ============================================================================
-function register_hexa_plugin_core_autoloader(): void {
-    static $registered = false;
-
-    if ( $registered ) {
-        return;
-    }
-
-    $base_dir = __DIR__ . '/lib/hexa-wordpress-plugin-core/src/';
-    $prefix   = 'Hexa\\PluginCore\\';
-
-    spl_autoload_register(
-        static function( string $class_name ) use ( $base_dir, $prefix ): void {
-            if ( strncmp( $class_name, $prefix, strlen( $prefix ) ) !== 0 ) {
-                return;
-            }
-
-            $relative_class = substr( $class_name, strlen( $prefix ) );
-            $file           = $base_dir . str_replace( '\\', DIRECTORY_SEPARATOR, $relative_class ) . '.php';
-
-            if ( is_readable( $file ) ) {
-                require_once $file;
-            }
-        },
-        true,
-        true
-    );
-
-    $registered = true;
-}
-
-register_hexa_plugin_core_autoloader();
+$hexa_plugin_core_root = __DIR__ . '/lib/hexa-wordpress-plugin-core';
+require_once $hexa_plugin_core_root . '/bootstrap.php';
+\hexa_plugin_core_register_package( 'smp-verified-profiles', $hexa_plugin_core_root );
 
 // ============================================================================
 // DEBUG LOGGING FUNCTION
