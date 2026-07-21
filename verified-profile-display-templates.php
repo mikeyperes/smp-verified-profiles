@@ -26,12 +26,12 @@ add_shortcode("display_single_post_mentioned_in_article", __NAMESPACE__ . "\\dis
 add_shortcode("display_profiles_featured_in_single_post", __NAMESPACE__ . "\\display_profiles_featured_in_single_post");
 
 function smp_vp_display_dashboard_tab(array $tabs): array {
-    $tabs["features"] = "Features";
+    $tabs["features"] = "Profile Cards";
     return $tabs;
 }
 
 function smp_vp_pages_dashboard_tab(array $tabs): array {
-    $tabs["pages"] = "Pages";
+    $tabs["pages"] = "Profile Archive";
     return $tabs;
 }
 

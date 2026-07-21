@@ -144,6 +144,7 @@ function smp_vp_boot_hexa_core_admin(): void {
                     [
                         "tabs_filter"   => "smp_vp_dashboard_tabs",
                         "render_filter" => "smp_vp_render_dashboard_tab",
+                        "label"         => "Hexa WP Core",
                         "capability"    => Config::$settings_page_capability,
                         "core_root"     => __DIR__ . "/lib/hexa-wordpress-plugin-core",
                         "readme_path"   => __DIR__ . "/lib/hexa-wordpress-plugin-core/README.md",

@@ -21,7 +21,7 @@ add_action( 'wp_ajax_smp_vp_spawn_approve', __NAMESPACE__ . '\\smp_vp_ajax_spawn
 add_action( 'wp_ajax_smp_vp_spawn_attach_existing', __NAMESPACE__ . '\\smp_vp_ajax_spawn_attach_existing' );
 
 function smp_vp_spawn_dashboard_tab( array $tabs ): array {
-    $tabs['spawning-api'] = 'Spawning API';
+    $tabs['spawning-api'] = 'Profile Generation';
     return $tabs;
 }
 

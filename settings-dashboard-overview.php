@@ -223,7 +223,7 @@ function display_settings_overview() {
                 <div class="smp-info-box warning">
                     <strong>⚠️ Profile Post Type Not Registered</strong>
                     <p>Enable the "register_profile_custom_post_type" snippet in the Snippets tab to register the Profile post type.</p>
-                    <a href="#" onclick="jQuery('.smp-tab-btn[data-tab=snippets]').click(); return false;" class="smp-btn smp-btn-primary" style="margin-top: 10px;">Go to Snippets</a>
+                    <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'snippets' ) ); ?>" class="smp-btn smp-btn-primary" style="margin-top: 10px;">Go to Snippets</a>
                 </div>
             <?php endif; ?>
         </div>
@@ -239,8 +239,8 @@ function display_settings_overview() {
                     <a href="<?php echo admin_url( 'post-new.php?post_type=profile' ); ?>">➕ Add New Profile</a>
                 <?php endif; ?>
                 <a href="<?php echo admin_url( 'users.php' ); ?>">👥 Manage Users</a>
-                <a href="#" onclick="jQuery('.smp-tab-btn[data-tab=snippets]').click(); return false;">✂️ Configure Snippets</a>
-                <a href="#" onclick="jQuery('.smp-tab-btn[data-tab=system-checks]').click(); return false;">🔍 System Checks</a>
+                <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'snippets' ) ); ?>">✂️ Configure Snippets</a>
+                <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'system-checks' ) ); ?>">🔍 System Checks</a>
                 <a href="https://github.com/<?php echo esc_attr( Config::$github_repo ); ?>" target="_blank">📚 Documentation</a>
             </div>
         </div>
@@ -314,7 +314,7 @@ function display_settings_overview() {
             <?php endif; ?>
             
             <p style="margin-top: 15px;">
-                <a href="#" onclick="jQuery('.smp-tab-btn[data-tab=snippets]').click(); return false;" class="smp-btn smp-btn-secondary">Manage Snippets</a>
+                <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'snippets' ) ); ?>" class="smp-btn smp-btn-secondary">Manage Snippets</a>
             </p>
         </div>
     </div>

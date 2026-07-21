@@ -66,53 +66,6 @@ function output_dashboard_styles() {
         #smp-dashboard * { box-sizing: border-box; }
         
         /* ============================================
-           Tab Navigation
-           ============================================ */
-        .smp-tabs-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0;
-            border-bottom: 2px solid #c3c4c7;
-            margin-bottom: 0;
-            background: #f0f0f1;
-            padding: 10px 10px 0;
-        }
-        .smp-tab-btn {
-            padding: 12px 20px;
-            text-decoration: none;
-            color: #50575e;
-            font-weight: 500;
-            font-size: 14px;
-            border: 1px solid transparent;
-            border-bottom: none;
-            background: transparent;
-            margin-bottom: -2px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .smp-tab-btn:hover { 
-            color: #2271b1; 
-            background: #fff; 
-        }
-        .smp-tab-btn.active {
-            color: #1d2327;
-            background: #fff;
-            border-color: #c3c4c7;
-            border-bottom-color: #fff;
-            border-radius: 4px 4px 0 0;
-        }
-        .smp-tab-content {
-            display: none;
-            background: #fff;
-            border: 1px solid #c3c4c7;
-            border-top: none;
-            padding: 20px;
-        }
-        .smp-tab-content.active { 
-            display: block; 
-        }
-        
-        /* ============================================
            Toggle Switch
            ============================================ */
         .smp-toggle-switch {

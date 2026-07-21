@@ -17,7 +17,7 @@ add_filter( 'hello_elementor_page_title', __NAMESPACE__ . '\\smp_vp_profile_page
 add_shortcode( 'verified_profile_page', __NAMESPACE__ . '\\smp_vp_verified_profile_page_shortcode' );
 
 function smp_vp_profile_page_dashboard_tab( array $tabs ): array {
-    $tabs['profile-pages'] = 'Profile Pages';
+    $tabs['profile-pages'] = 'Profile Page Templates';
     return $tabs;
 }
 
