@@ -2,6 +2,8 @@
 
 namespace smp_verified_profiles;
 
+use Hexa\PluginCore\WpAdminComponents\CoreUi;
+
 defined("ABSPATH") || exit;
 
 const SMP_VP_DISPLAY_OPTION = "smp_vp_display_card_settings";
@@ -679,19 +681,14 @@ function smp_vp_display_render_settings(): void {
         .smp-vp-display-admin .hpc-color-head h3{font-size:12px;margin:0;color:#1d2327}
         .smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:span 2}.smp-vp-display-admin .hpc-detailed-color-picker{height:100%}@media(max-width:980px){.smp-vp-display-admin .smp-vp-settings-grid .wide{grid-column:auto}}
         .smp-vp-loop-section{border-top:1px solid #eceff3;padding:20px}.smp-vp-loop-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}.smp-vp-loop-section-head h3{margin:0 0 4px;font-size:17px}.smp-vp-loop-section-head p{margin:0;color:#646970}.smp-vp-feature-instructions{background:#f8fbff;border:1px solid #cfe0ff;border-left:4px solid #3157d5;border-radius:8px;margin:0 0 16px;padding:13px 15px}.smp-vp-feature-instructions h3{font-size:15px;margin:0 0 6px}.smp-vp-feature-instructions p{color:#3f4d63;margin:0 0 10px}.smp-vp-feature-instructions code{background:#eef0f3;border-radius:5px;display:block;white-space:pre-wrap;padding:10px}.smp-vp-loop-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) 180px 220px auto;gap:10px;align-items:end;background:#f6f7f7;border:1px solid #dcdcde;border-radius:8px;padding:14px;margin-bottom:16px}.smp-vp-loop-toolbar select,.smp-vp-loop-card select{width:100%;min-height:38px}.smp-vp-loop-list{display:grid;gap:14px}.smp-vp-loop-card{border:1px solid #dcdcde;border-radius:8px;background:#fff;overflow:hidden}.smp-vp-loop-card-head{display:flex;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid #eef0f3}.smp-vp-loop-card-head h4{margin:0;font-size:15px}.smp-vp-loop-card-head p{margin:4px 0 0;color:#646970}.smp-vp-loop-chip{display:inline-flex;border-radius:999px;background:#f0f6fc;color:#0a4b78;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:5px 8px;white-space:nowrap}.smp-vp-loop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px}.smp-vp-loop-grid .wide{grid-column:span 2}.smp-vp-loop-output-count{min-height:38px;border:1px solid #dcdcde;background:#f6f7f7;border-radius:4px;padding:8px 10px;color:#3c434a}.smp-vp-loop-output-count strong{font-size:15px;color:#1d2327}.smp-vp-loop-preview{grid-column:1/-1;border:1px solid #dcdcde;background:#fbfaf9;border-radius:8px;padding:14px;margin-top:2px;overflow:auto}.smp-vp-loop-preview .smp-vp-display{max-width:none;margin:0;padding:0}.smp-vp-loop-preview .smp-vp-display .vp-a,.smp-vp-loop-preview .smp-vp-display .vp-b,.smp-vp-loop-preview .smp-vp-display .vp-c,.smp-vp-loop-preview .smp-vp-display .vp-d,.smp-vp-loop-preview .smp-vp-display .vp-e{grid-template-columns:repeat(var(--vp-items-per-row,3),minmax(0,1fr));padding:10px 0}.smp-vp-loop-preview .smp-vp-display .vp-card{min-height:0}.smp-vp-loop-preview-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#646970;margin-bottom:10px}.smp-vp-loop-card-response{margin:0 16px 14px;padding:11px 13px;border-radius:7px;font-weight:800;border:1px solid transparent}.smp-vp-loop-card-response.is-success{background:#ecfdf3;border-color:#9ad6ad;color:#116329}.smp-vp-loop-card-response.is-error{background:#fff1f0;border-color:#f0aaaa;color:#9f1d1d}.smp-vp-loop-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;background:#f6f7f7;border-top:1px solid #eef0f3}.smp-vp-loop-actions .smp-vp-loop-shortcode{max-width:360px;font-family:Menlo,Consolas,monospace;background:#fff}.smp-vp-loop-copy-status{color:#646970}@media(max-width:980px){.smp-vp-loop-toolbar,.smp-vp-loop-grid{grid-template-columns:1fr}.smp-vp-loop-grid .wide{grid-column:auto}}
+        .smp-vp-display-admin .smp-vp-core-panel>.hpc-section-body{padding:0}
+        .smp-vp-display-admin .smp-vp-panel-intro{color:#646970;margin:0;padding:18px 20px 0}
+        .smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{justify-content:flex-end}
+        @media(max-width:782px){.smp-vp-display-admin .smp-vp-core-panel>summary{align-items:flex-start;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-core-panel>summary .hpc-section-summary-side{flex-basis:100%;margin-left:0}.smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{flex:1;justify-content:flex-start}}
     </style>
     <div class="smp-vp-display-admin" id="smp-vp-display-settings" data-nonce="<?php echo esc_attr($nonce); ?>">
-        <div class="smp-vp-panel">
-            <div class="smp-vp-panel-head">
-                <div>
-                    <h2>Verified Profiles</h2>
-                    <p>Select the frontend homepage design and the post.php mentioned-entities design directly from the template previews.</p>
-                </div>
-                <div class="smp-vp-current">
-                    <span class="smp-vp-pill">Homepage: <strong id="smp-vp-current-homepage"><?php echo esc_html($labels[$settings["homepage_template"]] ?? $settings["homepage_template"]); ?></strong></span>
-                    <span class="smp-vp-pill">Post entities: <strong id="smp-vp-current-post"><?php echo esc_html($labels[$settings["post_template"]] ?? $settings["post_template"]); ?></strong></span>
-                </div>
-            </div>
+        <?php ob_start(); ?>
+            <p class="smp-vp-panel-intro">Select the frontend homepage design and the post.php mentioned-entities design directly from the template previews.</p>
             <div class="screen-reader-selects">
                 <input id="smp-vp-homepage-template" type="hidden" value="<?php echo esc_attr($settings["homepage_template"]); ?>">
                 <input id="smp-vp-post-template" type="hidden" value="<?php echo esc_attr($settings["post_template"]); ?>">
@@ -765,14 +762,23 @@ function smp_vp_display_render_settings(): void {
                     <?php echo smp_vp_display_render_loop_items_admin($settings); ?>
                 </div>
             </div>
-        </div>
-        <div class="smp-vp-panel">
-            <div class="smp-vp-panel-head">
-                <div>
-                    <h2>Template Library</h2>
-                    <p>Each treatment shows one loop item. Use the buttons on the card to assign it.</p>
-                </div>
-            </div>
+        <?php
+        $settings_panel_body = (string) ob_get_clean();
+        $settings_panel_meta = '<span class="smp-vp-current">'
+            . '<span class="smp-vp-pill">Homepage: <strong id="smp-vp-current-homepage">' . esc_html($labels[$settings["homepage_template"]] ?? $settings["homepage_template"]) . '</strong></span>'
+            . '<span class="smp-vp-pill">Post entities: <strong id="smp-vp-current-post">' . esc_html($labels[$settings["post_template"]] ?? $settings["post_template"]) . '</strong></span>'
+            . '</span>';
+        echo CoreUi::collapsible([
+            "title" => "Verified Profiles",
+            "body_html" => $settings_panel_body,
+            "meta_html" => $settings_panel_meta,
+            "open" => false,
+            "query_key" => "verified-profiles",
+            "class" => "smp-vp-panel smp-vp-core-panel",
+        ]);
+        ob_start();
+        ?>
+            <p class="smp-vp-panel-intro">Each treatment shows one loop item. Use the buttons on the card to assign it.</p>
             <div class="smp-vp-template-grid">
                 <?php foreach ($templates as $key => $template) : ?>
                     <div class="smp-vp-template-card" data-template-key="<?php echo esc_attr($key); ?>">
@@ -796,7 +802,16 @@ function smp_vp_display_render_settings(): void {
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
+        <?php
+        $template_panel_body = (string) ob_get_clean();
+        echo CoreUi::collapsible([
+            "title" => "Template Library",
+            "body_html" => $template_panel_body,
+            "open" => false,
+            "query_key" => "template-library",
+            "class" => "smp-vp-panel smp-vp-core-panel",
+        ]);
+        ?>
     </div>
     <script>
         jQuery(function($){
