@@ -20,7 +20,7 @@ $checks = [
     'Groups technical routes under Developer.' => str_contains( $dashboard, "[ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ]" ),
     'Removes retired host tab CSS.' => ! str_contains( $components, '.smp-tab-btn' ),
     'Removes dead legacy tab links.' => ! str_contains( $overview, "jQuery('.smp-tab-btn" ),
-    'Vendors the current Hexa WP Core package.' => '0.19.65' === $core,
+    'Vendors the current Hexa WP Core package.' => '0.19.66' === $core,
 ];
 
 $failed = false;
