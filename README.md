@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `6.5.54`
+- Version: `7.0.0`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -78,7 +78,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 0.19.78 |
+| Hexa WP Core bundle | 1.0.0 |
 
 ACF Pro is required for the profile field structures. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
@@ -97,6 +97,12 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 7.0.0
+
+- Established the stable major baseline for profile registration, claiming, management, display, spawning, shortcodes, and schema.
+- Updated shared CPT, ACF, entity, schema, updater, AJAX, rendering, and admin UI infrastructure to Hexa WP Core 1.0.0.
+- Preserved existing Profile keys, records, roles, page assignments, program settings, schema identities, and optional HWS entity behavior.
 
 ### 6.5.54
 
