@@ -18,7 +18,8 @@ $files = [
 ];
 
 $checks = [
-    'Boots the Core content/ACF adapter.' => str_contains( $files['main'], 'VerifiedProfileStructures::boot()' ),
+    'Boots the Core content/ACF adapter after Core package resolution.' => str_contains( $files['main'], "add_action( 'plugins_loaded', [ \\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures::class, 'boot' ], 1 )" )
+        && ! str_contains( $files['main'], '\\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures::boot();' ),
     'Keeps the Profile post-type key immutable.' => str_contains( $files['structures'], "'key'          => 'profile'" ),
     'Exposes an editable public rewrite slug.' => str_contains( $files['structures'], "'rewrite_slug' => 'profile'" ),
     'Preserves legacy snippet state during migration.' => str_contains( $files['structures'], 'migrate_legacy_acf_settings' )

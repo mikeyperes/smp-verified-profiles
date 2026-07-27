@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.50
+ * Version: 6.5.51
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -42,7 +42,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.50";
+    public static $plugin_version = "6.5.51";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -447,7 +447,7 @@ include_once __DIR__ . '/hexa-core-integration.php';
 // field group. Legacy files remain definition sources, not runtime registrars.
 require_once __DIR__ . '/src/ContentTypes/VerifiedProfileStructures.php';
 require_once __DIR__ . '/src/EntitySources/CanonicalProfileSource.php';
-\smp_verified_profiles\ContentTypes\VerifiedProfileStructures::boot();
+add_action( 'plugins_loaded', [ \smp_verified_profiles\ContentTypes\VerifiedProfileStructures::class, 'boot' ], 1 );
 
 if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
     add_action( 'plugins_loaded', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 20 );
