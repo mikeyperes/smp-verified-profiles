@@ -89,19 +89,7 @@ function modify_profile_post_type_labels($args, $post_type) {
  * Create 'Verified Profile Manager' role with custom capabilities.
  */
 function create_verified_profile_manager_role() {
-    if (!get_role('verified_profile_manager')) {
-        add_role('verified_profile_manager', 'Verified Profile Manager', array(
-            'read' => true, // Access admin dashboard
-            'edit_posts' => true, // Allow editing posts
-            'create_posts' => true, // Allow creating new posts
-            'upload_files' => true, // Allow uploading files
-            'edit_files' => true, // Allow editing media library files
-
-            // Capabilities for 'profile' CPT
-            'edit_profile' => true,
-            'read_private_profiles' => true,
-        ));
-    }
+    UserRoles\VerifiedProfileManagerRole::ensure();
 
     if (!get_role('contributor')) {
         add_role('contributor', 'Contributor', array(
@@ -248,28 +236,7 @@ function restrict_verified_profile_manager_to_own_posts($query) {
  * Add custom capabilities to 'Verified Profile Manager' role for managing profiles.
  */
 function add_profile_capabilities_to_verified_profile_manager() {
-    $role = get_role('verified_profile_manager');
-    if ($role) {
-        // Grant capabilities for the 'profile' custom post type (CPT)
-        $role->add_cap('edit_profile');
-        $role->add_cap('edit_profiles');
-        $role->add_cap('edit_published_profiles');
-        $role->add_cap('publish_profiles');
-        $role->add_cap('read_private_profiles');
-        $role->add_cap('delete_profile');
-        $role->add_cap('delete_others_profiles');
-        $role->add_cap('delete_private_profiles');
-        $role->add_cap('delete_published_profiles');
-
-        // Grant general WordPress capabilities for posts and uploads
-        $role->add_cap('edit_posts');
-        $role->add_cap('edit_others_posts');
-        $role->add_cap('delete_posts');
-        $role->add_cap('delete_others_posts');
-        $role->add_cap('read_private_posts');
-        $role->add_cap('edit_published_posts');
-        $role->add_cap('upload_files');
-    }
+    UserRoles\VerifiedProfileManagerRole::ensure();
 
     // Modify contributor capabilities as needed
     if (is_contributor(true)) {
