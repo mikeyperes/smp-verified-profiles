@@ -32,7 +32,9 @@ $checks = [
         && str_contains( $files['panel'], 'AcfFieldGroupRenderer' ),
     'Moves legacy Profile settings into the plugin dashboard.' => str_contains( $files['dashboard'], "'profile-settings' => 'Profile Settings'" )
         && str_contains( $files['panel'], 'AcfSettingsPanel' )
-        && str_contains( $files['main'], "'verified-profiles-settings' === smp_vp_request_value( 'page' )" ),
+        && str_contains( $files['main'], "'verified-profiles-settings' === smp_vp_request_value( 'page' )" )
+        && str_contains( $files['main'], "add_submenu_page(" )
+        && str_contains( $files['main'], "smp_vp_redirect_legacy_settings_page" ),
     'Separates the immutable key from the public URL slug.' => str_contains( $files['settings'], "'slug'         => 'profile'" )
         && str_contains( $files['settings'], "'rewrite_slug'" ),
     'Routes schema normalization and JSON through Core.' => str_contains( $files['schema'], 'SchemaDocumentRenderer' )

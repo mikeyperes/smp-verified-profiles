@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.53
+ * Version: 6.5.54
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -42,7 +42,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.53";
+    public static $plugin_version = "6.5.54";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -255,6 +255,15 @@ function smp_vp_render_settings_page(): void {
     }
 }
 
+function smp_vp_legacy_settings_url(): string {
+    return admin_url( 'options-general.php?page=' . Config::$settings_page_slug . '&tab=profile-settings' );
+}
+
+function smp_vp_redirect_legacy_settings_page(): void {
+    wp_safe_redirect( smp_vp_legacy_settings_url() );
+    exit;
+}
+
 function smp_vp_register_settings_menu(): void {
     add_options_page(
         Config::$settings_page_name,
@@ -262,6 +271,16 @@ function smp_vp_register_settings_menu(): void {
         Config::$settings_page_capability,
         Config::$settings_page_slug,
         __NAMESPACE__ . '\\smp_vp_render_settings_page'
+    );
+
+    // Keep the retired ACF route resolvable without restoring a visible menu item.
+    add_submenu_page(
+        null,
+        Config::$settings_page_name,
+        Config::$settings_page_name,
+        Config::$settings_page_capability,
+        'verified-profiles-settings',
+        __NAMESPACE__ . '\\smp_vp_redirect_legacy_settings_page'
     );
 }
 add_action( 'admin_menu', __NAMESPACE__ . '\\smp_vp_register_settings_menu' );
@@ -462,8 +481,7 @@ if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
 if ( is_admin() ) {
     add_action( 'admin_init', function() {
         if ( 'verified-profiles-settings' === smp_vp_request_value( 'page' ) && current_user_can( Config::$settings_page_capability ) ) {
-            wp_safe_redirect( admin_url( 'options-general.php?page=' . Config::$settings_page_slug . '&tab=profile-settings' ) );
-            exit;
+            smp_vp_redirect_legacy_settings_page();
         }
 
         // Remove shutdown output buffer flush on our settings page

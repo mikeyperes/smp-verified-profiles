@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `6.5.53`
+- Version: `6.5.54`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 6.5.54
+
+- Registered the retired standalone settings slug as a hidden compatibility route so bookmarked URLs redirect to the canonical Profile Settings tab without restoring a legacy menu item.
 
 ### 6.5.53
 
