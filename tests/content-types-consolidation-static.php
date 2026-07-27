@@ -39,6 +39,10 @@ $checks = [
         && str_contains( $files['schema'], 'build_verified_profile_schema' ),
     'Routes frontend schema injection through Core.' => str_contains( $files['injector'], 'SchemaInjector' )
         && ! str_contains( $files['injector'], 'echo \'<script type="application/ld+json"\'' ),
+    'Rebuilds missing legacy profile schema without changing stored content.' => str_contains( $files['main'], "include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';" )
+        && str_contains( $files['schema'], 'resolve_verified_profile_schema_type' )
+        && str_contains( $files['schema'], "return 'person';" )
+        && str_contains( $files['injector'], 'build_verified_profile_schema( $post->ID )' ),
     'Consumes the optional HWS canonical entity without requiring one.' => str_contains( $files['source'], 'CanonicalEntityResolver::resolve()' )
         && str_contains( $files['source'], 'return null;' ),
 ];

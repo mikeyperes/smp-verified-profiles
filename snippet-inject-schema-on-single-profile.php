@@ -36,14 +36,20 @@ function smp_vp_current_profile_schema(): array {
     }
 
     $schema_json = function_exists( 'get_field' ) ? get_field( 'schema_markup', $post->ID, false ) : '';
-    if ( is_array( $schema_json ) ) {
+    if ( is_array( $schema_json ) && ! empty( $schema_json ) ) {
         return $schema_json;
     }
 
-    if ( ! is_string( $schema_json ) || '' === trim( $schema_json ) ) {
-        return [];
+    if ( is_string( $schema_json ) && '' !== trim( $schema_json ) ) {
+        $schema = json_decode( $schema_json, true );
+        if ( is_array( $schema ) && ! empty( $schema ) ) {
+            return $schema;
+        }
     }
 
-    $schema = json_decode( $schema_json, true );
-    return is_array( $schema ) ? $schema : [];
+    if ( function_exists( __NAMESPACE__ . '\\build_verified_profile_schema' ) ) {
+        return build_verified_profile_schema( $post->ID );
+    }
+
+    return [];
 }

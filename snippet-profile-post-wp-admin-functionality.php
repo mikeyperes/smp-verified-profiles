@@ -34,6 +34,50 @@ function check_plugin_acf()
 {return true;}
 
 /**
+ * Resolve the schema entity type without requiring legacy category assignments.
+ * Explicit ACF/category values win; older untyped profiles default to Person
+ * unless organization-only fields contain data.
+ */
+function resolve_verified_profile_schema_type( int $post_id, array $category_slugs = [] ): string {
+    $profile_type = function_exists( 'get_field' )
+        ? sanitize_key( (string) get_field( 'profile_type', $post_id ) )
+        : '';
+
+    if ( 'company' === $profile_type ) {
+        $profile_type = 'organization';
+    }
+
+    if ( in_array( $profile_type, [ 'person', 'organization' ], true ) ) {
+        return $profile_type;
+    }
+
+    foreach ( [ 'person', 'organization' ] as $category_type ) {
+        if ( in_array( $category_type, $category_slugs, true ) ) {
+            return $category_type;
+        }
+    }
+
+    if ( function_exists( 'get_field' ) ) {
+        foreach ( [
+            'organization_name',
+            'legal_name',
+            'company_details',
+            'founding_date',
+            'number_of_employees',
+            'founder_profile',
+            'naics',
+        ] as $organization_field ) {
+            $value = get_field( $organization_field, $post_id );
+            if ( null !== $value && '' !== $value && [] !== $value && false !== $value ) {
+                return 'organization';
+            }
+        }
+    }
+
+    return 'person';
+}
+
+/**
  * Save ACF post ID into the 'post_id' field when the post is saved.
  * 
  * @param int $post_id The ID of the post being saved.
@@ -79,11 +123,8 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
 	        $category_slugs   = array_map(function($category) {
 	            return $category->slug;
 	        }, $post_categories);
-	        $profile_type = function_exists('get_field') ? sanitize_key((string) get_field('profile_type', $post_id)) : '';
-	        if ('company' === $profile_type) {
-	            $profile_type = 'organization';
-	        }
-	        if (in_array($profile_type, ['person', 'organization'], true) && !in_array($profile_type, $category_slugs, true)) {
+	        $profile_type = resolve_verified_profile_schema_type( (int) $post_id, $category_slugs );
+	        if ( ! in_array( $profile_type, $category_slugs, true ) ) {
 	            $category_slugs[] = $profile_type;
 	        }
 

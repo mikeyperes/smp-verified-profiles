@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `6.5.52`
+- Version: `6.5.53`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,11 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 6.5.53
+
+- Restored schema output for legacy profiles that have no Person/Organization category or explicit profile type.
+- Rebuilds an empty stored schema at render time without mutating profile records.
 
 ### 6.5.52
 

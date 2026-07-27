@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.52
+ * Version: 6.5.53
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -42,7 +42,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.52";
+    public static $plugin_version = "6.5.53";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -510,6 +510,8 @@ add_action( 'acf/init', function() {
 // MAIN INIT HOOK - Load features conditionally
 // ============================================================================
 add_action( 'init', function() {
+    // The schema builder serves both admin saves and frontend fallback output.
+    include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
     
     // -------------------------------------------------------------------------
     // ADMIN-ONLY FEATURES (Performance: skip on frontend)
@@ -528,7 +530,6 @@ add_action( 'init', function() {
 	            include_once __DIR__ . '/verified-profile-display-templates.php';
 	            include_once __DIR__ . '/verified-profile-page-templates.php';
 	            include_once __DIR__ . '/verified-profile-spawner.php';
-	            include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
 	            include_once __DIR__ . '/snippet-wp-admin-user-page-optional-functionality.php';
 	            include_once __DIR__ . '/snippet-disable-password-reset.php';
 	            include_once __DIR__ . '/snippet-wp-admin-add-featured-image-to-events.php';
