@@ -2,74 +2,10 @@
 
 
 
-function register_profile_custom_post_type(){ 
-
-
-      // pull in singular, plural, slug (will be 'wiki' if that's what you saved)
-      $opts     = get_verified_profile_settings();
-      $singular = sanitize_text_field( $opts['singular'] );
-      $plural   = sanitize_text_field( $opts['plural'] );
-      $slug     = sanitize_title(      $opts['slug'] );
-  
-
-// sanitize and apply defaults
-$singular = ! empty( $opts['singular'] ) ? sanitize_text_field( $opts['singular'] ) : 'Verified Profile';
-$plural   = ! empty( $opts['plural']   ) ? sanitize_text_field( $opts['plural']   ) : 'Verified Profiles';
-$slug     = ! empty( $opts['slug']     ) ? sanitize_title( $opts['slug']     ) : 'profile';
-
-$labels = [
-    'name'                     => $plural ,
-    'singular_name'            => $singular,
-    'menu_name'                => $plural ,
-    'all_items'                => 'All ' . $plural,
-    'edit_item'                => 'Edit ' . $singular,
-    'view_item'                => 'View ' . $singular,
-    'view_items'               => 'View ' . $plural,
-    'add_new_item'             => 'Add New ' . $singular,
-    'add_new'                  => 'Add New ' . $singular,
-    'new_item'                 => 'New ' . $singular,
-    'parent_item_colon'        => 'Parent ' . $singular . ':',
-    'search_items'             => 'Search ' . $plural,
-    'not_found'                => 'No ' . strtolower( $plural ) . ' found',
-    'not_found_in_trash'       => 'No ' . strtolower( $plural ) . ' found in Trash',
-    'archives'                 => $singular . ' Archives',
-    'attributes'               => $singular . ' Attributes',
-    'insert_into_item'         => 'Insert into ' . strtolower( $singular ),
-    'uploaded_to_this_item'    => 'Uploaded to this ' . strtolower( $singular ),
-    'filter_items_list'        => 'Filter ' . strtolower( $plural ) . ' list',
-    'filter_by_date'           => 'Filter ' . $plural . ' by date',
-    'items_list_navigation'    => $plural . ' list navigation',
-    'items_list'               => $plural . ' list',
-    'item_published'           => $singular . ' published.',
-    'item_published_privately' => $singular . ' published privately.',
-    'item_reverted_to_draft'   => $singular . ' reverted to draft.',
-    'item_scheduled'           => $singular . ' scheduled.',
-    'item_updated'             => $singular . ' updated.',
-    'item_link'                => $singular . ' Link',
-    'item_link_description'    => 'A link to a ' . strtolower( $singular ) . '.',
-];
-
-register_post_type( $slug, [
-    'labels'             => $labels,
-    'public'             => true,
-    'show_in_rest'       => true,
-    'supports'           => [
-        'title',
-        'author',
-        'trackbacks',
-        'editor',
-        'excerpt',
-        'revisions',
-        'page-attributes',
-        'thumbnail',
-        'custom-fields',
-        'post-formats',
-    ],
-    'taxonomies'         => [ 'category', 'post_tag' ],
-    'delete_with_user'   => false,
-] );
-
-
+function register_profile_custom_post_type(): void {
+    // Compatibility callback retained for the legacy snippet option. The
+    // immutable `profile` key, editable labels, and rewrite slug are now
+    // registered exclusively by VerifiedProfileStructures through Hexa Core.
 }
 
 
@@ -114,7 +50,7 @@ function register_profile_general_acf_fields() {
             return;
         }
     
-        acf_add_local_field_group( array(
+        smp_vp_register_local_acf_group( array(
         'key' => 'group_66b7bdf713e77',
         'title' => 'Post - Verified Profile - Admin',
         'fields' => array(
@@ -441,7 +377,7 @@ function register_verified_profile_pages_custom_fields() {
     // ----------------------------------------
 
     // Register the field group on the Verified Profiles options page
-    acf_add_local_field_group([
+    smp_vp_register_local_acf_group([
         'key'      => 'group_verified_profiles_settings',
         'title'    => 'Verified Profiles Settings',
         'fields'   => $acf_fields,

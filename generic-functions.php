@@ -77,39 +77,59 @@ function activate_snippets( $type = '' ) {
  *
  * @return array{singular:string,plural:string,slug:string}
  */
-function get_verified_profile_settings(): array {
-  
-    static $cache = null;
-    if ( $cache !== null ) {
-        return $cache;
-    }
-
-    // default fallbacks
+function get_verified_profile_legacy_settings(): array {
     $defaults = [
-        'singular' => 'Verified Profile',
-        'plural'   => 'Verified Profiles',
-        'slug'     => 'profile',
+        'singular'     => 'Verified Profile',
+        'plural'       => 'Verified Profiles',
+        'rewrite_slug' => 'profile',
     ];
 
-    // if ACF isn't active, return defaults
-    if ( ! function_exists('get_field') ) {
-        return $cache = $defaults;
+    if ( ! function_exists( 'get_field' ) ) {
+        return $defaults;
     }
 
-    // pull the general_settings group from ACF options
-    $settings     = get_field('general_settings', 'option');
-    $settings     = is_array($settings) ? $settings : [];
-    $raw_plural   = $settings['cpt_plural_name']   ?? '';
-    $raw_singular = $settings['cpt_singular_name'] ?? '';
-    $raw_slug     = $settings['cpt_slug']          ?? '';
+    $settings = get_field( 'general_settings', 'option' );
+    $settings = is_array( $settings ) ? $settings : [];
 
-    $cache = [
-        'singular' => sanitize_text_field( $raw_singular ?: $defaults['singular'] ),
-        'plural'   => sanitize_text_field( $raw_plural   ?: $defaults['plural']   ),
-        'slug'     => sanitize_title(    $raw_slug      ?: $defaults['slug']     ),
+    return [
+        'singular'     => sanitize_text_field( (string) ( $settings['cpt_singular_name'] ?? '' ) ) ?: $defaults['singular'],
+        'plural'       => sanitize_text_field( (string) ( $settings['cpt_plural_name'] ?? '' ) ) ?: $defaults['plural'],
+        'rewrite_slug' => sanitize_title( (string) ( $settings['cpt_slug'] ?? '' ) ) ?: $defaults['rewrite_slug'],
     ];
+}
 
-    return $cache;
+/**
+ * Return the immutable post-type key plus editable public labels and URL slug.
+ *
+ * Existing callers historically treated `slug` as the post-type key, so it
+ * remains `profile`. The editable URL is exposed separately as rewrite_slug.
+ *
+ * @return array{singular:string,plural:string,slug:string,rewrite_slug:string}
+ */
+function get_verified_profile_settings(): array {
+    $legacy = get_verified_profile_legacy_settings();
+    $saved  = get_option( 'smp_vp_content_type_settings', [] );
+    $saved  = is_array( $saved ) && is_array( $saved['profile'] ?? null ) ? $saved['profile'] : [];
+
+    return [
+        'singular'     => sanitize_text_field( (string) ( $saved['singular'] ?? $legacy['singular'] ) ) ?: 'Verified Profile',
+        'plural'       => sanitize_text_field( (string) ( $saved['plural'] ?? $legacy['plural'] ) ) ?: 'Verified Profiles',
+        'slug'         => 'profile',
+        'rewrite_slug' => sanitize_title( (string) ( $saved['rewrite_slug'] ?? $legacy['rewrite_slug'] ) ) ?: 'profile',
+    ];
+}
+
+/**
+ * Adapter used by legacy field-definition files. Hexa WP Core owns the actual
+ * registration; these files remain the source of their established ACF arrays.
+ *
+ * @param array<string,mixed> $group
+ */
+function smp_vp_register_local_acf_group( array $group ): void {
+    $adapter = '\\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures';
+    if ( class_exists( $adapter ) ) {
+        $adapter::capture_acf_group( $group );
+    }
 }
 
 

@@ -251,6 +251,10 @@ function smp_vp_ajax_toggle_snippet( AjaxRequest $request ): array {
         throw AjaxFailure::bad_request( 'Snippet could not be updated.' );
     }
 
+    if ( class_exists( '\\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures' ) ) {
+        \smp_verified_profiles\ContentTypes\VerifiedProfileStructures::sync_legacy_snippet( $snippet_id, $enable );
+    }
+
     return [
         'snippet_id' => $snippet_id,
         'enabled'    => $enable,

@@ -17,6 +17,7 @@
 namespace smp_verified_profiles;
 
 use Hexa\PluginCore\CorePackageUpdates\CorePackageStatus;
+use Hexa\PluginCore\FieldStructures\AcfSettingsPanel;
 use Hexa\PluginCore\PluginUpdates\PluginUpdateStatus;
 use Hexa\PluginCore\WpAdminTabs\HostTabsRenderer;
 use Hexa\PluginCore\WpAdminTabs\TabDefinition;
@@ -54,6 +55,8 @@ function smp_vp_dashboard_tabs() {
         'overview'      => 'Dashboard',
         'system-checks' => 'System Checks',
         'plugins'       => 'Plugin Checks',
+        'content-types' => 'Custom Post Types',
+        'profile-settings' => 'Profile Settings',
         'snippets'      => 'Snippets',
         'shortcodes'    => 'Shortcodes',
         'emails'        => 'Email Settings',
@@ -111,7 +114,7 @@ function smp_vp_resolve_dashboard_tab( $tab_id, array $tabs ): string {
 function smp_vp_dashboard_tab_groups( array $tabs ): array {
     $groups = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profiles', 'tabs' => [ 'features', 'profile-pages', 'pages', 'spawning-api' ] ],
+        [ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'profile-pages', 'pages', 'spawning-api' ] ],
         [ 'label' => 'Configuration', 'tabs' => [ 'emails' ] ],
         [ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ],
         [ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ],
@@ -215,6 +218,18 @@ function smp_vp_render_dashboard_tab( $tab_id ) {
         case 'plugins':
             if ( function_exists( __NAMESPACE__ . '\\display_settings_check_plugins' ) ) {
                 display_settings_check_plugins();
+            }
+            break;
+
+        case 'content-types':
+            if ( function_exists( __NAMESPACE__ . '\\smp_vp_render_content_types_tab' ) ) {
+                smp_vp_render_content_types_tab();
+            }
+            break;
+
+        case 'profile-settings':
+            if ( function_exists( __NAMESPACE__ . '\\smp_vp_render_profile_settings_tab' ) ) {
+                smp_vp_render_profile_settings_tab();
             }
             break;
 
@@ -421,22 +436,23 @@ function display_wp_admin_settings_page() {
 }
 
 function display_settings_emails() {
-    echo '<div class="smp-card"><h2>' . esc_html__( 'Email Options', 'smp_verified_profiles' ) . '</h2>';
-
-    if ( ! function_exists( 'acf_form' ) ) {
-        echo '<p>' . esc_html__( 'ACF Pro is required to edit email options.', 'smp_verified_profiles' ) . '</p></div>';
+    if ( ! class_exists( AcfSettingsPanel::class ) ) {
+        echo '<div class="notice notice-error"><p>' . esc_html__( 'The Hexa WP Core settings component is unavailable.', 'smp_verified_profiles' ) . '</p></div>';
         return;
     }
 
-    acf_form(
+    echo ( new AcfSettingsPanel(
         [
+            'page_slug'       => Config::$settings_page_slug,
+            'tab'             => 'emails',
             'post_id'         => 'options',
             'field_groups'    => [ 'group_658739a0ab536' ],
-            'form'            => true,
+            'title'           => __( 'Email Options', 'smp_verified_profiles' ),
+            'description'     => __( 'Manage the existing Verified Profiles workflow and notification email templates.', 'smp_verified_profiles' ),
             'submit_value'    => __( 'Save Email Options', 'smp_verified_profiles' ),
             'updated_message' => __( 'Email options saved.', 'smp_verified_profiles' ),
+            'persist_key'     => 'smp-vp-email-options',
+            'open'            => true,
         ]
-    );
-
-    echo '</div>';
+    ) )->render();
 }

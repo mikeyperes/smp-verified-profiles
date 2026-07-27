@@ -7,7 +7,7 @@ function enable_acf_theme_options() {
     }
 
     // Main ACF group on the "Verified Profiles Settings" options page
-    acf_add_local_field_group(array(
+    smp_vp_register_local_acf_group(array(
         'key'                   => 'group_6850930366d8f',
         'title'                 => 'Verified Profiles',
         'fields'                => array(
@@ -322,7 +322,7 @@ function enable_acf_theme_options() {
     ));
 
     // Additional Shortcodes group on same options page
-    acf_add_local_field_group(array(
+    smp_vp_register_local_acf_group(array(
         'key'                   => 'group_additional_shortcodes',
         'title'                 => 'Additional Shortcodes',
         'fields'                => array(
@@ -374,19 +374,13 @@ function enable_acf_theme_options() {
         'active'                => true,
     ));
 
-    // Register the options page
-    acf_add_options_page(array(
-        'page_title'    => 'Verified Profiles Settings',
-        'menu_slug'     => 'verified-profiles-settings',
-        'post_id'       => 'option',
-        'redirect'      => false,
-    ));
 }
 
 // Inject view/edit buttons on admin footer
 add_action('acf/input/admin_footer', function() {
     $screen = get_current_screen();
-    if ($screen->id !== 'toplevel_page_verified-profiles-settings') {
+    $tab = isset( $_GET['tab'] ) ? sanitize_key( (string) wp_unslash( $_GET['tab'] ) ) : '';
+    if ( ! $screen || 'settings_page_' . Config::$settings_page_slug !== $screen->id || 'profile-settings' !== $tab ) {
         return;
     }
     ?>

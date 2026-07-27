@@ -26,7 +26,7 @@ function register_verified_profile_custom_fields()
     $verified_profile_settings_slug = $verified_profile_settings["slug"]; 
 
 
-	acf_add_local_field_group( array(
+	smp_vp_register_local_acf_group( array(
 	'key' => 'group_67e39e4171b16',
 	'title' => 'Verified Profile',
 		'fields' => array(

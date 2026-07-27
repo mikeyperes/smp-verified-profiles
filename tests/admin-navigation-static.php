@@ -15,12 +15,12 @@ $checks = [
     'Supplies sidebar identity.' => str_contains( $dashboard, "'sidebar_identity' => smp_vp_sidebar_identity()" ),
     'Keeps the legacy Display Cards URL as an alias.' => str_contains( $dashboard, "'display-cards' => 'features'" ),
     'Does not render Display Cards as a duplicate switch route.' => ! str_contains( $dashboard, "case 'display-cards':" ),
-    'Groups profile display and generation routes together.' => str_contains( $dashboard, "[ 'label' => 'Profiles', 'tabs' => [ 'features', 'profile-pages', 'pages', 'spawning-api' ] ]" ),
+    'Groups profile configuration, display, and generation routes together.' => str_contains( $dashboard, "[ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'profile-pages', 'pages', 'spawning-api' ] ]" ),
     'Groups maintenance routes under System.' => str_contains( $dashboard, "[ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ]" ),
     'Groups technical routes under Developer.' => str_contains( $dashboard, "[ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ]" ),
     'Removes retired host tab CSS.' => ! str_contains( $components, '.smp-tab-btn' ),
     'Removes dead legacy tab links.' => ! str_contains( $overview, "jQuery('.smp-tab-btn" ),
-    'Vendors the current Hexa WP Core package.' => '0.19.66' === $core,
+    'Vendors the current Hexa WP Core package.' => '0.19.78' === $core,
 ];
 
 $failed = false;

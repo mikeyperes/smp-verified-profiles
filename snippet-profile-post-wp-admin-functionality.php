@@ -58,10 +58,10 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
  */
 
  
- if (!function_exists(__NAMESPACE__ . '\\generate_schema_markup')) {
-    function generate_schema_markup($post_id = -1) {
-        if (!check_plugin_acf()) return;
-        if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return;
+ if (!function_exists(__NAMESPACE__ . '\\build_verified_profile_schema')) {
+    function build_verified_profile_schema($post_id = -1): array {
+        if (!check_plugin_acf()) return [];
+        if (wp_is_post_autosave($post_id) || wp_is_post_revision($post_id)) return [];
 
         // only run on 'profile' or 'entity' post types
         $post_type = get_post_type($post_id);
@@ -72,7 +72,7 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
 
 
         if (! in_array($post_type, [$verified_profile_settings["slug"], 'entity'], true)) {
-            return;
+            return [];
         }
 
 	        $post_categories = get_the_category($post_id);
@@ -441,14 +441,26 @@ $bio = wp_strip_all_tags( $raw_bio );
         $schema = array_filter($schema, function($value) {
             return ($value !== null && $value !== []);
         });
-        $schema_json = wp_json_encode(
-            $schema,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-        );
-        update_field( 'schema_markup', $schema_json, $post_id );                   
+        return ( new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer() )->normalize( $schema );
     }
 } else {
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\generate_schema_markup function is already declared", true);
+    write_log("Warning: " . __NAMESPACE__ . "\\build_verified_profile_schema function is already declared", true);
+}
+
+if ( ! function_exists( __NAMESPACE__ . '\\generate_schema_markup' ) ) {
+    function generate_schema_markup( $post_id = -1 ): string {
+        $schema = build_verified_profile_schema( (int) $post_id );
+        if ( empty( $schema ) ) {
+            return '';
+        }
+
+        $schema_json = ( new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer() )->json( $schema );
+        if ( '' !== $schema_json ) {
+            update_field( 'schema_markup', $schema_json, (int) $post_id );
+        }
+
+        return $schema_json;
+    }
 }
 
 /**

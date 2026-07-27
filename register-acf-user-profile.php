@@ -26,7 +26,7 @@ function register_user_custom_fields()
 	/// MOVE TO HWS 
 
     if ( ! is_deprecated_user_social_acf_group( 'group_590d64c31db0a' ) ) {
-    acf_add_local_field_group( array(
+    smp_vp_register_local_acf_group( array(
 		'key' => 'group_590d64c31db0a',
 		'title' => 'Profile',
 		'fields' => array(
@@ -431,7 +431,7 @@ function register_user_custom_fields()
 
 
 	if ( ! is_deprecated_user_social_acf_group( 'group_6419bc02b6e93' ) ) {
-	acf_add_local_field_group( array(
+	smp_vp_register_local_acf_group( array(
 	'key' => 'group_6419bc02b6e93',
 	'title' => 'User/Author',
 	'fields' => array(
@@ -944,7 +944,7 @@ function register_user_custom_fields()
 
 
 
-	acf_add_local_field_group( array(
+	smp_vp_register_local_acf_group( array(
 	'key' => 'group_658739a0ab536',
 	'title' => 'Theme Options - Emails',
 	'fields' => array(
@@ -1173,7 +1173,7 @@ function register_user_custom_fields()
 	'show_in_rest' => 0,
 ) );
 
-	acf_add_local_field_group( array(
+	smp_vp_register_local_acf_group( array(
 	'key' => 'group_65a8b25062d91',
 	'title' => 'User - Profile Manager',
 	'fields' => array(
@@ -1260,7 +1260,7 @@ function register_user_custom_fields()
 	'show_in_rest' => 0,
 ) );
 
-	acf_add_local_field_group( array(
+	smp_vp_register_local_acf_group( array(
 	'key' => 'group_658602c9eaa49',
 	'title' => 'User - Verified Profile Manager - Admin',
 	'fields' => array(

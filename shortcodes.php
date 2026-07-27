@@ -44,28 +44,24 @@ function get_verified_profile_shortcodes() {
 */
 
 function get_profile_field( $atts ) {
-    // Get CPT slug from your settings
-    $settings = get_verified_profile_settings();
-    $slug     = $settings['slug'];
-
-    global $post;
-    // Only run on the correct post type
-    if ( $post->post_type !== $slug ) {
-        return '';
-    }
-
     // Pull the requested field name
     $atts = shortcode_atts( [
         'field' => '',
+        'post_id' => 0,
     ], $atts, 'get_profile_field' );
 
     if ( ! $atts['field'] ) {
         return '';
     }
 
-    $field_name = $atts['field'];
+    $post_id = smp_vp_shortcode_profile_post_id( $atts );
+    if ( ! $post_id ) {
+        return '';
+    }
+
+    $field_name = sanitize_key( (string) $atts['field'] );
     // Get the ACF value
-    $value = get_field( $field_name, $post->ID );
+    $value = get_field( $field_name, $post_id );
 
     // If it's an array, flatten it to a comma-separated string
     if ( is_array( $value ) ) {
@@ -1048,14 +1044,18 @@ function smp_vp_shortcode_profile_post_id( array $atts ): int {
     }
 
     $post = $post_id ? get_post( $post_id ) : null;
-    if ( ! $post instanceof \WP_Post ) {
-        return 0;
-    }
-
     $settings = function_exists( __NAMESPACE__ . '\\get_verified_profile_settings' ) ? get_verified_profile_settings() : [];
     $slug     = isset( $settings['slug'] ) && '' !== (string) $settings['slug'] ? (string) $settings['slug'] : 'profile';
 
-    return $post->post_type === $slug ? (int) $post->ID : 0;
+    if ( $post instanceof \WP_Post && $post->post_type === $slug ) {
+        return (int) $post->ID;
+    }
+
+    if ( class_exists( '\\smp_verified_profiles\\EntitySources\\CanonicalProfileSource' ) ) {
+        return \smp_verified_profiles\EntitySources\CanonicalProfileSource::profile_id();
+    }
+
+    return 0;
 }
 
 function smp_vp_shortcode_class_attr( string $class ): string {

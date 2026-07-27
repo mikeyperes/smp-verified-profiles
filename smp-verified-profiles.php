@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 6.5.49
+ * Version: 6.5.50
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -42,7 +42,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "6.5.46";
+    public static $plugin_version = "6.5.50";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -102,60 +102,6 @@ class Config {
     public static function get_plugin_file_path() {
         return WP_PLUGIN_DIR . '/' . self::get_plugin_basename();
     }
-    
-    /**
-     * Build configuration array for the GitHub Updater
-     * Pulls metadata from plugin headers dynamically
-     * 
-     * @return array Complete configuration for WP_GitHub_Updater
-     */
-    public static function get_github_config() {
-        // Ensure we can read plugin headers
-        if ( ! function_exists( 'get_plugin_data' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/plugin.php';
-        }
-        
-        // Get the main plugin file path
-        $plugin_file = self::get_plugin_file_path();
-        
-        // Pull header info from the plugin file
-        $plugin_data = get_plugin_data( $plugin_file );
-        
-        // Build and return the updater config using Config values (no hardcoding!)
-        return [
-            // Plugin's WP slug (folder/file path under wp-content/plugins)
-            'slug'               => self::get_plugin_basename(),
-            
-            // Folder name on disk
-            'proper_folder_name' => self::$plugin_folder_name,
-            
-            // GitHub endpoints & download URL
-            'api_url'            => 'https://api.github.com/repos/' . self::$github_repo,
-            'raw_url'            => 'https://raw.githubusercontent.com/' . self::$github_repo . '/' . self::$github_branch,
-            'github_url'         => 'https://github.com/' . self::$github_repo,
-            'zip_url'            => 'https://github.com/' . self::$github_repo . '/archive/' . self::$github_branch . '.zip',
-            
-            // HTTP settings
-            'sslverify'          => true,
-            'access_token'       => '',
-            'timeout'            => 10,
-            
-            // WP compatibility
-            'requires'           => '5.0',
-            'tested'             => '6.4',
-            'readme'             => 'README.md',
-            
-            // Which file to read "Version:" from
-            'plugin_starter_file' => self::$plugin_starter_file,
-            
-            // Metadata pulled straight from the plugin header
-            'plugin_name'        => $plugin_data['Name'],
-            'version'            => $plugin_data['Version'],
-            'author'             => $plugin_data['Author'],
-            'homepage'           => $plugin_data['PluginURI'],
-            'description'        => $plugin_data['Description'],
-        ];
-    }
 }
 
 function add_plugin_settings_action_link( array $links ): array {
@@ -205,6 +151,8 @@ function smp_vp_settings_ajax_actions(): array {
         'smp_vp_pages_apply_template',
         'smp_vp_pages_page_details',
         'smp_vp_pages_update_page_slug',
+        'smp_vp_save_content_type',
+        'smp_vp_save_acf_structure',
     ];
 }
 
@@ -290,6 +238,7 @@ function smp_vp_load_settings_dashboard_files(): void {
     include_once __DIR__ . '/settings-dashboard-overview.php';
     include_once __DIR__ . '/settings-dashboard-snippets.php';
     include_once __DIR__ . '/settings-dashboard-shortcodes.php';
+    include_once __DIR__ . '/settings-dashboard-content-types.php';
     include_once __DIR__ . '/settings-dashboard.php';
     include_once __DIR__ . '/verified-profile-display-templates.php';
     include_once __DIR__ . '/verified-profile-page-templates.php';
@@ -494,6 +443,12 @@ include_once __DIR__ . '/generic-functions.php';
 // Hexa Plugin Core integration: shared AJAX guard, updater, and host tabs.
 include_once __DIR__ . '/hexa-core-integration.php';
 
+// Shared Core registration for the immutable Profile CPT and every active ACF
+// field group. Legacy files remain definition sources, not runtime registrars.
+require_once __DIR__ . '/src/ContentTypes/VerifiedProfileStructures.php';
+require_once __DIR__ . '/src/EntitySources/CanonicalProfileSource.php';
+\smp_verified_profiles\ContentTypes\VerifiedProfileStructures::boot();
+
 if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
     add_action( 'plugins_loaded', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 20 );
     add_action( 'admin_init', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 5 );
@@ -504,13 +459,22 @@ if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
 // ============================================================================
 if ( is_admin() ) {
     add_action( 'admin_init', function() {
+        if ( 'verified-profiles-settings' === smp_vp_request_value( 'page' ) && current_user_can( Config::$settings_page_capability ) ) {
+            wp_safe_redirect( admin_url( 'options-general.php?page=' . Config::$settings_page_slug . '&tab=profile-settings' ) );
+            exit;
+        }
+
         // Remove shutdown output buffer flush on our settings page
         // Prevents "headers already sent" issues
         if ( isset( $_GET['page'] ) && $_GET['page'] === Config::$settings_page_slug ) {
             remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
         }
 
-        if ( Config::$settings_page_slug === smp_vp_request_value( 'page' ) && 'emails' === smp_vp_request_value( 'tab' ) && function_exists( 'acf_form_head' ) ) {
+        if (
+            Config::$settings_page_slug === smp_vp_request_value( 'page' )
+            && in_array( smp_vp_request_value( 'tab' ), [ 'emails', 'profile-settings' ], true )
+            && function_exists( 'acf_form_head' )
+        ) {
             acf_form_head();
         }
     } );

@@ -1037,7 +1037,6 @@ function smp_vp_scan_acf_profile_field_names() {
     $field_names = [];
     $files       = [
         __DIR__ . '/register-acf-verified-profile.php',
-        __DIR__ . '/register-acf-fields.php',
         __DIR__ . '/register-acf-structures.php',
     ];
 
