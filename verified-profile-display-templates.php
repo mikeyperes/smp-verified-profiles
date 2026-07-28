@@ -20,6 +20,7 @@ add_action("wp_ajax_smp_vp_display_create_loop_item", __NAMESPACE__ . "\\smp_vp_
 add_action("wp_ajax_smp_vp_display_save_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_save_loop_item");
 add_action("wp_ajax_smp_vp_display_delete_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_delete_loop_item");
 add_action("admin_init", __NAMESPACE__ . "\\smp_vp_register_pages_ajax");
+add_action("save_post", __NAMESPACE__ . "\\smp_vp_display_invalidate_profile_surfaces", 20, 3);
 add_filter("the_content", __NAMESPACE__ . "\\smp_vp_display_append_to_content", 28);
 add_shortcode("verified_profiles_loop", __NAMESPACE__ . "\\smp_vp_verified_profiles_loop_shortcode");
 add_shortcode("smp_verified_profiles_loop", __NAMESPACE__ . "\\smp_vp_verified_profiles_loop_shortcode");
@@ -1489,21 +1490,75 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
     return (string) ob_get_clean();
 }
 
-function smp_vp_display_homepage_ids(int $limit, bool $require_thumbnail): array {
+function smp_vp_display_profile_post_type(): string {
+    $post_type = "profile";
+
+    if (function_exists(__NAMESPACE__ . "\\get_verified_profile_settings")) {
+        $settings = get_verified_profile_settings();
+        $candidate = sanitize_key((string) ($settings["slug"] ?? ""));
+        if ($candidate !== "") {
+            $post_type = $candidate;
+        }
+    }
+
+    return $post_type;
+}
+
+function smp_vp_display_homepage_query_args(int $limit, bool $require_thumbnail): array {
     $args = [
-        "post_type" => "profile",
+        "post_type" => smp_vp_display_profile_post_type(),
         "post_status" => "publish",
         "posts_per_page" => $limit,
-        "orderby" => "modified",
+        "orderby" => ["date" => "DESC", "ID" => "DESC"],
         "order" => "DESC",
         "fields" => "ids",
+        "ignore_sticky_posts" => true,
+        "no_found_rows" => true,
     ];
 
     if ($require_thumbnail) {
         $args["meta_query"] = [["key" => "_thumbnail_id", "compare" => "EXISTS"]];
     }
 
-    return array_map("intval", get_posts($args));
+    return $args;
+}
+
+function smp_vp_display_homepage_ids(int $limit, bool $require_thumbnail): array {
+    return array_map("intval", get_posts(smp_vp_display_homepage_query_args($limit, $require_thumbnail)));
+}
+
+function smp_vp_display_invalidate_profile_surfaces(int $post_id, $post, bool $update): void {
+    unset($update);
+
+    if (! $post instanceof \WP_Post || $post->post_type !== smp_vp_display_profile_post_type()) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    $front_page_id = absint(get_option("page_on_front"));
+    if ($front_page_id) {
+        delete_post_meta($front_page_id, "_elementor_element_cache");
+        clean_post_cache($front_page_id);
+    }
+
+    $settings = smp_vp_display_settings();
+    $urls = [home_url("/")];
+    $archive_url = get_post_type_archive_link($post->post_type);
+    if (is_string($archive_url) && $archive_url !== "") {
+        $urls[] = $archive_url;
+    }
+    if (! empty($settings["archive_url"])) {
+        $urls[] = (string) $settings["archive_url"];
+    }
+
+    foreach (array_unique(array_filter($urls)) as $url) {
+        do_action("litespeed_purge_url", $url);
+    }
+
+    do_action("smp_vp_profile_surfaces_invalidated", $post_id, $urls);
 }
 
 function smp_vp_display_post_ids(int $post_id, bool $require_thumbnail = false): array {
