@@ -37,6 +37,7 @@ src/FrontendForms/      Hexa\PluginCore\FrontendForms
 src/FaqSets/            Hexa\PluginCore\FaqSets
 src/GettingStartedChecklist/
                         Hexa\PluginCore\GettingStartedChecklist
+src/IntegrationTests/   Hexa\PluginCore\IntegrationTests
 src/LogFiles/           Hexa\PluginCore\LogFiles
 src/MediaUploads/       Hexa\PluginCore\MediaUploads
 src/ObjectCache/        Hexa\PluginCore\ObjectCache
@@ -243,6 +244,20 @@ $config = new \Hexa\PluginCore\GettingStartedChecklist\GettingStartedChecklistCo
 ( new \Hexa\PluginCore\GettingStartedChecklist\GettingStartedChecklistAjaxController($config) )->register();
 ( new \Hexa\PluginCore\GettingStartedChecklist\GettingStartedChecklistRenderer($config) )->render();
 ```
+
+## Integration Tests
+
+Namespace:
+
+```text
+Hexa\PluginCore\IntegrationTests
+```
+
+Every host using `CoreBootstrap` is included automatically in the protected report at `/wp-admin/tools.php?page=hexa-integration-tests`. Add `&format=json` for the machine-readable report. Both routes require `manage_options` and run the checks on request.
+
+Core owns package integrity, source hash, autoload, host context, version-contract checks, pass/fail normalization, exception handling, report UI, and the endpoint. Hosts register deterministic, non-mutating business assertions through `hexa_plugin_core_register_integration_tests` and `TestRegistry::register()`. Keep stable test IDs and return `passed`, `summary`, `expected`, `actual`, and optional `details`.
+
+See `docs/integration-tests.md` for the registration example and response contract.
 
 ## Plugin Checks And Plugin Inventory
 
@@ -830,9 +845,9 @@ Use this for one reusable CPT contract across host plugins. Hosts supply owned o
 
 Namespace: Hexa\PluginCore\EntitySources
 
-Classes: CanonicalEntityResolver, PrimaryEntityManager, PrimaryEntityModule, PrimaryEntityAjaxController, PrimaryEntityRenderer, EntityFieldInspector.
+Classes: CanonicalEntityResolver, PrimaryEntityManager, PrimaryEntityModule, PrimaryEntityAjaxController, PrimaryEntityRenderer, EntityProfileCardRenderer, EntityFieldInspector.
 
-Use this for an optional HWS-owned website type and primary user/post entity. Consumers resolve the canonical entity and its bound WordPress author rather than maintaining competing settings. No primary entity is a supported configuration. See `docs/entity-sources.md` and test with `tests/entity-sources.php`.
+Use this for an optional HWS-owned website type and primary user/post entity. Consumers resolve the canonical entity and its bound WordPress author rather than maintaining competing settings. Profile cards render social links as labeled rows with each complete URL visible and clickable. No primary entity is a supported configuration. See `docs/entity-sources.md` and test with `tests/entity-sources.php`.
 
 ## Field Structures
 
@@ -846,7 +861,7 @@ Definition keys: id, label, type, setting_key, enabled, registered, acf_group_ke
 
 Example use: create a FieldStructureRenderer, pass an array of structure definitions, and pass save_action plus nonce when toggles should save through AJAX.
 
-Use `AcfFieldGroupRegistry` when Core must own the actual `acf/init` registration path and toggle state. Use `AcfSettingsPanel` to display established option-backed ACF groups inside a host tab without moving their stored values. Host plugins always retain their exact field arrays.
+Use `AcfFieldGroupRegistry` when Core must own the actual `acf/init` registration path and toggle state. A disabled definition also deactivates database-imported copies that use the same ACF group key. Use `AcfSettingsPanel` to display established option-backed ACF groups inside a host tab without moving their stored values. Host plugins always retain their exact field arrays.
 
 ## Schema Tools
 

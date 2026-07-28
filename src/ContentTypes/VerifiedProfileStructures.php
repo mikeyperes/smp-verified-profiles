@@ -150,12 +150,24 @@ final class VerifiedProfileStructures {
             ),
             self::acf_definition(
                 'verified-profile-manager-admin',
-                'Verified Profile Manager Admin Fields',
+                'Verified Profiles Billing & Account Administration',
                 'group_658602c9eaa49',
                 'register_user_custom_fields',
                 'register_user_custom_fields',
                 'WordPress user profiles for administrators',
-                [ 'Unclaimed profiles', 'Profile ownership and manager administration' ]
+                [
+                    'Unclaimed Profiles',
+                    'New Entity Email',
+                    'Entity Summary Email',
+                    'Welcome Email',
+                    'Password Handling',
+                    'Price Verified Profile',
+                    'Price Leadership Council',
+                    'Is Council Member',
+                    'Is Contributor',
+                ],
+                null,
+                'Adds verified-profile ownership, billing prices, account flags, password guidance, and workflow email controls to administrator user profiles.'
             ),
             self::acf_definition(
                 'email-settings',
@@ -201,12 +213,13 @@ final class VerifiedProfileStructures {
         string $legacy_function,
         string $location,
         array $fields,
-        ?callable $definition_callback = null
+        ?callable $definition_callback = null,
+        string $description = ''
     ): array {
         return [
             'id'              => $id,
             'label'           => $label,
-            'description'     => 'Registered through the shared Hexa WP Core while retaining the plugin\'s existing field keys and stored values.',
+            'description'     => '' !== $description ? $description : 'Registered through the shared Hexa WP Core while retaining the plugin\'s existing field keys and stored values.',
             'group_key'       => $group_key,
             'enabled_default' => false,
             'legacy_option'   => '',
@@ -216,6 +229,12 @@ final class VerifiedProfileStructures {
             'fields'          => $fields,
             'dependencies'    => [ 'Advanced Custom Fields Pro' ],
         ];
+    }
+
+    public static function acf_group_enabled( string $id ): bool {
+        $registry = self::acf_groups();
+        $definition = $registry->definition( $id );
+        return is_array( $definition ) && $registry->store()->enabled( $definition );
     }
 
     /** @param array<string,mixed> $group */

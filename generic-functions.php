@@ -41,6 +41,16 @@ function activate_snippets( $type = '' ) {
         write_log( "Processing snippet: {$snippet['name']} (ID: $snippet_id)", false );
 
         if ( $is_enabled ) {
+            $required_acf_structure = sanitize_key( (string) ( $snippet['requires_acf_structure'] ?? '' ) );
+            if (
+                '' !== $required_acf_structure
+                && class_exists( ContentTypes\VerifiedProfileStructures::class )
+                && ! ContentTypes\VerifiedProfileStructures::acf_group_enabled( $required_acf_structure )
+            ) {
+                write_log( "Snippet $snippet_id requires disabled ACF structure $required_acf_structure.", false );
+                continue;
+            }
+
             write_log( "Snippet $snippet_id is enabled. Preparing to activate." );
             
             // Build fully qualified function name with namespace

@@ -15,6 +15,7 @@ $files = [
     'injector'   => (string) file_get_contents( $root . '/snippet-inject-schema-on-single-profile.php' ),
     'source'     => (string) file_get_contents( $root . '/src/EntitySources/CanonicalProfileSource.php' ),
     'theme_acf'  => (string) file_get_contents( $root . '/register-acf-structure-theme-options.php' ),
+    'snippets'   => (string) file_get_contents( $root . '/generic-functions.php' ),
 ];
 
 $checks = [
@@ -47,6 +48,13 @@ $checks = [
         && str_contains( $files['injector'], 'build_verified_profile_schema( $post->ID )' ),
     'Consumes the optional HWS canonical entity without requiring one.' => str_contains( $files['source'], 'CanonicalEntityResolver::resolve()' )
         && str_contains( $files['source'], 'return null;' ),
+    'Treats billing and account administration as one explicit ACF structure.' => str_contains( $files['structures'], "'Verified Profiles Billing & Account Administration'" )
+        && str_contains( $files['structures'], "'group_658602c9eaa49'" )
+        && str_contains( $files['structures'], "'Price Verified Profile'" )
+        && str_contains( $files['structures'], "'Price Leadership Council'" )
+        && str_contains( $files['structures'], "'Is Contributor'" ),
+    'Loads billing profile behavior only when its ACF structure is enabled.' => str_contains( $files['main'], "'requires_acf_structure' => 'verified-profile-manager-admin'" )
+        && str_contains( $files['snippets'], 'VerifiedProfileStructures::acf_group_enabled' ),
 ];
 
 $failed = false;
