@@ -1091,6 +1091,22 @@ function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string
     if ( in_array( $output, [ 'img', 'image', 'html' ], true ) ) {
         $class = smp_vp_shortcode_class_attr( (string) ( $atts['class'] ?? '' ) );
         $alt   = '' !== trim( (string) ( $atts['alt'] ?? '' ) ) ? (string) $atts['alt'] : get_the_title( $post_id );
+        $attachment_id = get_post_thumbnail_id( $post_id );
+
+        if ( $attachment_id ) {
+            $attributes = [
+                'alt'     => $alt,
+                'loading' => 'lazy',
+            ];
+            if ( '' !== $class ) {
+                $attributes['class'] = $class;
+            }
+
+            $image = wp_get_attachment_image( $attachment_id, $size, false, $attributes );
+            if ( $image ) {
+                return $image;
+            }
+        }
 
         return sprintf(
             '<img%s src="%s" alt="%s" loading="lazy">',

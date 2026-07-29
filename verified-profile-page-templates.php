@@ -543,7 +543,7 @@ function smp_vp_profile_page_bio_html( int $post_id ): string {
     return '' !== $content ? wp_kses_post( wpautop( $content ) ) : '';
 }
 
-function smp_vp_profile_page_image_url( int $post_id, string $size = 'large' ): string {
+function smp_vp_profile_page_image_url( int $post_id, string $size = 'medium' ): string {
     $featured = get_the_post_thumbnail_url( $post_id, $size );
     if ( $featured ) {
         return $featured;
@@ -851,7 +851,7 @@ function smp_vp_profile_page_photo_html( array $data, string $class ): string {
         $image = verified_profile_shortcode(
             [
                 'field'   => 'featured_image',
-                'size'    => 'large',
+                'size'    => 'medium',
                 'output'  => 'img',
                 'class'   => 'pp-photo ' . $class,
                 'post_id' => (int) $data['id'],

@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `7.0.2`
+- Version: `7.0.3`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,11 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 7.0.3
+
+- Rendered local Verified Profile images through WordPress responsive image markup with intrinsic dimensions and `srcset`/`sizes`.
+- Changed built-in profile portraits from the 1024px large derivative to the 300px medium derivative used by the 260px profile layout.
 
 ### 7.0.2
 
