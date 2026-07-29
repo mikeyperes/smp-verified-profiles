@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `7.0.4`
+- Version: `7.0.5`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 7.0.5
+
+- Restricted profile-related coverage to posts with an exact ACF repeater relationship and prevented sticky posts from being injected into empty profile queries.
 
 ### 7.0.4
 

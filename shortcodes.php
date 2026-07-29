@@ -895,39 +895,47 @@ if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')
 } else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_theme_footer_text_social_links function is already declared", true);
 }
-// define once at top level
-function customize_posts_where($where) {
-    $where = str_replace("meta_key = 'profiles_$", "meta_key LIKE 'profiles_%", $where);
-    return $where;
-}
+function find_posts_with_profile( $profile_id ) {
+    global $wpdb;
 
-
-function find_posts_with_profile($profile_id) {
-    add_filter('posts_where', __NAMESPACE__.'\\customize_posts_where');
-
-    $args = [
-        'post_type'      => 'post',
-        'posts_per_page' => -1,
-        'meta_query'     => [[
-            'key'     => 'profiles_$_profile',
-            'value'   => $profile_id,
-            'compare' => 'LIKE'
-        ]]
-    ];
-
-    $the_query = new \WP_Query($args);
-    $matching_post_ids = [];
-
-    if ($the_query->have_posts()) {
-        while ($the_query->have_posts()) {
-            $the_query->the_post();
-            $matching_post_ids[] = get_the_ID();
-        }
+    $profile_id = absint( $profile_id );
+    if ( ! $profile_id ) {
+        return [];
     }
-    wp_reset_postdata();
 
-    remove_filter('posts_where', __NAMESPACE__.'\\customize_posts_where');
-    return $matching_post_ids;
+    // Prove the ACF repeater relationship before asking WordPress to load posts.
+    $candidate_ids = $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT DISTINCT post_id
+            FROM {$wpdb->postmeta}
+            WHERE meta_key REGEXP %s
+            AND meta_value = %s",
+            '^profiles_[0-9]+_profile$',
+            (string) $profile_id
+        )
+    );
+    $candidate_ids = array_values( array_filter( array_map( 'absint', $candidate_ids ) ) );
+
+    if ( empty( $candidate_ids ) ) {
+        return [];
+    }
+
+    $the_query = new \WP_Query( [
+        'post_type'              => 'post',
+        'post_status'            => 'publish',
+        'post__in'               => $candidate_ids,
+        'posts_per_page'         => -1,
+        'fields'                 => 'ids',
+        'orderby'                => 'date',
+        'order'                  => 'DESC',
+        'ignore_sticky_posts'    => true,
+        'no_found_rows'          => true,
+        'cache_results'          => false,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ] );
+
+    return array_values( array_unique( array_map( 'absint', $the_query->posts ) ) );
 }
 
 
