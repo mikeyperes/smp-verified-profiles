@@ -1095,8 +1095,7 @@ function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string
 
         if ( $attachment_id ) {
             $attributes = [
-                'alt'     => $alt,
-                'loading' => 'lazy',
+                'alt' => $alt,
             ];
             if ( '' !== $class ) {
                 $attributes['class'] = $class;
