@@ -3,12 +3,15 @@
 namespace smp_verified_profiles;
 
 use Hexa\PluginCore\WpAdminComponents\CoreUi;
+use Hexa\PluginCore\WpAdminComponents\TemplateSelectionControl;
+use Hexa\PluginCore\WpAdminComponents\TypographyControl;
 
 defined("ABSPATH") || exit;
 
 const SMP_VP_DISPLAY_OPTION = "smp_vp_display_card_settings";
 const SMP_VP_DISPLAY_NONCE = "smp_vp_display_nonce";
 const SMP_VP_PAGES_NONCE = "smp_vp_pages_nonce";
+const SMP_VP_CUSTOM_TEMPLATE = "custom";
 
 add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_display_dashboard_tab");
 add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_pages_dashboard_tab");
@@ -276,6 +279,73 @@ function smp_vp_display_templates(): array {
     ];
 }
 
+function smp_vp_display_template_values( bool $include_custom = true ): array {
+    $values = array_keys( smp_vp_display_templates() );
+    if ( $include_custom ) {
+        $values[] = SMP_VP_CUSTOM_TEMPLATE;
+    }
+    return $values;
+}
+
+function smp_vp_display_is_custom_template( string $template ): bool {
+    return SMP_VP_CUSTOM_TEMPLATE === sanitize_key( $template );
+}
+
+function smp_vp_display_template_label( string $template ): string {
+    if ( smp_vp_display_is_custom_template( $template ) ) {
+        return "I'm going to design it myself";
+    }
+
+    $templates = smp_vp_display_templates();
+    return (string) ( $templates[ $template ]['label'] ?? $template );
+}
+
+function smp_vp_display_template_selector( array $args ): string {
+    if ( ! class_exists( TemplateSelectionControl::class ) ) {
+        return '';
+    }
+
+    $templates = smp_vp_display_templates();
+    $profiles  = isset( $args['profiles'] ) && is_array( $args['profiles'] ) ? $args['profiles'] : smp_vp_display_preview_profiles();
+    $choices   = [];
+    foreach ( $templates as $key => $template ) {
+        $choices[ $key ] = [
+            'label'          => (string) $template['label'],
+            'description'    => (string) $template['description'],
+            'preview_html'   => smp_vp_display_render_collection(
+                $profiles,
+                [
+                    'template'      => $key,
+                    'items_per_row' => 1,
+                ]
+            ),
+            'preview_width'  => 620,
+            'preview_height' => 200,
+        ];
+    }
+
+    return TemplateSelectionControl::render(
+        [
+            'id'             => (string) ( $args['id'] ?? 'smp-vp-template-selector' ),
+            'name'           => (string) ( $args['name'] ?? 'smp_vp_template' ),
+            'value'          => (string) ( $args['value'] ?? 'boxed-row' ),
+            'title'          => (string) ( $args['title'] ?? 'Profile card design' ),
+            'description'    => (string) ( $args['description'] ?? 'Select a design directly from the live previews.' ),
+            'templates'      => $choices,
+            'custom'         => [
+                'label'       => "I'm going to design it myself",
+                'description' => 'Return no plugin markup or styling for this placement. Explicit named-template shortcodes remain available.',
+            ],
+            'columns'        => 3,
+            'preview_height' => 200,
+            'preview_width'  => 620,
+            'input_class'    => (string) ( $args['input_class'] ?? 'smp-vp-template-setting' ),
+            'input_data'     => isset( $args['input_data'] ) && is_array( $args['input_data'] ) ? $args['input_data'] : [],
+            'class'          => (string) ( $args['class'] ?? '' ),
+        ]
+    );
+}
+
 function smp_vp_display_contexts(): array {
     return [
         "homepage" => "Homepage",
@@ -392,7 +462,7 @@ function smp_vp_display_unique_loop_id(string $base, array $items): string {
 }
 
 function smp_vp_display_sanitize_loop_item(array $input, array $settings, string $fallback_id = ""): array {
-    $templates = array_keys(smp_vp_display_templates());
+    $templates = smp_vp_display_template_values();
     $contexts = array_keys(smp_vp_display_contexts());
     $id = sanitize_key((string) ($input["id"] ?? $fallback_id));
     if ($id === "") {
@@ -484,6 +554,7 @@ function smp_vp_display_defaults(): array {
         "soft_color" => "#faf7f5",
         "name_font_size" => 18,
         "role_font_size" => 10,
+        "profile_card_preserve_font_size" => false,
         "loop_items" => [],
         "pages" => [],
         "page_templates" => [],
@@ -506,7 +577,7 @@ function smp_vp_display_settings(): array {
 
 function smp_vp_display_sanitize(array $input): array {
     $settings = smp_vp_display_settings();
-    $templates = array_keys(smp_vp_display_templates());
+    $templates = smp_vp_display_template_values();
 
     $settings["enabled"] = ! empty($input["enabled"]);
     $single_injection = sanitize_key((string) ($input["single_injection"] ?? (! empty($input["append_to_content"]) ? "after_content" : "shortcode")));
@@ -522,6 +593,7 @@ function smp_vp_display_sanitize(array $input): array {
     $settings["archive_url"] = smp_vp_display_archive_url($settings);
     $settings["name_font_size"] = smp_vp_display_number($input["name_font_size"] ?? $settings["name_font_size"], (int) $settings["name_font_size"], 12, 42);
     $settings["role_font_size"] = smp_vp_display_number($input["role_font_size"] ?? $settings["role_font_size"], (int) $settings["role_font_size"], 8, 24);
+    $settings["profile_card_preserve_font_size"] = ! empty($input["profile_card_preserve_font_size"]);
 
     foreach (["primary_color", "secondary_color", "ink_color", "muted_color", "line_color", "soft_color"] as $key) {
         $color = sanitize_hex_color((string) ($input[$key] ?? $settings[$key]));
@@ -596,8 +668,33 @@ function smp_vp_display_detailed_color_picker(array $args): string {
 }
 
 function smp_vp_display_color_palette(array $settings): string {
+    $detailed = smp_vp_display_detailed_color_picker([
+        "id" => "smp-vp-card-detailed-colors",
+        "title" => "Detailed Color Picker",
+        "description" => "Set the primary and secondary card colors or import both directly from Elementor.",
+        "show_elementor_import" => true,
+        "primary" => [
+            "key" => "primary_color",
+            "label" => "Primary color",
+            "value" => (string) ($settings["primary_color"] ?? "#b3272d"),
+            "id" => "smp-vp-primary-color",
+            "control_class" => "smp-vp-global-color-control",
+            "hex_input_class" => "smp-vp-global-color smp-vp-global-primary-color",
+            "picker_class" => "smp-vp-global-color-picker",
+        ],
+        "secondary" => [
+            "key" => "secondary_color",
+            "label" => "Secondary color",
+            "value" => (string) ($settings["secondary_color"] ?? "#151515"),
+            "id" => "smp-vp-secondary-color",
+            "control_class" => "smp-vp-global-color-control",
+            "hex_input_class" => "smp-vp-global-color smp-vp-global-secondary-color",
+            "picker_class" => "smp-vp-global-color-picker",
+        ],
+    ]);
+
     $colors = [];
-    foreach (["primary_color" => "Primary color", "secondary_color" => "Secondary color", "ink_color" => "Text", "muted_color" => "Muted", "line_color" => "Line", "soft_color" => "Soft background"] as $key => $label) {
+    foreach (["ink_color" => "Text", "muted_color" => "Muted", "line_color" => "Line", "soft_color" => "Soft background"] as $key => $label) {
         $colors[] = [
             "key" => $key,
             "label" => $label,
@@ -610,26 +707,25 @@ function smp_vp_display_color_palette(array $settings): string {
     }
 
     if (class_exists("\Hexa\PluginCore\WpAdminComponents\ColorPalette")) {
-        return \Hexa\PluginCore\WpAdminComponents\ColorPalette::render([
+        $advanced = \Hexa\PluginCore\WpAdminComponents\ColorPalette::render([
             "id" => "smp-vp-card-palette",
-            "title" => "Colors",
-            "description" => "Card palette for the verified-profiles display. Primary and secondary are seeded from Hexa WP Core. Edit any value and Save.",
+            "title" => "Supporting colors",
+            "description" => "Optional text, muted, line, and soft-background values used by the built-in templates.",
             "colors" => $colors,
-            "elementor_detector" => [
-                "id" => "smp-vp-elementor-palette",
-                "title" => "Elementor palette",
-                "button_label" => "Load Elementor colors",
-                "description" => "Reference only. This never changes your saved colors. Load your Elementor site colors, then use Copy hex to paste any value into a field above.",
-                "empty_label" => "Click \"Load Elementor colors\" to show your Elementor palette.",
-            ],
         ]);
+
+        return '<div class="smp-vp-color-tools">' . $detailed . CoreUi::detail_card([
+            "title" => "Supporting colors",
+            "body_html" => $advanced,
+            "open" => false,
+            "persist_key" => "smp-vp-card-supporting-colors",
+        ]) . '</div>';
     }
 
     ob_start();
     ?>
     <section class="smp-vp-section">
-        <h3 class="smp-vp-section-title">Colors</h3>
-        <p class="smp-vp-section-note">Card palette for the verified-profiles display. Primary and secondary are seeded from Hexa WP Core. Edit any value and Save.</p>
+        <h3 class="smp-vp-section-title">Supporting colors</h3>
         <div class="smp-vp-color-list">
             <?php foreach ($colors as $color) : ?>
                 <div class="smp-vp-color-field">
@@ -639,7 +735,7 @@ function smp_vp_display_color_palette(array $settings): string {
         </div>
     </section>
     <?php
-    return (string) ob_get_clean();
+    return '<div class="smp-vp-color-tools">' . $detailed . (string) ob_get_clean() . '</div>';
 }
 
 function smp_vp_display_css(): string {
@@ -672,6 +768,7 @@ function smp_vp_display_render_settings(): void {
     $labels = array_map(static function ($template) {
         return $template["label"];
     }, $templates);
+    $labels[SMP_VP_CUSTOM_TEMPLATE] = "Design it myself";
     $nonce = wp_create_nonce(SMP_VP_DISPLAY_NONCE);
     $preview = smp_vp_display_preview_profiles();
     ?>
@@ -691,6 +788,7 @@ function smp_vp_display_render_settings(): void {
         .smp-vp-display-admin .smp-vp-core-panel>.hpc-section-body{padding:0}
         .smp-vp-display-admin .smp-vp-panel-intro{color:#646970;margin:0;padding:18px 20px 0}
         .smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{justify-content:flex-end}
+        .smp-vp-display-admin .hpc-template-selection{margin:0}.smp-vp-display-admin .hpc-template-selection-label{display:flex;font-weight:inherit;margin:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display{margin:16px;padding:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display .vp{grid-template-columns:1fr!important}.smp-vp-display-admin .hpc-toggle{display:inline-flex;font-weight:800;margin:0}.smp-vp-display-admin .smp-vp-color-tools{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-color-tools .hpc-detail-card{margin:0}.smp-vp-display-admin .smp-vp-loop-builder{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-loop-builder>.hpc-template-selection{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector .hpc-template-selection-preview{--hpc-template-option-height:180px}.smp-vp-display-admin .smp-vp-loop-template-selector .hpc-template-selection-card-head{min-height:88px}.smp-vp-display-admin .smp-vp-advanced-loops{margin:0 20px 20px}.smp-vp-display-admin .smp-vp-advanced-loops>.hpc-section-body{padding:0}
         @media(max-width:782px){.smp-vp-display-admin .smp-vp-core-panel>summary{align-items:flex-start;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-core-panel>summary .hpc-section-summary-side{flex-basis:100%;margin-left:0}.smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{flex:1;justify-content:flex-start}}
     </style>
     <div class="smp-vp-display-admin" id="smp-vp-display-settings" data-nonce="<?php echo esc_attr($nonce); ?>">
@@ -701,6 +799,26 @@ function smp_vp_display_render_settings(): void {
                 <input id="smp-vp-post-template" type="hidden" value="<?php echo esc_attr($settings["post_template"]); ?>">
             </div>
             <div class="smp-vp-sections">
+                <?php echo smp_vp_display_template_selector([
+                    "id" => "smp-vp-homepage-template-selector",
+                    "name" => "smp_vp_homepage_template",
+                    "value" => (string) $settings["homepage_template"],
+                    "title" => "Homepage profile cards",
+                    "description" => "Choose the card design used by the homepage and the default homepage shortcode.",
+                    "profiles" => $preview,
+                    "input_class" => "smp-vp-template-setting",
+                    "input_data" => ["target" => "homepage"],
+                ]); ?>
+                <?php echo smp_vp_display_template_selector([
+                    "id" => "smp-vp-post-template-selector",
+                    "name" => "smp_vp_post_template",
+                    "value" => (string) $settings["post_template"],
+                    "title" => "Post entity cards",
+                    "description" => "Choose the design for Verified Profiles attached to articles and press releases.",
+                    "profiles" => $preview,
+                    "input_class" => "smp-vp-template-setting",
+                    "input_data" => ["target" => "post"],
+                ]); ?>
                 <section class="smp-vp-section">
                     <h3 class="smp-vp-section-title">General</h3>
                     <div class="smp-vp-fields">
@@ -719,24 +837,32 @@ function smp_vp_display_render_settings(): void {
                         </div>
                     </div>
                 </section>
-                <section class="smp-vp-section">
-                    <h3 class="smp-vp-section-title">Typography</h3>
-                    <div class="smp-vp-fields">
-                        <div><label for="smp-vp-name-font-size">Name font size</label><input id="smp-vp-name-font-size" type="number" min="12" max="32" value="<?php echo esc_attr($settings["name_font_size"] ?? 18); ?>"></div>
-                        <div><label for="smp-vp-role-font-size">Role font size</label><input id="smp-vp-role-font-size" type="number" min="8" max="24" value="<?php echo esc_attr($settings["role_font_size"] ?? 10); ?>"></div>
-                    </div>
-                </section>
+                <?php if ( class_exists( TypographyControl::class ) ) : ?>
+                    <?php echo TypographyControl::render([
+                        "prefix" => "profile_card",
+                        "settings" => $settings,
+                        "defaults" => false,
+                        "title" => "Typography",
+                        "description" => "Adjust the name and role sizes, or preserve the surrounding site's text size.",
+                        "input_class" => "smp-vp-card-typography-setting",
+                        "font_size" => [
+                            ["key" => "name_font_size", "label" => "Name size", "min" => 12, "max" => 42, "suffix" => "px"],
+                            ["key" => "role_font_size", "label" => "Role size", "min" => 8, "max" => 24, "suffix" => "px"],
+                        ],
+                    ]); ?>
+                <?php endif; ?>
                 <?php echo smp_vp_display_color_palette($settings); ?>
             </div>
             <div class="smp-vp-checks">
-                <label><input id="smp-vp-display-enabled" type="checkbox" <?php checked($settings["enabled"]); ?>> Enable cards</label>
-                <label><input id="smp-vp-require-thumb" type="checkbox" <?php checked($settings["require_thumbnail"]); ?>> Require thumbnails</label>
+                <?php echo CoreUi::toggle("smp_vp_display_enabled", ! empty($settings["enabled"]), "Enable profile card output", ["id" => "smp-vp-display-enabled"]); ?>
+                <?php echo CoreUi::toggle("smp_vp_require_thumbnail", ! empty($settings["require_thumbnail"]), "Require profile photos", ["id" => "smp-vp-require-thumb"]); ?>
             </div>
             <div class="smp-vp-actions">
                 <button type="button" class="button button-primary" id="smp-vp-display-save">Save Feature Settings</button>
                 <div class="smp-vp-log" id="smp-vp-display-log">Ready.</div>
             </div>
-            <div class="smp-vp-loop-section">
+            <?php ob_start(); ?>
+            <div class="smp-vp-loop-section smp-vp-loop-builder">
                 <div class="smp-vp-loop-section-head">
                     <div>
                         <h3>Loop Items</h3>
@@ -758,66 +884,48 @@ function smp_vp_display_render_settings(): void {
                             <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></option>
                         <?php endforeach; ?>
                     </select></div>
-                    <div><label for="smp-vp-new-loop-template">Starting design</label><select id="smp-vp-new-loop-template">
-                        <?php foreach ($templates as $key => $template) : ?>
-                            <option value="<?php echo esc_attr($key); ?>"><?php echo esc_html($template["label"]); ?></option>
-                        <?php endforeach; ?>
-                    </select></div>
                     <button type="button" class="button button-primary" id="smp-vp-loop-create">Create Loop Item</button>
                 </div>
+                <?php echo smp_vp_display_template_selector([
+                    "id" => "smp-vp-new-loop-template-selector",
+                    "name" => "smp_vp_new_loop_template",
+                    "value" => "boxed-row",
+                    "title" => "Starting loop design",
+                    "description" => "Every available design is shown before the loop item is created.",
+                    "profiles" => $preview,
+                    "input_class" => "smp-vp-new-loop-template",
+                ]); ?>
                 <div id="smp-vp-loop-items">
                     <?php echo smp_vp_display_render_loop_items_admin($settings); ?>
                 </div>
             </div>
+            <?php
+            $loop_items_body = (string) ob_get_clean();
+            echo CoreUi::collapsible([
+                "title" => "Reusable loop items",
+                "body_html" => $loop_items_body,
+                "open" => false,
+                "query_key" => "reusable-loop-items",
+                "class" => "smp-vp-advanced-loops",
+            ]);
+            ?>
         <?php
         $settings_panel_body = (string) ob_get_clean();
         $settings_panel_meta = '<span class="smp-vp-current">'
-            . '<span class="smp-vp-pill">Homepage: <strong id="smp-vp-current-homepage">' . esc_html($labels[$settings["homepage_template"]] ?? $settings["homepage_template"]) . '</strong></span>'
-            . '<span class="smp-vp-pill">Post entities: <strong id="smp-vp-current-post">' . esc_html($labels[$settings["post_template"]] ?? $settings["post_template"]) . '</strong></span>'
+            . '<span class="smp-vp-pill">Homepage: <strong id="smp-vp-current-homepage">' . esc_html(smp_vp_display_template_label((string) $settings["homepage_template"])) . '</strong></span>'
+            . '<span class="smp-vp-pill">Post entities: <strong id="smp-vp-current-post">' . esc_html(smp_vp_display_template_label((string) $settings["post_template"])) . '</strong></span>'
             . '</span>';
         echo CoreUi::collapsible([
-            "title" => "Verified Profiles",
+            "title" => "Profile Cards",
             "body_html" => $settings_panel_body,
             "meta_html" => $settings_panel_meta,
-            "open" => false,
+            "open" => true,
             "query_key" => "verified-profiles",
             "class" => "smp-vp-panel smp-vp-core-panel",
         ]);
-        ob_start();
-        ?>
-            <p class="smp-vp-panel-intro">Each treatment shows one loop item. Use the buttons on the card to assign it.</p>
-            <div class="smp-vp-template-grid">
-                <?php foreach ($templates as $key => $template) : ?>
-                    <div class="smp-vp-template-card" data-template-key="<?php echo esc_attr($key); ?>">
-                        <div class="smp-vp-template-card-head">
-                            <div>
-                                <h3><?php echo esc_html($template["label"]); ?></h3>
-                                <p><?php echo esc_html($template["description"]); ?></p>
-                            </div>
-                            <div class="smp-vp-template-badges">
-                                <span class="smp-vp-template-badge smp-vp-template-badge-home">Homepage</span>
-                                <span class="smp-vp-template-badge smp-vp-template-badge-post">Post</span>
-                            </div>
-                        </div>
-                        <div class="smp-vp-preview-frame">
-                            <?php echo smp_vp_display_render_collection($preview, ["template" => $key]); ?>
-                        </div>
-                        <div class="smp-vp-template-actions">
-                            <button type="button" class="button smp-vp-template-action" data-target="homepage" data-template="<?php echo esc_attr($key); ?>">Use for homepage</button>
-                            <button type="button" class="button smp-vp-template-action" data-target="post" data-template="<?php echo esc_attr($key); ?>">Use for post entities</button>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php
-        $template_panel_body = (string) ob_get_clean();
-        echo CoreUi::collapsible([
-            "title" => "Template Library",
-            "body_html" => $template_panel_body,
-            "open" => false,
-            "query_key" => "template-library",
-            "class" => "smp-vp-panel smp-vp-core-panel",
-        ]);
+        if ( function_exists( __NAMESPACE__ . "\\smp_vp_profile_page_render_settings" ) ) {
+            smp_vp_profile_page_render_settings();
+        }
         ?>
     </div>
     <script>
@@ -841,8 +949,9 @@ function smp_vp_display_render_settings(): void {
                     muted_color: globalColor("muted_color"),
                     line_color: globalColor("line_color"),
                     soft_color: globalColor("soft_color"),
-                    name_font_size: $("#smp-vp-name-font-size").val(),
-                    role_font_size: $("#smp-vp-role-font-size").val()
+                    name_font_size: $root.find('[data-key="name_font_size"]').first().val(),
+                    role_font_size: $root.find('[data-key="role_font_size"]').first().val(),
+                    profile_card_preserve_font_size: $root.find('[data-key="profile_card_preserve_font_size"]').is(":checked") ? 1 : 0
                 };
             }
             function log(message){ $log.text(message || "Done."); }
@@ -879,14 +988,27 @@ function smp_vp_display_render_settings(): void {
                 const post = $("#smp-vp-post-template").val();
                 $("#smp-vp-current-homepage").text(labels[home] || home);
                 $("#smp-vp-current-post").text(labels[post] || post);
-                $(".smp-vp-template-card").each(function(){
-                    const key = $(this).data("template-key");
-                    $(this).toggleClass("is-homepage", key === home).toggleClass("is-post", key === post);
-                });
-                $(".smp-vp-template-action").each(function(){
-                    const target = $(this).data("target");
-                    const key = $(this).data("template");
-                    $(this).toggleClass("is-active", (target === "homepage" && key === home) || (target === "post" && key === post));
+                syncTemplatePreviews();
+            }
+            function syncTemplatePreviews(){
+                const primary = globalColor("primary_color") || "#b3272d";
+                const secondary = globalColor("secondary_color") || "#151515";
+                const ink = globalColor("ink_color") || secondary;
+                const muted = globalColor("muted_color") || "#747474";
+                const line = globalColor("line_color") || "#e6e1de";
+                const soft = globalColor("soft_color") || "#faf7f5";
+                const preserveSize = $root.find('[data-key="profile_card_preserve_font_size"]').is(":checked");
+                const nameSize = preserveSize ? "inherit" : ((parseInt($root.find('[data-key="name_font_size"]').first().val(), 10) || 18) + "px");
+                const roleSize = preserveSize ? "inherit" : ((parseInt($root.find('[data-key="role_font_size"]').first().val(), 10) || 10) + "px");
+                $root.find(".hpc-template-selection-preview .smp-vp-display").each(function(){
+                    this.style.setProperty("--vp-red", primary);
+                    this.style.setProperty("--vp-secondary", secondary);
+                    this.style.setProperty("--vp-ink", ink);
+                    this.style.setProperty("--vp-muted", muted);
+                    this.style.setProperty("--vp-line", line);
+                    this.style.setProperty("--vp-soft", soft);
+                    this.style.setProperty("--vp-name-size", nameSize);
+                    this.style.setProperty("--vp-role-size", roleSize);
                 });
             }
             function save(button, doneMessage, syncTarget){
@@ -896,7 +1018,14 @@ function smp_vp_display_render_settings(): void {
                 log("Saving display settings...");
                 return $.post(ajaxurl, { action: "smp_vp_display_save_settings", nonce: $root.data("nonce"), settings: collect(), sync_loop_target: syncTarget || "" })
                     .done(function(response){
-                        if (response && response.success) { if (response.data && response.data.html) { $("#smp-vp-loop-items").html(response.data.html); } log(doneMessage || response.data.message || "Feature settings saved."); }
+                        if (response && response.success) {
+                            if (response.data && response.data.html) {
+                                $("#smp-vp-loop-items").html(response.data.html);
+                                if (window.hexaTemplateSelection) { window.hexaTemplateSelection.init(document.getElementById("smp-vp-loop-items")); }
+                                syncLoopPreviews();
+                            }
+                            log(doneMessage || response.data.message || "Feature settings saved.");
+                        }
                         else { log((response && response.data && response.data.message) || "Save failed."); }
                     })
                     .fail(function(){ log("Save request failed."); })
@@ -905,16 +1034,16 @@ function smp_vp_display_render_settings(): void {
             function cardMessage(id, type, message){
                 const $card = $(".smp-vp-loop-card[data-loop-id=\"" + id + "\"]");
                 if (!$card.length) { return; }
-                const icon = type === "success" ? "✅" : "❌";
                 $card.find(".smp-vp-loop-card-response")
                     .removeAttr("hidden")
                     .removeClass("is-success is-error")
                     .addClass(type === "success" ? "is-success" : "is-error")
-                    .text(icon + " " + message);
+                    .text((type === "success" ? "Saved: " : "Error: ") + message);
             }
             function replaceLoops(response, cardStatus){
                 if (response && response.success && response.data && response.data.html) {
                     $("#smp-vp-loop-items").html(response.data.html);
+                    if (window.hexaTemplateSelection) { window.hexaTemplateSelection.init(document.getElementById("smp-vp-loop-items")); }
                     syncLoopPreviews();
                 }
                 if (cardStatus && cardStatus.id) {
@@ -927,7 +1056,7 @@ function smp_vp_display_render_settings(): void {
                     id: $card.data("loop-id"),
                     label: $card.find(".smp-vp-loop-label").val(),
                     context: $card.find(".smp-vp-loop-context").val(),
-                    template: $card.find(".smp-vp-loop-template").val(),
+                    template: $card.find(".smp-vp-loop-template:checked").val(),
                     rows: $card.find(".smp-vp-loop-rows").val(),
                     items_per_row: $card.find(".smp-vp-loop-items-per-row").val(),
                     require_thumbnail: $card.find(".smp-vp-loop-require-thumb").is(":checked") ? 1 : 0,
@@ -939,7 +1068,7 @@ function smp_vp_display_render_settings(): void {
             }
             function syncLoopPreview($card){
                 if (!$card || !$card.length) { return; }
-                const template = $card.find(".smp-vp-loop-template").val();
+                const template = $card.find(".smp-vp-loop-template:checked").val();
                 const label = labels[template] || template;
                 const primary = $card.find(".smp-vp-loop-primary-color").val() || "#b3272d";
                 const secondary = $card.find(".smp-vp-loop-secondary-color").val() || "#151515";
@@ -950,9 +1079,7 @@ function smp_vp_display_render_settings(): void {
                 const outputCount = Math.min(48, rows * itemsPerRow);
                 $card.find(".smp-vp-loop-output-count strong").text(outputCount);
                 $card.find(".smp-vp-loop-template-chip").text("Design: " + label);
-                $card.find(".smp-vp-loop-preview-template").attr("hidden", true);
-                $card.find(".smp-vp-loop-preview-template[data-template-key=\"" + template + "\"]").removeAttr("hidden");
-                $card.find(".smp-vp-loop-preview .smp-vp-display").each(function(){
+                $card.find(".hpc-template-selection-preview .smp-vp-display").each(function(){
                     this.style.setProperty("--vp-red", primary);
                     this.style.setProperty("--vp-secondary", secondary);
                     this.style.setProperty("--vp-ink", secondary);
@@ -996,13 +1123,13 @@ function smp_vp_display_render_settings(): void {
                     })
                     .always(function(){ $button.prop("disabled", false).text(original); });
             }
-            $(".smp-vp-template-action").on("click", function(){
+            $root.on("change", ".smp-vp-template-setting", function(){
                 const target = $(this).data("target");
-                const key = $(this).data("template");
+                const key = $(this).val();
                 if (target === "homepage") { $("#smp-vp-homepage-template").val(key); }
                 if (target === "post") { $("#smp-vp-post-template").val(key); }
                 syncState();
-                save(this, "Template selection saved.", target);
+                save(document.getElementById("smp-vp-display-save"), "Template selection saved.", target);
             });
             $("#smp-vp-display-save").on("click", function(){ save(this); });
             $root.on("hexa:elementorPaletteLoaded", "[data-hpc-elementor-palette]", function(event){
@@ -1014,7 +1141,7 @@ function smp_vp_display_render_settings(): void {
                 const original = $button.text();
                 $button.prop("disabled", true).text("Creating...");
                 log("Creating loop item...");
-                $.post(ajaxurl, { action: "smp_vp_display_create_loop_item", nonce: $root.data("nonce"), label: $("#smp-vp-new-loop-label").val(), context: $("#smp-vp-new-loop-context").val(), template: $("#smp-vp-new-loop-template").val() })
+                $.post(ajaxurl, { action: "smp_vp_display_create_loop_item", nonce: $root.data("nonce"), label: $("#smp-vp-new-loop-label").val(), context: $("#smp-vp-new-loop-context").val(), template: $root.find(".smp-vp-new-loop-template:checked").val() })
                     .done(function(response){ replaceLoops(response); if (response && response.success) { $("#smp-vp-new-loop-label").val(""); } })
                     .fail(function(){ log("Loop create request failed."); })
                     .always(function(){ $button.prop("disabled", false).text(original); });
@@ -1043,6 +1170,7 @@ function smp_vp_display_render_settings(): void {
             $root.on("input change", ".smp-vp-loop-label,.smp-vp-loop-context,.smp-vp-loop-template,.smp-vp-loop-rows,.smp-vp-loop-items-per-row,.smp-vp-loop-primary-color,.smp-vp-loop-secondary-color,.smp-vp-loop-primary-picker,.smp-vp-loop-secondary-picker,.smp-vp-loop-name-font-size,.smp-vp-loop-role-font-size,.smp-vp-loop-require-thumb", function(){
                 syncLoopPreview($(this).closest(".smp-vp-loop-card"));
             });
+            $root.on("input change", ".smp-vp-global-color,.smp-vp-global-color-picker,.smp-vp-card-typography-setting", syncTemplatePreviews);
             $root.on("click", ".smp-vp-loop-delete", function(){
                 const $button = $(this);
                 const original = $button.text();
@@ -1097,7 +1225,7 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
             $id = (string) $item["id"];
             $shortcode = "[verified_profiles_loop id=\"" . $id . "\"]";
             $is_default = in_array($id, ["homepage", "single-post"], true);
-            $template_label = $templates[$item["template"]]["label"] ?? $item["template"];
+            $template_label = smp_vp_display_template_label((string) $item["template"]);
             ?>
             <div class="smp-vp-loop-card" data-loop-id="<?php echo esc_attr($id); ?>">
                 <div class="smp-vp-loop-card-head">
@@ -1115,11 +1243,6 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
                     <div><label>Context</label><select class="smp-vp-loop-context">
                         <?php foreach ($contexts as $key => $label) : ?>
                             <option value="<?php echo esc_attr($key); ?>" <?php selected($item["context"], $key); ?>><?php echo esc_html($label); ?></option>
-                        <?php endforeach; ?>
-                    </select></div>
-                    <div><label>Design</label><select class="smp-vp-loop-template">
-                        <?php foreach ($templates as $key => $template) : ?>
-                            <option value="<?php echo esc_attr($key); ?>" <?php selected($item["template"], $key); ?>><?php echo esc_html($template["label"]); ?></option>
                         <?php endforeach; ?>
                     </select></div>
                     <div><label>Rows</label><input type="number" min="1" max="8" class="smp-vp-loop-rows" value="<?php echo esc_attr($item["rows"]); ?>"></div>
@@ -1154,7 +1277,7 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
                     </div>
                     <div><label>Name font size</label><input type="number" min="12" max="42" class="smp-vp-loop-name-font-size" value="<?php echo esc_attr($item["name_font_size"]); ?>"></div>
                     <div><label>Role font size</label><input type="number" min="8" max="24" class="smp-vp-loop-role-font-size" value="<?php echo esc_attr($item["role_font_size"]); ?>"></div>
-                    <div><label><input type="checkbox" class="smp-vp-loop-require-thumb" <?php checked($item["require_thumbnail"]); ?>> Require thumbnails</label></div>
+                    <div><?php echo CoreUi::toggle("smp_vp_loop_require_thumbnail_" . $id, ! empty($item["require_thumbnail"]), "Require profile photos", ["id" => "smp-vp-loop-require-thumbnail-" . $id, "input_class" => "smp-vp-loop-require-thumb"]); ?></div>
                     <?php echo smp_vp_display_render_loop_preview_admin($item, $templates); ?>
                 </div>
                 <div class="smp-vp-loop-card-response" hidden></div>
@@ -1174,29 +1297,17 @@ function smp_vp_display_render_loop_items_admin(array $settings): string {
 
 
 function smp_vp_display_render_loop_preview_admin(array $item, array $templates): string {
-    $profiles = smp_vp_display_preview_profiles((int) ($item["limit"] ?? 1));
-    $base_args = [
-        "primary_color" => $item["primary_color"] ?? "#b3272d",
-        "secondary_color" => $item["secondary_color"] ?? "#151515",
-        "ink_color" => $item["secondary_color"] ?? "#151515",
-        "items_per_row" => $item["items_per_row"] ?? 3,
-        "name_font_size" => $item["name_font_size"] ?? 18,
-        "role_font_size" => $item["role_font_size"] ?? 10,
-        "archive_url" => "#",
-    ];
-
-    ob_start();
-    ?>
-    <div class="smp-vp-loop-preview" data-active-template="<?php echo esc_attr($item["template"]); ?>">
-        <div class="smp-vp-loop-preview-title">Live card preview</div>
-        <?php foreach ($templates as $key => $template) : ?>
-            <div class="smp-vp-loop-preview-template" data-template-key="<?php echo esc_attr($key); ?>" <?php echo $key === $item["template"] ? "" : "hidden"; ?>>
-                <?php echo smp_vp_display_render_collection($profiles, array_replace($base_args, ["template" => $key])); ?>
-            </div>
-        <?php endforeach; ?>
-    </div>
-    <?php
-    return (string) ob_get_clean();
+    unset($templates);
+    return smp_vp_display_template_selector([
+        "id" => "smp-vp-loop-template-selector-" . (string) $item["id"],
+        "name" => "smp_vp_loop_template_" . (string) $item["id"],
+        "value" => (string) $item["template"],
+        "title" => "Loop design",
+        "description" => "Select this loop item's design from the complete visual library.",
+        "profiles" => smp_vp_display_preview_profiles(1),
+        "input_class" => "smp-vp-loop-template",
+        "class" => "smp-vp-loop-template-selector",
+    ]);
 }
 
 function smp_vp_ajax_display_create_loop_item(): void {
@@ -1218,7 +1329,7 @@ function smp_vp_ajax_display_create_loop_item(): void {
 
     $id = smp_vp_display_unique_loop_id($label, $settings["loop_items"] ?? []);
     $requested_template = sanitize_key(wp_unslash((string) ($_POST["template"] ?? "")));
-    $templates = array_keys(smp_vp_display_templates());
+    $templates = smp_vp_display_template_values();
     $template = in_array($requested_template, $templates, true) ? $requested_template : ($context === "single" ? ($settings["post_template"] ?? "directory-list") : ($settings["homepage_template"] ?? "boxed-row"));
     $item = smp_vp_display_sanitize_loop_item([
         "id" => $id,
@@ -1457,6 +1568,9 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
     $settings = array_replace(smp_vp_display_settings(), $args);
     $template = $settings["template"] ?? $settings["homepage_template"];
     $templates = smp_vp_display_templates();
+    if (smp_vp_display_is_custom_template((string) $template)) {
+        return "";
+    }
     if (empty($templates[$template])) {
         $template = "boxed-row";
     }
@@ -1465,8 +1579,11 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
     $configured_items_per_row = smp_vp_display_number($settings["items_per_row"] ?? smp_vp_display_default_items_per_row((string) $template), smp_vp_display_default_items_per_row((string) $template), 1, 6);
     $effective_items_per_row = $profile_count > 0 ? min($configured_items_per_row, $profile_count) : $configured_items_per_row;
 
+    $preserve_size = ! empty($settings["profile_card_preserve_font_size"]);
+    $name_size = $preserve_size ? "inherit" : absint($settings["name_font_size"] ?? 18) . "px";
+    $role_size = $preserve_size ? "inherit" : absint($settings["role_font_size"] ?? 10) . "px";
     $vars = sprintf(
-        "--vp-red:%s;--vp-secondary:%s;--vp-ink:%s;--vp-muted:%s;--vp-line:%s;--vp-soft:%s;--vp-items-per-row:%d;--vp-name-size:%dpx;--vp-role-size:%dpx;",
+        "--vp-red:%s;--vp-secondary:%s;--vp-ink:%s;--vp-muted:%s;--vp-line:%s;--vp-soft:%s;--vp-items-per-row:%d;--vp-name-size:%s;--vp-role-size:%s;",
         esc_attr($settings["primary_color"]),
         esc_attr($settings["secondary_color"] ?? ($settings["ink_color"] ?? "#151515")),
         esc_attr($settings["ink_color"]),
@@ -1474,8 +1591,8 @@ function smp_vp_display_render_collection(array $profiles, array $args = []): st
         esc_attr($settings["line_color"]),
         esc_attr($settings["soft_color"]),
         $effective_items_per_row,
-        absint($settings["name_font_size"] ?? 18),
-        absint($settings["role_font_size"] ?? 10)
+        esc_attr($name_size),
+        esc_attr($role_size)
     );
 
     ob_start();
@@ -1740,9 +1857,16 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
     }
 
     $item = $items[$id];
-    $template = sanitize_key((string) ($atts["template"] ?? $item["template"]));
+    $requested_template = sanitize_key((string) ($atts["template"] ?? ""));
+    $template = "" !== $requested_template ? $requested_template : sanitize_key((string) $item["template"]);
+    if (smp_vp_display_is_custom_template($template)) {
+        return "";
+    }
     if (! isset(smp_vp_display_templates()[$template])) {
-        $template = $item["template"];
+        $template = sanitize_key((string) $item["template"]);
+    }
+    if (smp_vp_display_is_custom_template($template) || ! isset(smp_vp_display_templates()[$template])) {
+        return "";
     }
 
     $ids = smp_vp_display_loop_profile_ids($item, $atts);
@@ -1894,7 +2018,7 @@ function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
 
 function smp_vp_display_append_to_content(string $content): string {
     $settings = smp_vp_display_settings();
-    if (empty($settings["enabled"]) || ($settings["single_injection"] ?? "after_content") !== "after_content" || is_admin() || ! is_singular(["post", "press-release"]) || ! in_the_loop() || ! is_main_query()) {
+    if (empty($settings["enabled"]) || smp_vp_display_is_custom_template((string) ($settings["post_template"] ?? "")) || ($settings["single_injection"] ?? "after_content") !== "after_content" || is_admin() || ! is_singular(["post", "press-release"]) || ! in_the_loop() || ! is_main_query()) {
         return $content;
     }
 

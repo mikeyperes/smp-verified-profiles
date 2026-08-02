@@ -14,13 +14,15 @@ $checks = [
     'Supplies grouped navigation.' => str_contains( $dashboard, "'groups'          => smp_vp_dashboard_tab_groups( \$tabs )" ),
     'Supplies sidebar identity.' => str_contains( $dashboard, "'sidebar_identity' => smp_vp_sidebar_identity()" ),
     'Keeps the legacy Display Cards URL as an alias.' => str_contains( $dashboard, "'display-cards' => 'features'" ),
+    'Keeps the legacy Profile Pages URL as a Features alias.' => str_contains( $dashboard, "'profile-pages' => 'features'" ),
     'Does not render Display Cards as a duplicate switch route.' => ! str_contains( $dashboard, "case 'display-cards':" ),
-    'Groups profile configuration, display, and generation routes together.' => str_contains( $dashboard, "[ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'profile-pages', 'pages', 'spawning-api' ] ]" ),
+    'Groups profile configuration, display, and generation routes together.' => str_contains( $dashboard, "[ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'pages', 'spawning-api' ] ]" ),
+    'Does not expose Profile Pages as a duplicate sidebar route.' => ! str_contains( $dashboard, "'features', 'profile-pages', 'pages'" ),
     'Groups maintenance routes under System.' => str_contains( $dashboard, "[ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ]" ),
     'Groups technical routes under Developer.' => str_contains( $dashboard, "[ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ]" ),
     'Removes retired host tab CSS.' => ! str_contains( $components, '.smp-tab-btn' ),
     'Removes dead legacy tab links.' => ! str_contains( $overview, "jQuery('.smp-tab-btn" ),
-    'Vendors the current Hexa WP Core package.' => '1.1.2' === $core,
+    'Vendors the current Hexa WP Core package.' => '2.1.0' === $core,
 ];
 
 $failed = false;

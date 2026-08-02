@@ -76,6 +76,7 @@ function smp_vp_dashboard_tabs() {
 function smp_vp_dashboard_tab_aliases(): array {
     return [
         'display-cards' => 'features',
+        'profile-pages' => 'features',
     ];
 }
 
@@ -114,7 +115,7 @@ function smp_vp_resolve_dashboard_tab( $tab_id, array $tabs ): string {
 function smp_vp_dashboard_tab_groups( array $tabs ): array {
     $groups = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'profile-pages', 'pages', 'spawning-api' ] ],
+        [ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'pages', 'spawning-api' ] ],
         [ 'label' => 'Configuration', 'tabs' => [ 'emails' ] ],
         [ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ],
         [ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ],

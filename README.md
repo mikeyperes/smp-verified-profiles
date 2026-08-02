@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `7.0.6`
+- Version: `7.1.0`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -60,7 +60,7 @@ Verified Profiles constructs profile-specific schema nodes. `Hexa\PluginCore\Sch
 The settings dashboard uses Hexa WP Core grouped tabs and collapsible components. Major areas include:
 
 - Overview, Profile Settings, Custom Post Types, and ACF structures.
-- Display cards, page/listing templates, shortcodes, and snippets.
+- Profile cards, full profile-page templates, page/listing templates, shortcodes, and snippets.
 - Profile generation/spawning and processing tools.
 - Plugins, updates, Hexa WP Core, and developer diagnostics.
 
@@ -78,7 +78,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 1.1.2 |
+| Hexa WP Core bundle | 2.1.0 |
 
 ACF Pro is required for the profile field structures. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
@@ -97,6 +97,13 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 7.1.0
+
+- Rebuilt every Profile Card and Verified Profile page template selection surface with the reusable Hexa WP Core three-column visual selector.
+- Added a third full-page design and a true custom-design mode that emits no automatic/default plugin markup or styling while preserving explicitly named template shortcodes.
+- Moved full profile-page settings into Features, retained the old URL as an alias, and replaced the standalone template library with Core toggles, detailed colors, Elementor import, and typography controls.
+- Updated the bundled Hexa WP Core to 2.1.0.
 
 ### 7.0.6
 

@@ -2,33 +2,24 @@
 
 namespace smp_verified_profiles;
 
+use Hexa\PluginCore\WpAdminComponents\ColorControl;
+use Hexa\PluginCore\WpAdminComponents\CoreUi;
+use Hexa\PluginCore\WpAdminComponents\DetailedColorPicker;
+use Hexa\PluginCore\WpAdminComponents\TemplateSelectionControl;
+use Hexa\PluginCore\WpAdminComponents\TypographyControl;
+
 defined( 'ABSPATH' ) || exit;
 
 const SMP_VP_PROFILE_PAGE_OPTION = 'smp_vp_profile_page_settings';
 const SMP_VP_PROFILE_PAGE_NONCE  = 'smp_vp_profile_page_nonce';
+const SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE = 'custom';
 
-add_filter( 'smp_vp_dashboard_tabs', __NAMESPACE__ . '\\smp_vp_profile_page_dashboard_tab' );
-add_filter( 'smp_vp_render_dashboard_tab', __NAMESPACE__ . '\\smp_vp_render_profile_page_dashboard_tab', 10, 2 );
 add_action( 'wp_ajax_smp_vp_profile_page_save', __NAMESPACE__ . '\\smp_vp_ajax_profile_page_save' );
 add_filter( 'the_content', __NAMESPACE__ . '\\smp_vp_profile_page_filter_content', 18 );
 add_filter( 'template_include', __NAMESPACE__ . '\\smp_vp_profile_page_template_include', 99 );
 add_filter( 'elementor/theme/get_location_templates/template_id', __NAMESPACE__ . '\\smp_vp_profile_page_elementor_single_template_id', 10, 2 );
 add_filter( 'hello_elementor_page_title', __NAMESPACE__ . '\\smp_vp_profile_page_hello_page_title', 20 );
 add_shortcode( 'verified_profile_page', __NAMESPACE__ . '\\smp_vp_verified_profile_page_shortcode' );
-
-function smp_vp_profile_page_dashboard_tab( array $tabs ): array {
-    $tabs['profile-pages'] = 'Profile Page Templates';
-    return $tabs;
-}
-
-function smp_vp_render_profile_page_dashboard_tab( $rendered, string $tab_id ) {
-    if ( 'profile-pages' !== $tab_id ) {
-        return $rendered;
-    }
-
-    smp_vp_profile_page_render_settings();
-    return true;
-}
 
 function smp_vp_profile_page_templates(): array {
     return [
@@ -37,6 +28,12 @@ function smp_vp_profile_page_templates(): array {
             'short_label' => 'Editorial Masthead',
             'class'       => 'pp-a',
             'description' => 'Sharp editorial profile page with a large serif name, portrait, social row, details, organizations, and article sections.',
+        ],
+        'modern-ledger' => [
+            'label'       => 'Template B: Modern Ledger',
+            'short_label' => 'Modern Ledger',
+            'class'       => 'pp-b',
+            'description' => 'Balanced portrait-led profile with a clear biography column, compact facts, organizations, and recent coverage.',
         ],
         'sidebar-dossier' => [
             'label'       => 'Template C: Sidebar Dossier',
@@ -59,6 +56,9 @@ function smp_vp_profile_page_defaults(): array {
         'muted_color'       => '#8a8a8a',
         'line_color'        => '#e8e4df',
         'soft_color'        => '#faf8f5',
+        'heading_font_size' => 46,
+        'body_font_size'    => 17,
+        'profile_page_preserve_font_size' => false,
     ];
 }
 
@@ -80,54 +80,61 @@ function smp_vp_profile_page_grid_width_css( array $settings ): string {
 
 function smp_vp_profile_page_color_palette_html( array $settings ): string {
     $defaults = smp_vp_profile_page_defaults();
-    $colors   = [];
-
-    foreach ( smp_vp_profile_page_color_keys() as $key => $label ) {
-        $colors[] = [
-            'key'             => $key,
-            'label'           => $label,
-            'value'           => (string) ( $settings[ $key ] ?? $defaults[ $key ] ),
-            'default'         => (string) $defaults[ $key ],
-            'id'              => 'smp-vp-profile-page-' . str_replace( '_', '-', $key ),
-            'control_class'   => 'smp-vp-profile-page-color-control',
-            'hex_input_class' => 'smp-vp-page-color smp-vp-profile-page-' . str_replace( '_', '-', $key ),
-            'picker_class'    => 'smp-vp-profile-page-color-picker',
-        ];
+    if ( ! class_exists( DetailedColorPicker::class ) || ! class_exists( ColorControl::class ) ) {
+        return '';
     }
 
-    if ( class_exists( '\\Hexa\\PluginCore\\WpAdminComponents\\ColorPalette' ) ) {
-        return \Hexa\PluginCore\WpAdminComponents\ColorPalette::render(
+    $detailed = DetailedColorPicker::render(
+        [
+            'id'          => 'smp-vp-profile-page-detailed-colors',
+            'title'       => 'Detailed Color Picker',
+            'description' => 'Set the accent and heading colors, or import both directly from Elementor.',
+            'show_elementor_import' => true,
+            'primary'     => [
+                'key'             => 'primary_color',
+                'label'           => 'Primary color',
+                'value'           => (string) $settings['primary_color'],
+                'default'         => (string) $defaults['primary_color'],
+                'id'              => 'smp-vp-profile-page-primary-color',
+                'control_class'   => 'smp-vp-profile-page-color-control',
+                'hex_input_class' => 'smp-vp-page-color',
+            ],
+            'secondary'   => [
+                'key'             => 'ink_color',
+                'label'           => 'Secondary color',
+                'value'           => (string) $settings['ink_color'],
+                'default'         => (string) $defaults['ink_color'],
+                'id'              => 'smp-vp-profile-page-ink-color',
+                'control_class'   => 'smp-vp-profile-page-color-control',
+                'hex_input_class' => 'smp-vp-page-color',
+            ],
+        ]
+    );
+
+    $supporting = '<div class="smp-vp-page-supporting-colors">';
+    foreach ( [ 'body_color', 'muted_color', 'line_color', 'soft_color' ] as $key ) {
+        $supporting .= ColorControl::render(
             [
-                'id'                 => 'smp-vp-profile-page-color-palette',
-                'title'              => 'Profile page colors',
-                'description'        => 'Hexa WP Core color palette for the profile page templates. Edit saved colors here, or load Elementor colors below and copy any hex value into the fields above.',
-                'colors'             => $colors,
-                'elementor_detector' => [
-                    'id'           => 'smp-vp-profile-page-elementor-palette',
-                    'title'        => 'Elementor palette',
-                    'button_label' => 'Load Elementor colors',
-                    'description'  => 'Reference only. This never changes saved profile-page colors until you paste a value into the fields above and save.',
-                    'empty_label'  => 'Click "Load Elementor colors" to show your Elementor palette.',
-                ],
+                'key'             => $key,
+                'label'           => smp_vp_profile_page_color_keys()[ $key ],
+                'value'           => (string) $settings[ $key ],
+                'default'         => (string) $defaults[ $key ],
+                'id'              => 'smp-vp-profile-page-' . str_replace( '_', '-', $key ),
+                'control_class'   => 'smp-vp-profile-page-color-control',
+                'hex_input_class' => 'smp-vp-page-color',
             ]
         );
     }
+    $supporting .= '</div>';
 
-    ob_start();
-    ?>
-    <section class="smp-vp-page-color-fallback">
-        <h3>Profile page colors</h3>
-        <div class="smp-vp-page-color-fallback-grid">
-            <?php foreach ( $colors as $color ) : ?>
-                <label>
-                    <span><?php echo esc_html( (string) $color['label'] ); ?></span>
-                    <input class="<?php echo esc_attr( (string) $color['hex_input_class'] ); ?>" data-key="<?php echo esc_attr( (string) $color['key'] ); ?>" type="text" value="<?php echo esc_attr( (string) $color['value'] ); ?>">
-                </label>
-            <?php endforeach; ?>
-        </div>
-    </section>
-    <?php
-    return (string) ob_get_clean();
+    return '<div class="smp-vp-page-color-tools">' . $detailed . CoreUi::detail_card(
+        [
+            'title'       => 'Supporting colors',
+            'body_html'   => $supporting,
+            'open'        => false,
+            'persist_key' => 'smp-vp-profile-page-supporting-colors',
+        ]
+    ) . '</div>';
 }
 
 function smp_vp_profile_page_settings(): array {
@@ -142,6 +149,7 @@ function smp_vp_profile_page_sanitize( array $input ): array {
     $defaults  = smp_vp_profile_page_defaults();
 
     $selected = sanitize_key( (string) ( $input['selected_template'] ?? $defaults['selected_template'] ) );
+    $templates[] = SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE;
     if ( ! in_array( $selected, $templates, true ) ) {
         $selected = $defaults['selected_template'];
     }
@@ -156,11 +164,19 @@ function smp_vp_profile_page_sanitize( array $input ): array {
         'selected_template' => $selected,
         'render_mode'       => $mode,
         'grid_width'        => min( 2400, max( 0, absint( $input['grid_width'] ?? $defaults['grid_width'] ) ) ),
+        'heading_font_size' => min( 84, max( 24, absint( $input['heading_font_size'] ?? $defaults['heading_font_size'] ) ) ),
+        'body_font_size'    => min( 28, max( 12, absint( $input['body_font_size'] ?? $defaults['body_font_size'] ) ) ),
+        'profile_page_preserve_font_size' => ! empty( $input['profile_page_preserve_font_size'] ),
     ];
 
     foreach ( array_keys( smp_vp_profile_page_color_keys() ) as $key ) {
         $color = sanitize_hex_color( (string) ( $input[ $key ] ?? $defaults[ $key ] ) );
         $settings[ $key ] = $color ?: $defaults[ $key ];
+    }
+
+    if ( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $settings['selected_template'] ) {
+        $settings['enabled']     = false;
+        $settings['render_mode'] = 'shortcode';
     }
 
     return $settings;
@@ -189,6 +205,7 @@ function smp_vp_profile_page_should_render_auto(): bool {
 
     return ! empty( $settings['enabled'] )
         && 'auto' === $settings['render_mode']
+        && SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE !== $settings['selected_template']
         && ! is_admin()
         && is_singular( smp_vp_profile_page_cpt_slug() )
         && in_the_loop()
@@ -239,7 +256,9 @@ function smp_vp_profile_page_should_use_single_template(): bool {
     }
 
     $settings = smp_vp_profile_page_settings();
-    return ! empty( $settings['enabled'] ) && 'auto' === $settings['render_mode'];
+    return ! empty( $settings['enabled'] )
+        && 'auto' === $settings['render_mode']
+        && SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE !== $settings['selected_template'];
 }
 
 function smp_vp_profile_page_template_include( string $template ): string {
@@ -324,9 +343,16 @@ function smp_vp_verified_profile_page_shortcode( $atts = [] ): string {
         return '';
     }
 
-    $template = sanitize_key( (string) $atts['template'] );
-    if ( '' === $template || 'auto' === $template || ! isset( smp_vp_profile_page_templates()[ $template ] ) ) {
-        $template = $settings['selected_template'];
+    $requested_template = sanitize_key( (string) $atts['template'] );
+    $template           = $requested_template;
+    if ( '' === $template || 'auto' === $template ) {
+        $template = (string) $settings['selected_template'];
+    } elseif ( ! isset( smp_vp_profile_page_templates()[ $template ] ) ) {
+        return '';
+    }
+
+    if ( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $template ) {
+        return '';
     }
 
     $overrides = [];
@@ -807,22 +833,41 @@ function smp_vp_profile_page_social_links( int $post_id ): array {
 
 function smp_vp_render_profile_page_template( int $post_id, string $template = '', array $overrides = [] ): string {
     $templates = smp_vp_profile_page_templates();
-    if ( '' === $template || ! isset( $templates[ $template ] ) ) {
-        $template = smp_vp_profile_page_settings()['selected_template'];
+    if ( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $template ) {
+        return '';
     }
 
-    $data     = smp_vp_profile_page_data( $post_id );
+    if ( '' === $template ) {
+        $template = smp_vp_profile_page_settings()['selected_template'];
+    }
+    if ( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $template || ! isset( $templates[ $template ] ) ) {
+        return '';
+    }
+
+    return smp_vp_render_profile_page_template_data( smp_vp_profile_page_data( $post_id ), $template, $overrides );
+}
+
+function smp_vp_render_profile_page_template_data( array $data, string $template, array $overrides = [] ): string {
+    $templates = smp_vp_profile_page_templates();
+    if ( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $template || ! isset( $templates[ $template ] ) ) {
+        return '';
+    }
+
     $settings = array_replace( smp_vp_profile_page_settings(), $overrides );
     $settings = smp_vp_profile_page_sanitize( $settings );
+    $preserve = ! empty( $settings['profile_page_preserve_font_size'] );
     $vars     = sprintf(
-        '--pp-accent:%s;--ink:%s;--body:%s;--muted:%s;--line:%s;--soft:%s;--pp-grid-width:%s;',
+        '--pp-accent:%s;--ink:%s;--body:%s;--muted:%s;--line:%s;--soft:%s;--pp-grid-width:%s;--pp-heading-size:%s;--pp-mobile-heading-size:%s;--pp-body-size:%s;',
         esc_attr( $settings['primary_color'] ),
         esc_attr( $settings['ink_color'] ),
         esc_attr( $settings['body_color'] ),
         esc_attr( $settings['muted_color'] ),
         esc_attr( $settings['line_color'] ),
         esc_attr( $settings['soft_color'] ),
-        esc_attr( smp_vp_profile_page_grid_width_css( $settings ) )
+        esc_attr( smp_vp_profile_page_grid_width_css( $settings ) ),
+        esc_attr( $preserve ? 'inherit' : (int) $settings['heading_font_size'] . 'px' ),
+        esc_attr( $preserve ? 'inherit' : min( 34, (int) $settings['heading_font_size'] ) . 'px' ),
+        esc_attr( $preserve ? 'inherit' : (int) $settings['body_font_size'] . 'px' )
     );
 
     ob_start();
@@ -832,6 +877,8 @@ function smp_vp_render_profile_page_template( int $post_id, string $template = '
         <?php
         if ( 'sidebar-dossier' === $template ) {
             echo smp_vp_profile_page_template_c( $data );
+        } elseif ( 'modern-ledger' === $template ) {
+            echo smp_vp_profile_page_template_b( $data );
         } else {
             echo smp_vp_profile_page_template_a( $data );
         }
@@ -1016,6 +1063,38 @@ function smp_vp_profile_page_template_a( array $data ): string {
     return (string) ob_get_clean();
 }
 
+function smp_vp_profile_page_template_b( array $data ): string {
+    $facts    = smp_vp_profile_page_facts_html( $data['facts'], 6 );
+    $orgs     = smp_vp_profile_page_orgs_html( $data['organizations'] );
+    $articles = smp_vp_profile_page_articles_html( $data['related_posts'] );
+
+    ob_start();
+    ?>
+    <div class="ppb-inner">
+        <header class="ppb-hero">
+            <?php echo smp_vp_profile_page_photo_html( $data, 'ppb-photo' ); ?>
+            <div class="ppb-intro">
+                <span class="pp-eyebrow">Verified Profile</span>
+                <h1 class="pp-name"><?php echo esc_html( $data['name'] ); ?> <?php echo smp_vp_profile_page_verified_icon(); ?></h1>
+                <div class="pp-role"><?php echo esc_html( $data['role'] ); ?></div>
+                <?php echo smp_vp_profile_page_socials_html( $data['socials'] ); ?>
+            </div>
+        </header>
+        <div class="ppb-layout">
+            <main class="ppb-main">
+                <?php echo smp_vp_profile_page_section_html( 'Profile', '<div class="pp-bio">' . $data['bio'] . '</div>' ); ?>
+                <?php echo smp_vp_profile_page_section_html( 'Recent Coverage', $articles ); ?>
+            </main>
+            <aside class="ppb-aside">
+                <?php echo smp_vp_profile_page_section_html( 'At a Glance', $facts ); ?>
+                <?php echo smp_vp_profile_page_section_html( 'Organizations', $orgs ); ?>
+            </aside>
+        </div>
+    </div>
+    <?php
+    return (string) ob_get_clean();
+}
+
 function smp_vp_profile_page_template_c( array $data ): string {
     $meta_posts = ! empty( $data['authored_posts'] ) ? $data['authored_posts'] : $data['related_posts'];
     $facts      = smp_vp_profile_page_facts_html( $data['facts'], 8 );
@@ -1053,9 +1132,9 @@ function smp_vp_profile_page_css(): string {
 .smp-vp-profile-page .pp-link:after,.smp-vp-profile-page .pp-art .ah:after{content:" \\2197";display:inline-block;font-size:.78em;line-height:1;transform:translateY(-.14em)}
 .smp-vp-profile-page .pp-eyebrow{align-items:center;color:var(--pp-accent);display:flex;font-size:11px;font-weight:700;gap:10px;letter-spacing:.22em;text-transform:uppercase;margin:0 0 10px}
 .smp-vp-profile-page .pp-eyebrow:before{background:var(--pp-accent);content:"";display:block;flex:0 0 auto;height:2px;width:18px}
-.smp-vp-profile-page .pp-name{align-items:center;color:var(--ink);display:flex;font-family:Georgia,serif;font-size:46px;font-weight:700;gap:13px;letter-spacing:-.01em;line-height:1.04;margin:10px 0 0}
+.smp-vp-profile-page .pp-name{align-items:center;color:var(--ink);display:flex;font-family:Georgia,serif;font-size:var(--pp-heading-size,46px);font-weight:700;gap:13px;letter-spacing:0;line-height:1.04;margin:10px 0 0}
 .smp-vp-profile-page .pp-role{color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.14em;line-height:1.7;margin-top:12px;text-transform:uppercase}
-.smp-vp-profile-page .pp-bio{color:var(--body);font-size:16.5px;line-height:1.72;margin:0}
+.smp-vp-profile-page .pp-bio{color:var(--body);font-size:var(--pp-body-size,17px);line-height:1.72;margin:0}
 .smp-vp-profile-page .pp-bio p{margin:0 0 1em}
 .smp-vp-profile-page .pp-bio p:last-child{margin-bottom:0}
 .smp-vp-profile-page .pp-verif{color:var(--pp-accent);display:inline-block;flex:0 0 auto;height:21px;width:21px}
@@ -1083,6 +1162,16 @@ function smp_vp_profile_page_css(): string {
 .smp-vp-profile-page .ppa-hero{align-items:start;display:grid;gap:40px;grid-template-columns:1fr 260px}
 .smp-vp-profile-page .ppa-hero .pp-bio{margin-top:20px}
 .smp-vp-profile-page .ppa-photo{border-radius:14px;height:320px;width:260px}
+.smp-vp-profile-page.pp-b .ppb-inner{margin:0 auto;max-width:var(--pp-grid-width,none);padding:44px 0;width:100%}
+.smp-vp-profile-page .ppb-hero{align-items:center;border-bottom:1px solid var(--line);display:grid;gap:34px;grid-template-columns:210px minmax(0,1fr);padding-bottom:34px}
+.smp-vp-profile-page .ppb-photo{border-radius:6px;height:240px;width:210px}
+.smp-vp-profile-page.pp-b .ppb-intro .pp-name{font-family:inherit;font-weight:760;max-width:18ch}
+.smp-vp-profile-page .ppb-layout{display:grid;gap:44px;grid-template-columns:minmax(0,1fr) 310px}
+.smp-vp-profile-page .ppb-main,.smp-vp-profile-page .ppb-aside{min-width:0}
+.smp-vp-profile-page .ppb-aside{background:var(--soft);padding:0 24px 28px}
+.smp-vp-profile-page.pp-b .ppb-aside .pp-section{margin-top:28px;padding-top:22px}
+.smp-vp-profile-page.pp-b .ppb-aside .pp-facts,.smp-vp-profile-page.pp-b .ppb-aside .pp-orgs{grid-template-columns:1fr}
+.smp-vp-profile-page.pp-b .ppb-aside .pp-org{background:#fff;border-radius:6px}
 .smp-vp-profile-page.pp-c .ppc-inner{display:grid;gap:0;grid-template-columns:268px 1fr;margin:0 auto;max-width:var(--pp-grid-width,none);width:100%}
 .smp-vp-profile-page .ppc-side{background:var(--soft);border-right:1px solid var(--line);padding:34px 28px}
 .smp-vp-profile-page .ppc-photo{aspect-ratio:4/5;border-radius:10px;width:100%}
@@ -1093,7 +1182,7 @@ function smp_vp_profile_page_css(): string {
 .smp-vp-profile-page .ppc-meta .pp-facts{display:grid;gap:14px;grid-template-columns:1fr}
 .smp-vp-profile-page .ppc-main{padding:42px 44px}
 .smp-vp-profile-page .ppc-main .pp-section:first-child{border-top:0;margin-top:0;padding-top:0}
-@media(max-width:740px){.smp-vp-profile-page.pp-a .ppa-inner{padding:34px 0}.smp-vp-profile-page .ppa-hero{grid-template-columns:1fr}.smp-vp-profile-page .ppa-photo{height:220px;order:-1;width:180px}.smp-vp-profile-page .pp-name{font-size:34px}.smp-vp-profile-page .pp-facts,.smp-vp-profile-page .pp-arts{grid-template-columns:1fr}.smp-vp-profile-page.pp-c .ppc-inner{grid-template-columns:1fr}.smp-vp-profile-page .ppc-side{border-bottom:1px solid var(--line);border-right:0}.smp-vp-profile-page .ppc-main{padding:32px 0}}
+@media(max-width:740px){.smp-vp-profile-page.pp-a .ppa-inner,.smp-vp-profile-page.pp-b .ppb-inner{padding:34px 0}.smp-vp-profile-page .ppa-hero,.smp-vp-profile-page .ppb-hero,.smp-vp-profile-page .ppb-layout{grid-template-columns:1fr}.smp-vp-profile-page .ppa-photo{height:220px;order:-1;width:180px}.smp-vp-profile-page .ppb-photo{height:220px;width:190px}.smp-vp-profile-page .pp-name{font-size:var(--pp-mobile-heading-size,34px)}.smp-vp-profile-page .pp-facts,.smp-vp-profile-page .pp-arts{grid-template-columns:1fr}.smp-vp-profile-page .ppb-aside{padding:1px 18px 24px}.smp-vp-profile-page.pp-c .ppc-inner{grid-template-columns:1fr}.smp-vp-profile-page .ppc-side{border-bottom:1px solid var(--line);border-right:0}.smp-vp-profile-page .ppc-main{padding:32px 0}}
 ';
 }
 
@@ -1118,169 +1207,222 @@ function smp_vp_profile_page_sample_profile_id(): int {
     return ! empty( $posts ) ? absint( $posts[0] ) : 0;
 }
 
+function smp_vp_profile_page_preview_data( int $sample_id = 0 ): array {
+    if ( $sample_id > 0 ) {
+        return smp_vp_profile_page_data( $sample_id );
+    }
+
+    return [
+        'id'             => 0,
+        'name'           => 'Alex Morgan',
+        'role'           => 'Founder and Industry Leader',
+        'image'          => '',
+        'bio'            => '<p>Alex is a verified professional known for building thoughtful organizations and contributing practical expertise to the industry.</p>',
+        'facts'          => [
+            'Based'     => 'New York, United States',
+            'Education' => 'State University',
+            'Field'     => 'Media and Technology',
+        ],
+        'organizations'  => [
+            [ 'name' => 'Northstar Group', 'description' => 'Independent organization focused on durable growth.', 'url' => '' ],
+            [ 'name' => 'Civic Studio', 'description' => 'Research and strategy for public-facing brands.', 'url' => '' ],
+        ],
+        'related_posts'  => [],
+        'authored_posts' => [],
+        'socials'        => [
+            [ 'key' => 'linkedin', 'label' => 'LinkedIn', 'url' => '#' ],
+            [ 'key' => 'website', 'label' => 'Website', 'url' => '#' ],
+        ],
+    ];
+}
+
+function smp_vp_profile_page_template_selector( array $settings, int $sample_id, string $sample_url ): string {
+    if ( ! class_exists( TemplateSelectionControl::class ) ) {
+        return '';
+    }
+
+    $choices = [];
+    $data    = smp_vp_profile_page_preview_data( $sample_id );
+    foreach ( smp_vp_profile_page_templates() as $key => $template ) {
+        $actions = CoreUi::copy_button( '[verified_profile_page template="' . $key . '"]', 'Copy shortcode' );
+        if ( '' !== $sample_url ) {
+            $preview_url = add_query_arg( 'smp_vp_template_preview', $key, $sample_url );
+            $actions    .= CoreUi::external_link( $preview_url, 'View live', 'hpc-button secondary' );
+        }
+
+        $choices[ $key ] = [
+            'label'          => (string) $template['short_label'],
+            'description'    => (string) $template['description'],
+            'preview_html'   => smp_vp_render_profile_page_template_data( $data, $key ),
+            'preview_width'  => 1120,
+            'preview_height' => 300,
+            'actions_html'   => $actions,
+        ];
+    }
+
+    return TemplateSelectionControl::render(
+        [
+            'id'          => 'smp-vp-profile-page-template-selector',
+            'name'        => 'smp_vp_profile_page_template',
+            'value'       => (string) $settings['selected_template'],
+            'title'       => 'Verified Profile page design',
+            'description' => 'Choose the complete design used on individual Verified Profile pages. Every available template is shown here.',
+            'templates'   => $choices,
+            'custom'      => [
+                'label'       => "I'm going to design it myself",
+                'description' => 'Disable automatic page takeover, default shortcode markup, and all plugin template styling.',
+            ],
+            'columns'        => 3,
+            'preview_height' => 300,
+            'preview_width'  => 1120,
+            'input_class'    => 'smp-vp-profile-page-template-setting',
+        ]
+    );
+}
+
 function smp_vp_profile_page_render_settings(): void {
     if ( ! current_user_can( 'manage_options' ) ) {
         echo '<div class="notice notice-error"><p>Insufficient permissions.</p></div>';
         return;
     }
 
-    if ( class_exists( '\\Hexa\\PluginCore\\WpAdminComponents\\CoreUi' ) ) {
-        \Hexa\PluginCore\WpAdminComponents\CoreUi::render_assets();
+    CoreUi::render_assets();
+    $settings   = smp_vp_profile_page_settings();
+    $templates  = smp_vp_profile_page_templates();
+    $sample_id  = smp_vp_profile_page_sample_profile_id();
+    $sample_url = $sample_id ? (string) get_permalink( $sample_id ) : '';
+    $nonce      = wp_create_nonce( SMP_VP_PROFILE_PAGE_NONCE );
+    $labels     = [ SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE => "I'm going to design it myself" ];
+    foreach ( $templates as $key => $template ) {
+        $labels[ $key ] = (string) $template['short_label'];
     }
 
-    $settings        = smp_vp_profile_page_settings();
-    $templates       = smp_vp_profile_page_templates();
-    $sample_id       = smp_vp_profile_page_sample_profile_id();
-    $sample_url      = $sample_id ? get_permalink( $sample_id ) : '';
-    $nonce           = wp_create_nonce( SMP_VP_PROFILE_PAGE_NONCE );
-    $template_labels = [];
-    foreach ( $templates as $key => $template ) {
-        $template_labels[ $key ] = $template['short_label'];
-    }
+    ob_start();
     ?>
-    <style>
-        <?php echo smp_vp_profile_page_css(); ?>
-        .smp-vp-page-admin{max-width:1280px}.smp-vp-page-admin *{box-sizing:border-box}.smp-vp-page-panel{background:#fff;border:1px solid #dcdcde;border-radius:10px;margin:16px 0;overflow:hidden}.smp-vp-page-head{align-items:flex-start;border-bottom:1px solid #eceff3;display:flex;gap:18px;justify-content:space-between;padding:20px}.smp-vp-page-head h2{font-size:22px;margin:0 0 6px}.smp-vp-page-head p{color:#646970;margin:0}.smp-vp-page-state{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.smp-vp-page-pill{background:#f0f6fc;border-radius:999px;color:#0a4b78;display:inline-flex;font-size:12px;font-weight:800;gap:6px;padding:7px 11px;text-transform:uppercase}.smp-vp-page-controls{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));padding:20px}.smp-vp-page-controls label{display:block;font-weight:800;margin-bottom:6px}.smp-vp-page-controls select,.smp-vp-page-controls input[type=text],.smp-vp-page-controls input[type=number]{min-height:38px;width:100%}.smp-vp-page-control-box{border:1px solid #e6e9ee;border-radius:8px;padding:14px}.smp-vp-page-color-section{display:grid;gap:16px;padding:0 20px 20px}.smp-vp-page-color-section .hpc-color-palette,.smp-vp-page-color-section .hpc-elementor-palette{margin:0}.smp-vp-page-color-fallback{border:1px solid #e6e9ee;border-radius:10px;padding:16px 18px}.smp-vp-page-color-fallback h3{font-size:13px;letter-spacing:.07em;margin:0 0 14px;text-transform:uppercase}.smp-vp-page-color-fallback-grid{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}.smp-vp-page-color-fallback-grid label{display:grid;font-weight:800;gap:6px}.smp-vp-page-actions{align-items:center;background:#f6f7f7;border-top:1px solid #eceff3;display:flex;flex-wrap:wrap;gap:12px;padding:16px 20px}.smp-vp-page-log{background:#fff;border:1px solid #dcdcde;border-radius:6px;color:#3c434a;font-family:Menlo,Consolas,monospace;min-height:38px;min-width:260px;padding:9px 12px}.smp-vp-page-grid{display:grid;gap:18px;grid-template-columns:1fr;padding:20px}.smp-vp-page-card{border:1px solid #dcdcde;border-radius:10px;overflow:hidden}.smp-vp-page-card.is-selected{border-color:#3157d5;box-shadow:0 0 0 1px rgba(49,87,213,.2)}.smp-vp-page-card-head{border-bottom:1px solid #eef0f3;display:flex;gap:12px;justify-content:space-between;padding:16px}.smp-vp-page-card-head h3{font-size:16px;margin:0 0 5px}.smp-vp-page-card-head p{color:#646970;margin:0}.smp-vp-page-badge{background:#eef3ff;border-radius:999px;color:#3157d5;display:none;font-size:11px;font-weight:900;letter-spacing:.06em;padding:5px 9px;text-transform:uppercase}.smp-vp-page-card.is-selected .smp-vp-page-badge{display:inline-flex}.smp-vp-page-preview{background:#fbfaf9;max-height:760px;overflow:auto;padding:0}.smp-vp-page-preview .smp-vp-profile-page{transform-origin:top left}.smp-vp-page-card-actions{align-items:center;background:#f6f7f7;border-top:1px solid #eef0f3;display:flex;flex-wrap:wrap;gap:10px;padding:14px 16px}.smp-vp-page-shortcode{background:#fff;border:1px solid #dcdcde;border-radius:6px;font-family:Menlo,Consolas,monospace;padding:8px 10px}.smp-vp-page-empty{padding:20px}.smp-vp-page-admin .button.is-active{background:#3157d5;border-color:#3157d5;color:#fff}@media(max-width:980px){.smp-vp-page-controls,.smp-vp-page-color-fallback-grid{grid-template-columns:1fr}}
-    </style>
-    <div class="smp-vp-page-admin" id="smp-vp-profile-pages" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-        <div class="smp-vp-page-panel">
-            <div class="smp-vp-page-head">
-                <div>
-                    <h2>Profile Page Templates</h2>
-                    <p>Template A and Template C from the HerForward full-page profile redesign. The frontend output is generated by the Verified Profiles plugin and can also be placed with <code>[verified_profile_page]</code>.</p>
+    <div class="smp-vp-profile-page-settings" id="smp-vp-profile-pages" data-nonce="<?php echo esc_attr( $nonce ); ?>" data-hpc-typography-scope>
+        <p class="smp-vp-page-panel-intro">Choose the complete Verified Profile page design and its shared visual settings. Previews use the same renderer as the frontend.</p>
+        <div class="smp-vp-page-sections">
+            <?php echo smp_vp_profile_page_template_selector( $settings, $sample_id, $sample_url ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <section class="smp-vp-page-setting-section">
+                <h3>Output</h3>
+                <div class="smp-vp-page-output-grid">
+                    <?php echo CoreUi::toggle( 'smp_vp_profile_page_enabled', ! empty( $settings['enabled'] ), 'Enable plugin profile-page output', [ 'id' => 'smp-vp-page-enabled' ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    <label class="smp-vp-page-field" for="smp-vp-page-render-mode"><span>Frontend mode</span><select id="smp-vp-page-render-mode"><option value="auto" <?php selected( $settings['render_mode'], 'auto' ); ?>>Automatic profile-page replacement</option><option value="shortcode" <?php selected( $settings['render_mode'], 'shortcode' ); ?>>Shortcode only</option></select></label>
+                    <label class="smp-vp-page-field" for="smp-vp-page-grid-width"><span>Maximum grid width</span><input id="smp-vp-page-grid-width" type="number" min="0" max="2400" step="10" value="<?php echo esc_attr( (string) $settings['grid_width'] ); ?>"><small>Use 0 to inherit the theme content width.</small></label>
                 </div>
-                <div class="smp-vp-page-state">
-                    <span class="smp-vp-page-pill">Selected: <strong id="smp-vp-page-current-template"><?php echo esc_html( $templates[ $settings['selected_template'] ]['short_label'] ?? $settings['selected_template'] ); ?></strong></span>
-                    <span class="smp-vp-page-pill">Auto render: <strong id="smp-vp-page-current-enabled"><?php echo $settings['enabled'] && 'auto' === $settings['render_mode'] ? 'On' : 'Off'; ?></strong></span>
-                </div>
-            </div>
-            <div class="smp-vp-page-controls">
-                <div class="smp-vp-page-control-box">
-                    <label for="smp-vp-page-selected-template">Active template</label>
-                    <select id="smp-vp-page-selected-template">
-                        <?php foreach ( $templates as $key => $template ) : ?>
-                            <option value="<?php echo esc_attr( $key ); ?>" <?php selected( $settings['selected_template'], $key ); ?>><?php echo esc_html( $template['label'] ); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="smp-vp-page-control-box">
-                    <label for="smp-vp-page-render-mode">Frontend mode</label>
-                    <select id="smp-vp-page-render-mode">
-                        <option value="auto" <?php selected( $settings['render_mode'], 'auto' ); ?>>Render selected template on profile pages</option>
-                        <option value="shortcode" <?php selected( $settings['render_mode'], 'shortcode' ); ?>>Shortcode only</option>
-                    </select>
-                </div>
-                <div class="smp-vp-page-control-box">
-                    <label><input id="smp-vp-page-enabled" type="checkbox" <?php checked( $settings['enabled'] ); ?>> Enable selected profile-page template</label>
-                    <p class="description">Turn this on to replace the single profile content with the selected template.</p>
-                </div>
-                <div class="smp-vp-page-control-box">
-                    <label for="smp-vp-page-grid-width">Grid width</label>
-                    <input id="smp-vp-page-grid-width" type="number" min="0" max="2400" step="10" value="<?php echo esc_attr( (string) $settings['grid_width'] ); ?>">
-                    <p class="description">0 leaves width uncapped so the theme grid controls it. Enter pixels to cap this profile-page template, or override in shortcode with <code>grid_width="1140"</code>.</p>
-                </div>
-            </div>
-            <div class="smp-vp-page-color-section">
-                <?php echo smp_vp_profile_page_color_palette_html( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-            </div>
-            <div class="smp-vp-page-actions">
-                <button type="button" class="button button-primary" id="smp-vp-page-save">Save Profile Page Settings</button>
-                <button type="button" class="button" id="smp-vp-page-copy-shortcode" data-copy="[verified_profile_page]">Copy shortcode</button>
-                <?php if ( $sample_url ) : ?><a class="button" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $sample_url ); ?>">View current live profile</a><?php endif; ?>
-                <div class="smp-vp-page-log" id="smp-vp-page-log">Ready.</div>
-            </div>
-        </div>
-        <div class="smp-vp-page-panel">
-            <div class="smp-vp-page-head">
-                <div>
-                    <h2>Template Library</h2>
-                    <p>Preview the real renderer, view a live URL with the template forced, then select the template to trigger it for profile pages.</p>
-                </div>
-            </div>
-            <?php if ( ! $sample_id ) : ?>
-                <div class="smp-vp-page-empty">No verified profile posts were found. Create a profile first, then this page can show live previews and live URLs.</div>
-            <?php else : ?>
-                <div class="smp-vp-page-grid">
-                    <?php foreach ( $templates as $key => $template ) : ?>
-                        <?php $preview_url = add_query_arg( 'smp_vp_template_preview', $key, $sample_url ); ?>
-                        <section class="smp-vp-page-card <?php echo $settings['selected_template'] === $key ? 'is-selected' : ''; ?>" data-template="<?php echo esc_attr( $key ); ?>" data-label="<?php echo esc_attr( $template['short_label'] ); ?>">
-                            <div class="smp-vp-page-card-head">
-                                <div>
-                                    <h3><?php echo esc_html( $template['label'] ); ?></h3>
-                                    <p><?php echo esc_html( $template['description'] ); ?></p>
-                                </div>
-                                <span class="smp-vp-page-badge">Selected</span>
-                            </div>
-                            <div class="smp-vp-page-preview">
-                                <?php echo smp_vp_render_profile_page_template( $sample_id, $key ); ?>
-                            </div>
-                            <div class="smp-vp-page-card-actions">
-                                <button type="button" class="button button-primary smp-vp-page-use-template <?php echo $settings['selected_template'] === $key ? 'is-active' : ''; ?>" data-template="<?php echo esc_attr( $key ); ?>">Use this page template</button>
-                                <a class="button" target="_blank" rel="noopener noreferrer" href="<?php echo esc_url( $preview_url ); ?>">View live with this template</a>
-                                <span class="smp-vp-page-shortcode">[verified_profile_page template="<?php echo esc_html( $key ); ?>"]</span>
-                            </div>
-                        </section>
-                    <?php endforeach; ?>
-                </div>
+                <p class="smp-vp-page-custom-note" data-smp-vp-page-custom-note<?php echo SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE === $settings['selected_template'] ? '' : ' hidden'; ?>>Custom-design mode is active. Automatic takeover and default shortcode output are disabled; explicitly named template shortcodes remain available.</p>
+            </section>
+            <?php if ( class_exists( TypographyControl::class ) ) : ?>
+                <?php echo TypographyControl::render( [
+                    'prefix'      => 'profile_page',
+                    'settings'    => $settings,
+                    'defaults'    => false,
+                    'title'       => 'Typography',
+                    'description' => 'Adjust profile-page heading and body sizes, or preserve the surrounding site sizes.',
+                    'input_class' => 'smp-vp-profile-page-typography-setting',
+                    'font_size'   => [
+                        [ 'key' => 'heading_font_size', 'label' => 'Heading size', 'min' => 24, 'max' => 84, 'suffix' => 'px' ],
+                        [ 'key' => 'body_font_size', 'label' => 'Body size', 'min' => 12, 'max' => 28, 'suffix' => 'px' ],
+                    ],
+                ] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
             <?php endif; ?>
+            <?php echo smp_vp_profile_page_color_palette_html( $settings ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+        </div>
+        <div class="smp-vp-page-actions">
+            <button type="button" class="hpc-button" id="smp-vp-page-save">Save Profile Page Settings</button>
+            <?php echo CoreUi::copy_button( '[verified_profile_page]', 'Copy default shortcode' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php if ( '' !== $sample_url ) : ?><?php echo CoreUi::external_link( $sample_url, 'Open current profile', 'hpc-button secondary' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><?php endif; ?>
+            <span class="smp-vp-page-log" id="smp-vp-page-log" role="status">Ready.</span>
         </div>
     </div>
+    <?php
+    $body = (string) ob_get_clean();
+
+    echo '<style>' . smp_vp_profile_page_admin_css() . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+    echo CoreUi::collapsible( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        [
+            'title'       => 'Verified Profile Pages',
+            'body_html'   => $body,
+            'meta_html'   => CoreUi::pill( 'Selected: ' . ( $labels[ $settings['selected_template'] ] ?? $settings['selected_template'] ), 'dark' ),
+            'open'        => true,
+            'query_key'   => 'profile-pages',
+            'class'       => 'smp-vp-profile-page-core-panel',
+        ]
+    );
+    smp_vp_profile_page_admin_script( $labels );
+}
+
+function smp_vp_profile_page_admin_css(): string {
+    return '
+.smp-vp-profile-page-core-panel{margin-top:18px}.smp-vp-profile-page-core-panel>.hpc-section-body{padding:0}.smp-vp-profile-page-settings{min-width:0}.smp-vp-page-panel-intro{color:#64748b;margin:0;padding:18px 20px 0}.smp-vp-page-sections{display:grid;gap:18px;padding:20px}.smp-vp-profile-page-settings .hpc-template-selection{margin:0}.smp-vp-profile-page-settings .hpc-template-selection-label{display:flex;font-weight:inherit;margin:0}.smp-vp-profile-page-settings .hpc-template-selection-preview .smp-vp-profile-page{min-height:620px}.smp-vp-profile-page-settings .hpc-template-selection-actions{min-height:58px}.smp-vp-page-setting-section{border:1px solid #d8dee8;border-radius:8px;padding:16px}.smp-vp-page-setting-section>h3{font-size:15px;margin:0 0 14px}.smp-vp-page-output-grid{align-items:start;display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}.smp-vp-page-output-grid>.hpc-toggle{margin-top:25px}.smp-vp-page-field{display:grid;gap:6px;margin:0}.smp-vp-page-field>span{color:#314056;font-size:12px;font-weight:800;text-transform:uppercase}.smp-vp-page-field select,.smp-vp-page-field input{min-height:40px;width:100%}.smp-vp-page-field small{color:#64748b}.smp-vp-page-custom-note{background:#fff7e5;border:1px solid #e7c86d;border-radius:6px;color:#694d00;margin:14px 0 0;padding:10px 12px}.smp-vp-page-color-tools{display:grid;gap:14px}.smp-vp-page-color-tools .hpc-detail-card{margin:0}.smp-vp-page-supporting-colors{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr));padding:14px}.smp-vp-page-actions{align-items:center;background:#f6f7f7;border-top:1px solid #e4e9f0;display:flex;flex-wrap:wrap;gap:10px;padding:16px 20px}.smp-vp-page-log{color:#475569;font-weight:700;margin-left:auto}.smp-vp-profile-page-settings.is-custom .smp-vp-page-output-grid{opacity:.7}@media(max-width:1100px){.smp-vp-page-output-grid{grid-template-columns:1fr 1fr}.smp-vp-page-output-grid>.hpc-toggle{margin-top:0}}@media(max-width:782px){.smp-vp-page-output-grid,.smp-vp-page-supporting-colors{grid-template-columns:1fr}.smp-vp-page-log{margin-left:0;width:100%}}
+';
+}
+
+function smp_vp_profile_page_admin_script( array $labels ): void {
+    ?>
     <script>
-        jQuery(function($){
-            const $root = $("#smp-vp-profile-pages");
-            if (!$root.length) return;
-            const templates = <?php echo wp_json_encode( $template_labels ); ?>;
-            function log(message){ $("#smp-vp-page-log").text(message || "Ready."); }
-            function values(){
-                const settings = {
-                    enabled: $("#smp-vp-page-enabled").is(":checked") ? 1 : 0,
-                    selected_template: $("#smp-vp-page-selected-template").val(),
-                    render_mode: $("#smp-vp-page-render-mode").val(),
-                    grid_width: $("#smp-vp-page-grid-width").val()
-                };
-                $root.find("[data-hpc-color-hex-input].smp-vp-page-color,.smp-vp-page-color:not([data-hpc-color-hex-input])").each(function(){ settings[$(this).data("key")] = $(this).val(); });
-                return settings;
-            }
-            function syncSelected(template){
-                $("#smp-vp-page-selected-template").val(template);
-                $(".smp-vp-page-card").removeClass("is-selected").find(".smp-vp-page-use-template").removeClass("is-active");
-                const $card = $('.smp-vp-page-card[data-template="'+template+'"]');
-                $card.addClass("is-selected").find(".smp-vp-page-use-template").addClass("is-active");
-                $("#smp-vp-page-current-template").text(templates[template] || template);
-                $("#smp-vp-page-current-enabled").text($("#smp-vp-page-enabled").is(":checked") && $("#smp-vp-page-render-mode").val() === "auto" ? "On" : "Off");
-            }
-            function save(button){
-                const $button = $(button);
-                const original = $button.text();
-                $button.prop("disabled", true).text("Saving...");
-                log("Saving profile page template settings...");
-                $.post(ajaxurl, { action: "smp_vp_profile_page_save", nonce: $root.data("nonce"), settings: values() })
-                    .done(function(response){
-                        if (response && response.success) {
-                            syncSelected(response.data.settings.selected_template);
-                            log("Saved.");
-                            return;
-                        }
-                        log((response && response.data && response.data.message) || "Save failed.");
-                    })
-                    .fail(function(){ log("Save request failed."); })
-                    .always(function(){ $button.prop("disabled", false).text(original); });
-            }
-            $root.on("click", "#smp-vp-page-save", function(){ save(this); });
-            $root.on("change", "#smp-vp-page-selected-template,#smp-vp-page-render-mode,#smp-vp-page-enabled", function(){ syncSelected($("#smp-vp-page-selected-template").val()); });
-            $root.on("click", ".smp-vp-page-use-template", function(){
-                const template = $(this).data("template");
-                $("#smp-vp-page-enabled").prop("checked", true);
-                $("#smp-vp-page-render-mode").val("auto");
-                syncSelected(template);
-                save(this);
+    (function($){
+        const $root = $("#smp-vp-profile-pages");
+        if (!$root.length) return;
+        const labels = <?php echo wp_json_encode( $labels ); ?>;
+        const custom = <?php echo wp_json_encode( SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE ); ?>;
+        const $log = $("#smp-vp-page-log");
+        function selected(){ return String($root.find(".smp-vp-profile-page-template-setting:checked").val() || ""); }
+        function color(key){ return String($root.find('[data-hpc-color-hex-input][data-key="'+key+'"]').first().val() || ""); }
+        function collect(){
+            return {
+                enabled: $("#smp-vp-page-enabled").is(":checked") ? 1 : 0,
+                selected_template: selected(),
+                render_mode: $("#smp-vp-page-render-mode").val(),
+                grid_width: $("#smp-vp-page-grid-width").val(),
+                primary_color: color("primary_color"), ink_color: color("ink_color"), body_color: color("body_color"),
+                muted_color: color("muted_color"), line_color: color("line_color"), soft_color: color("soft_color"),
+                heading_font_size: $root.find('[data-key="heading_font_size"]').first().val(),
+                body_font_size: $root.find('[data-key="body_font_size"]').first().val(),
+                profile_page_preserve_font_size: $root.find('[data-key="profile_page_preserve_font_size"]').is(":checked") ? 1 : 0
+            };
+        }
+        function sync(){
+            const isCustom = selected() === custom;
+            if (isCustom) { $("#smp-vp-page-enabled").prop("checked", false); $("#smp-vp-page-render-mode").val("shortcode"); }
+            $root.toggleClass("is-custom", isCustom);
+            $root.find("[data-smp-vp-page-custom-note]").prop("hidden", !isCustom);
+            $root.closest(".smp-vp-profile-page-core-panel").find(".hpc-pill").first().text("Selected: " + (labels[selected()] || selected()));
+        }
+        function syncPreviews(){
+            const preserve = $root.find('[data-key="profile_page_preserve_font_size"]').is(":checked");
+            const heading = Math.max(24, Math.min(84, parseInt($root.find('[data-key="heading_font_size"]').first().val(), 10) || 46));
+            const body = Math.max(12, Math.min(28, parseInt($root.find('[data-key="body_font_size"]').first().val(), 10) || 17));
+            const width = Math.max(0, Math.min(2400, parseInt($("#smp-vp-page-grid-width").val(), 10) || 0));
+            $root.find(".hpc-template-selection-preview .smp-vp-profile-page").each(function(){
+                this.style.setProperty("--pp-accent", color("primary_color") || "#2f55ff");
+                this.style.setProperty("--ink", color("ink_color") || "#101010");
+                this.style.setProperty("--body", color("body_color") || "#565656");
+                this.style.setProperty("--muted", color("muted_color") || "#8a8a8a");
+                this.style.setProperty("--line", color("line_color") || "#e8e4df");
+                this.style.setProperty("--soft", color("soft_color") || "#faf8f5");
+                this.style.setProperty("--pp-grid-width", width ? width + "px" : "none");
+                this.style.setProperty("--pp-heading-size", preserve ? "inherit" : heading + "px");
+                this.style.setProperty("--pp-mobile-heading-size", preserve ? "inherit" : Math.min(34, heading) + "px");
+                this.style.setProperty("--pp-body-size", preserve ? "inherit" : body + "px");
             });
-            $root.on("click", "#smp-vp-page-copy-shortcode", function(){
-                const code = $(this).data("copy");
-                if (navigator.clipboard) { navigator.clipboard.writeText(code); }
-                log("Copied shortcode.");
-            });
-        });
+        }
+        function save(button, message){
+            const $button = $(button || "#smp-vp-page-save"), original = $button.text();
+            $button.prop("disabled", true).text("Saving..."); $log.text("Saving profile page settings...");
+            return $.post(ajaxurl, {action:"smp_vp_profile_page_save", nonce:$root.data("nonce"), settings:collect()})
+                .done(function(response){
+                    if (response && response.success) { $log.text(message || response.data.message || "Saved."); sync(); return; }
+                    $log.text((response && response.data && response.data.message) || "Save failed.");
+                })
+                .fail(function(){ $log.text("Save request failed."); })
+                .always(function(){ $button.prop("disabled", false).text(original); });
+        }
+        $root.on("change", ".smp-vp-profile-page-template-setting", function(){ sync(); save(document.getElementById("smp-vp-page-save"), "Template selection saved."); });
+        $root.on("click", "#smp-vp-page-save", function(){ save(this); });
+        $root.on("input change", ".smp-vp-page-color,.smp-vp-profile-page-typography-setting,#smp-vp-page-grid-width", syncPreviews);
+        sync(); syncPreviews();
+    })(jQuery);
     </script>
     <?php
 }
