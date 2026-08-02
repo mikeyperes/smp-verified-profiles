@@ -1678,6 +1678,59 @@ function smp_vp_display_loop_profile_ids(array $item, array $atts = []): array {
     return smp_vp_display_homepage_ids($limit, $require_thumbnail);
 }
 
+/**
+ * Resolve the publication's historical Elementor Loop Item for profiles named
+ * in a single article. This option predates the display-card renderer and is
+ * still the canonical editable design source on migrated publication sites.
+ */
+function smp_vp_display_single_post_elementor_template_id(): int {
+    $template_id = absint(get_option("options_verified_profile_loop_items_display_single_post_mentioned_in_article", 0));
+    if ($template_id <= 0 || "elementor_library" !== get_post_type($template_id)) {
+        return 0;
+    }
+
+    return "loop-item" === (string) get_post_meta($template_id, "_elementor_template_type", true) ? $template_id : 0;
+}
+
+/**
+ * Render verified profiles through the saved Elementor Loop Item while each
+ * profile is the active dynamic context. The wrapper preserves the historical
+ * six-column desktop and two-column mobile behavior from the publication.
+ */
+function smp_vp_display_render_elementor_collection(array $ids, int $template_id, string $id): string {
+    if (! class_exists("\\Elementor\\Plugin") || $template_id <= 0) {
+        return "";
+    }
+
+    $original_post = $GLOBALS["post"] ?? null;
+    $frontend = \Elementor\Plugin::instance()->frontend;
+    $items = "";
+
+    foreach ($ids as $profile_id) {
+        $profile = get_post((int) $profile_id);
+        if (! $profile) {
+            continue;
+        }
+
+        $GLOBALS["post"] = $profile;
+        setup_postdata($profile);
+        $items .= (string) $frontend->get_builder_content_for_display($template_id, true);
+    }
+
+    wp_reset_postdata();
+    if ($original_post instanceof \WP_Post) {
+        $GLOBALS["post"] = $original_post;
+        setup_postdata($original_post);
+    }
+
+    if ("" === $items) {
+        return "";
+    }
+
+    $style = "<style>.verified-profiles-loop-single-post.smp-vp-elementor-loop{width:100%;display:block}.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem}@media(max-width:600px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>";
+    return $style . "<div class=\"verified-profiles-loop verified-profiles-loop-" . esc_attr($id) . " smp-vp-elementor-loop display_single_post_mentioned_in_article\" data-smp-vp-template-id=\"" . esc_attr((string) $template_id) . "\"><div class=\"shortcode\">" . $items . "</div></div>";
+}
+
 function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
     $settings = smp_vp_display_settings();
     $id = sanitize_key($id ?: ($atts["id"] ?? "homepage"));
@@ -1695,6 +1748,16 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
     $ids = smp_vp_display_loop_profile_ids($item, $atts);
     if (! $ids) {
         return smp_vp_display_empty_loop_marker($id);
+    }
+
+    if ("single-post" === $id) {
+        $elementor_template_id = smp_vp_display_single_post_elementor_template_id();
+        if ($elementor_template_id > 0) {
+            $elementor_output = smp_vp_display_render_elementor_collection($ids, $elementor_template_id, $id);
+            if ("" !== $elementor_output) {
+                return $elementor_output;
+            }
+        }
     }
 
     $render_args = array_replace($settings, [
