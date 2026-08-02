@@ -11,6 +11,7 @@ $assertions = [
     'plugin owns the single-post section wrapper' => str_contains($display, 'class="smp-vp-single-post-section"'),
     'plugin owns the section heading' => str_contains($display, "esc_html__('In This Article', 'smp-verified-profiles')"),
     'plugin section uses an H2 heading' => str_contains($display, '<h2 id="'),
+    'tablet collection uses three columns' => str_contains($display, '@media(max-width:1024px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(3,minmax(0,1fr))!important}'),
     'automatic content injection uses the full section' => str_contains($display, 'smp_vp_display_single_post_section(' . "\n" . '            smp_vp_display_render_loop_item'),
     'canonical shortcode uses the full section' => str_contains($display, 'smp_vp_display_single_post_section(' . "\n" . '            smp_vp_verified_profiles_loop_shortcode'),
     'fallback shortcode uses the full section' => str_contains($shortcodes, '? smp_vp_display_single_post_section($loop_html)'),

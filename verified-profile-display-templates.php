@@ -1869,7 +1869,7 @@ function smp_vp_display_render_elementor_collection(array $ids, int $template_id
         return "";
     }
 
-    $style = "<style>.verified-profiles-loop-single-post.smp-vp-elementor-loop{width:100%;display:block}.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem}@media(max-width:600px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>";
+    $style = "<style>.verified-profiles-loop-single-post.smp-vp-elementor-loop{width:100%;display:block}.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem}@media(max-width:1024px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:600px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>";
     return $style . "<div class=\"verified-profiles-loop verified-profiles-loop-" . esc_attr($id) . " smp-vp-elementor-loop display_single_post_mentioned_in_article\" data-smp-vp-template-id=\"" . esc_attr((string) $template_id) . "\"><div class=\"shortcode\">" . $items . "</div></div>";
 }
 
