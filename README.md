@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `7.1.1`
+- Version: `7.1.2`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,11 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 7.1.2
+
+- Consolidated the live single-post "In This Article" wrapper and empty-state handling with the full-row profile-template selector release.
+- Preserved the shortcode fallback and Elementor-host hiding behavior while shipping the complete Hexa WP Core 2.1.1 bundle.
 
 ### 7.1.1
 

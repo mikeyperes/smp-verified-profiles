@@ -746,11 +746,33 @@ function smp_vp_display_css(): string {
 }
 
 function smp_vp_display_empty_section_assets(): string {
-    return '<style>.smp-vp-hide-if-empty:has([data-smp-vp-empty-loop]){display:none!important}</style><script>(function(){function run(){document.querySelectorAll(".smp-vp-hide-if-empty").forEach(function(section){if(section.querySelector("[data-smp-vp-empty-loop]")){section.style.display="none";}});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
+    return '<style>.smp-vp-hide-if-empty:has([data-smp-vp-empty-loop]),.elementor-widget-shortcode.display_single_post_mentioned_in_article:has([data-smp-vp-empty-loop]),.smp-vp-single-post-section-host:has([data-smp-vp-empty-loop]){display:none!important}</style><script>(function(){function run(){document.querySelectorAll("[data-smp-vp-empty-loop]").forEach(function(marker){var section=marker.closest(".smp-vp-hide-if-empty,.elementor-widget-shortcode.display_single_post_mentioned_in_article,.smp-vp-single-post-section-host");if(section){section.style.display="none";}});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
 }
 
 function smp_vp_display_empty_loop_marker(string $id): string {
     return smp_vp_display_empty_section_assets() . '<span class="smp-vp-empty-loop-marker verified-profiles-loop-' . esc_attr($id) . '" data-smp-vp-empty-loop="' . esc_attr($id) . '" hidden></span>';
+}
+
+function smp_vp_display_single_post_section_css(): string {
+    return '.smp-vp-single-post-section{box-sizing:border-box;width:100%;margin:0;padding:0 0 24px;border-bottom:1px solid var(--e-global-color-a52e073,#e9e9e9)}.smp-vp-single-post-section__title{margin:0 0 20px;color:var(--e-global-color-text,#000);font-family:var(--e-global-typography-c4967ee-font-family,"Playfair Display"),Georgia,serif;font-size:20px;font-weight:600;line-height:1.3;letter-spacing:0}.smp-vp-single-post-section__content,.smp-vp-single-post-section__content>.verified-profiles-loop{box-sizing:border-box;width:100%;margin:0}@media(max-width:1024px){.smp-vp-single-post-section__title{font-size:18px}}';
+}
+
+function smp_vp_display_single_post_section(string $loop_html, bool $preserve_empty_marker = true): string {
+    $loop_html = trim($loop_html);
+    if ($loop_html === '') {
+        return '';
+    }
+
+    if (false !== strpos($loop_html, 'data-smp-vp-empty-loop=')) {
+        return $preserve_empty_marker ? $loop_html : '';
+    }
+
+    $heading_id = 'smp-vp-in-this-article-' . absint(get_the_ID());
+    return '<style>' . smp_vp_display_single_post_section_css() . '</style>'
+        . '<section class="smp-vp-single-post-section" data-smp-vp-section="single-post" aria-labelledby="' . esc_attr($heading_id) . '">'
+        . '<h2 id="' . esc_attr($heading_id) . '" class="smp-vp-single-post-section__title">' . esc_html__('In This Article', 'smp-verified-profiles') . '</h2>'
+        . '<div class="smp-vp-single-post-section__content">' . $loop_html . '</div>'
+        . '</section>';
 }
 
 function smp_vp_display_log_failure(string $context, \Throwable $error): void {
@@ -2031,7 +2053,10 @@ function smp_vp_display_append_to_content(string $content): string {
     }
 
     try {
-        $rendered = smp_vp_display_render_loop_item("single-post", ["post_id" => $post_id]);
+        $rendered = smp_vp_display_single_post_section(
+            smp_vp_display_render_loop_item("single-post", ["post_id" => $post_id]),
+            false
+        );
         return $rendered ? $content . $rendered : $content;
     } catch (\Throwable $error) {
         smp_vp_display_log_failure('single-post content injection', $error);
@@ -2051,7 +2076,9 @@ if (! function_exists(__NAMESPACE__ . "\\display_single_post_mentioned_in_articl
     function display_single_post_mentioned_in_article($atts = []): string {
         $settings = smp_vp_display_settings();
         $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
-        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts));
+        return smp_vp_display_single_post_section(
+            smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts))
+        );
     }
 }
 

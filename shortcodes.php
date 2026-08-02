@@ -855,7 +855,10 @@ if (!function_exists(__NAMESPACE__ . chr(92) . "display_single_post_mentioned_in
         }
         $settings = smp_vp_display_settings();
         $atts = shortcode_atts(["must_have_thumbnail" => false, "template" => $settings["post_template"], "post_id" => get_the_ID()], (array) $atts, "display_single_post_mentioned_in_article");
-        return smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts));
+        $loop_html = smp_vp_verified_profiles_loop_shortcode(array_merge(["id" => "single-post"], (array) $atts));
+        return function_exists(__NAMESPACE__ . chr(92) . "smp_vp_display_single_post_section")
+            ? smp_vp_display_single_post_section($loop_html)
+            : $loop_html;
     }
 }
 
