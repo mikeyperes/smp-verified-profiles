@@ -8,8 +8,9 @@ $pages   = (string) file_get_contents( $root . '/verified-profile-page-templates
 $control = (string) file_get_contents( $root . '/lib/hexa-wordpress-plugin-core/src/WpAdminComponents/TemplateSelectionControl.php' );
 
 $checks = [
-    'Core owns the three-column visual template selector.' => str_contains( $control, 'final class TemplateSelectionControl' )
-        && str_contains( $control, 'grid-template-columns:repeat(var(--hpc-template-columns,3),minmax(0,1fr))' ),
+    'Core owns configurable visual template grids and the no-design toggle.' => str_contains( $control, 'final class TemplateSelectionControl' )
+        && str_contains( $control, 'grid-template-columns:repeat(var(--hpc-template-columns,3),minmax(0,1fr))' )
+        && str_contains( $control, 'data-hpc-template-custom-toggle' ),
     'Profile cards use the Core selector for every selection surface.' => str_contains( $cards, 'use Hexa\PluginCore\WpAdminComponents\TemplateSelectionControl;' )
         && substr_count( $cards, 'smp_vp_display_template_selector([' ) >= 4,
     'All six profile-card templates remain available.' => 6 === substr_count( $cards, '"class" => "vp-' ),
@@ -19,9 +20,16 @@ $checks = [
     'Profile pages use the same Core visual selector.' => str_contains( $pages, 'TemplateSelectionControl::render(' )
         && str_contains( $pages, "'columns'        => 3" )
         && str_contains( $pages, "'preview_width'  => 1120" ),
-    'Both display systems offer a custom-design mode.' => str_contains( $cards, 'SMP_VP_CUSTOM_TEMPLATE' )
+    'Profile-card choices use full-width rows with three-card previews.' => str_contains( $cards, "'columns'        => 1" )
+        && str_contains( $cards, "'items_per_row' => 3" )
+        && str_contains( $cards, 'grid-template-columns:repeat(3,minmax(0,1fr))!important' )
+        && substr_count( $cards, 'smp_vp_display_preview_profiles(3)' ) >= 1,
+    'Both display systems offer the top-level no-design toggle.' => str_contains( $cards, 'SMP_VP_CUSTOM_TEMPLATE' )
         && str_contains( $pages, 'SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE' )
-        && substr_count( $pages, "I'm going to design it myself" ) >= 2,
+        && str_contains( $cards, "'custom_control' => 'toggle'" )
+        && str_contains( $pages, "'custom_control' => 'toggle'" )
+        && str_contains( $cards, "'toggle_label'       => 'No plugin design'" )
+        && str_contains( $pages, "'toggle_label'       => 'No plugin design'" ),
     'Card custom mode exits before plugin styles or markup.' => preg_match( '/function smp_vp_display_render_collection.*?smp_vp_display_is_custom_template.*?return "";.*?<style>/s', $cards ) === 1,
     'Page custom mode exits before plugin styles or markup.' => preg_match( '/function smp_vp_render_profile_page_template_data.*?SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE.*?return \'\';.*?<style>/s', $pages ) === 1,
     'Custom page mode disables automatic takeover.' => str_contains( $pages, "SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE !== \$settings['selected_template']" )
@@ -41,4 +49,4 @@ foreach ( $checks as $message => $passed ) {
     }
 }
 
-echo "PASS: Verified Profiles uses reusable three-column selectors and a true no-output custom mode.\n";
+echo "PASS: Verified Profiles uses full-row three-profile previews and a top-level no-output toggle.\n";

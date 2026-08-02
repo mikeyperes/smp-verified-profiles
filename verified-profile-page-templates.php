@@ -1269,9 +1269,12 @@ function smp_vp_profile_page_template_selector( array $settings, int $sample_id,
             'description' => 'Choose the complete design used on individual Verified Profile pages. Every available template is shown here.',
             'templates'   => $choices,
             'custom'      => [
-                'label'       => "I'm going to design it myself",
-                'description' => 'Disable automatic page takeover, default shortcode markup, and all plugin template styling.',
+                'label'              => 'No plugin design',
+                'description'        => 'Disable automatic page takeover, default shortcode markup, and all plugin template styling.',
+                'toggle_label'       => 'No plugin design',
+                'toggle_description' => 'Turn this on to disable every page design choice and build the profile page yourself.',
             ],
+            'custom_control' => 'toggle',
             'columns'        => 3,
             'preview_height' => 300,
             'preview_width'  => 1120,
@@ -1292,7 +1295,7 @@ function smp_vp_profile_page_render_settings(): void {
     $sample_id  = smp_vp_profile_page_sample_profile_id();
     $sample_url = $sample_id ? (string) get_permalink( $sample_id ) : '';
     $nonce      = wp_create_nonce( SMP_VP_PROFILE_PAGE_NONCE );
-    $labels     = [ SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE => "I'm going to design it myself" ];
+    $labels     = [ SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE => 'No plugin design' ];
     foreach ( $templates as $key => $template ) {
         $labels[ $key ] = (string) $template['short_label'];
     }

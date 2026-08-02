@@ -293,7 +293,7 @@ function smp_vp_display_is_custom_template( string $template ): bool {
 
 function smp_vp_display_template_label( string $template ): string {
     if ( smp_vp_display_is_custom_template( $template ) ) {
-        return "I'm going to design it myself";
+        return 'No plugin design';
     }
 
     $templates = smp_vp_display_templates();
@@ -306,7 +306,7 @@ function smp_vp_display_template_selector( array $args ): string {
     }
 
     $templates = smp_vp_display_templates();
-    $profiles  = isset( $args['profiles'] ) && is_array( $args['profiles'] ) ? $args['profiles'] : smp_vp_display_preview_profiles();
+    $profiles  = isset( $args['profiles'] ) && is_array( $args['profiles'] ) ? $args['profiles'] : smp_vp_display_preview_profiles( 3 );
     $choices   = [];
     foreach ( $templates as $key => $template ) {
         $choices[ $key ] = [
@@ -316,11 +316,11 @@ function smp_vp_display_template_selector( array $args ): string {
                 $profiles,
                 [
                     'template'      => $key,
-                    'items_per_row' => 1,
+                    'items_per_row' => 3,
                 ]
             ),
-            'preview_width'  => 620,
-            'preview_height' => 200,
+            'preview_width'  => 1200,
+            'preview_height' => 250,
         ];
     }
 
@@ -333,12 +333,15 @@ function smp_vp_display_template_selector( array $args ): string {
             'description'    => (string) ( $args['description'] ?? 'Select a design directly from the live previews.' ),
             'templates'      => $choices,
             'custom'         => [
-                'label'       => "I'm going to design it myself",
-                'description' => 'Return no plugin markup or styling for this placement. Explicit named-template shortcodes remain available.',
+                'label'              => 'No plugin design',
+                'description'        => 'Return no plugin markup or styling for this placement. Explicit named-template shortcodes remain available.',
+                'toggle_label'       => 'No plugin design',
+                'toggle_description' => 'Turn this on to disable every design choice and provide your own markup and styling.',
             ],
-            'columns'        => 3,
-            'preview_height' => 200,
-            'preview_width'  => 620,
+            'custom_control' => 'toggle',
+            'columns'        => 1,
+            'preview_height' => 250,
+            'preview_width'  => 1200,
             'input_class'    => (string) ( $args['input_class'] ?? 'smp-vp-template-setting' ),
             'input_data'     => isset( $args['input_data'] ) && is_array( $args['input_data'] ) ? $args['input_data'] : [],
             'class'          => (string) ( $args['class'] ?? '' ),
@@ -768,9 +771,9 @@ function smp_vp_display_render_settings(): void {
     $labels = array_map(static function ($template) {
         return $template["label"];
     }, $templates);
-    $labels[SMP_VP_CUSTOM_TEMPLATE] = "Design it myself";
+    $labels[SMP_VP_CUSTOM_TEMPLATE] = "No plugin design";
     $nonce = wp_create_nonce(SMP_VP_DISPLAY_NONCE);
-    $preview = smp_vp_display_preview_profiles();
+    $preview = smp_vp_display_preview_profiles( 3 );
     ?>
     <style>
         <?php echo smp_vp_display_css(); ?>
@@ -788,7 +791,7 @@ function smp_vp_display_render_settings(): void {
         .smp-vp-display-admin .smp-vp-core-panel>.hpc-section-body{padding:0}
         .smp-vp-display-admin .smp-vp-panel-intro{color:#646970;margin:0;padding:18px 20px 0}
         .smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{justify-content:flex-end}
-        .smp-vp-display-admin .hpc-template-selection{margin:0}.smp-vp-display-admin .hpc-template-selection-label{display:flex;font-weight:inherit;margin:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display{margin:16px;padding:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display .vp{grid-template-columns:1fr!important}.smp-vp-display-admin .hpc-toggle{display:inline-flex;font-weight:800;margin:0}.smp-vp-display-admin .smp-vp-color-tools{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-color-tools .hpc-detail-card{margin:0}.smp-vp-display-admin .smp-vp-loop-builder{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-loop-builder>.hpc-template-selection{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector .hpc-template-selection-preview{--hpc-template-option-height:180px}.smp-vp-display-admin .smp-vp-loop-template-selector .hpc-template-selection-card-head{min-height:88px}.smp-vp-display-admin .smp-vp-advanced-loops{margin:0 20px 20px}.smp-vp-display-admin .smp-vp-advanced-loops>.hpc-section-body{padding:0}
+        .smp-vp-display-admin .hpc-template-selection{margin:0}.smp-vp-display-admin .hpc-template-selection-label{display:flex;font-weight:inherit;margin:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display{margin:16px;padding:0}.smp-vp-display-admin .hpc-template-selection-preview .smp-vp-display .vp{grid-template-columns:repeat(3,minmax(0,1fr))!important}.smp-vp-display-admin .hpc-toggle{display:inline-flex;font-weight:800;margin:0}.smp-vp-display-admin .smp-vp-color-tools{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-color-tools .hpc-detail-card{margin:0}.smp-vp-display-admin .smp-vp-loop-builder{display:grid;gap:14px}.smp-vp-display-admin .smp-vp-loop-builder>.hpc-template-selection{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector{grid-column:1/-1}.smp-vp-display-admin .smp-vp-loop-template-selector .hpc-template-selection-card-head{min-height:88px}.smp-vp-display-admin .smp-vp-advanced-loops{margin:0 20px 20px}.smp-vp-display-admin .smp-vp-advanced-loops>.hpc-section-body{padding:0}
         @media(max-width:782px){.smp-vp-display-admin .smp-vp-core-panel>summary{align-items:flex-start;flex-wrap:wrap}.smp-vp-display-admin .smp-vp-core-panel>summary .hpc-section-summary-side{flex-basis:100%;margin-left:0}.smp-vp-display-admin .smp-vp-core-panel>summary .smp-vp-current{flex:1;justify-content:flex-start}}
     </style>
     <div class="smp-vp-display-admin" id="smp-vp-display-settings" data-nonce="<?php echo esc_attr($nonce); ?>">
@@ -1304,7 +1307,7 @@ function smp_vp_display_render_loop_preview_admin(array $item, array $templates)
         "value" => (string) $item["template"],
         "title" => "Loop design",
         "description" => "Select this loop item's design from the complete visual library.",
-        "profiles" => smp_vp_display_preview_profiles(1),
+        "profiles" => smp_vp_display_preview_profiles(3),
         "input_class" => "smp-vp-loop-template",
         "class" => "smp-vp-loop-template-selector",
     ]);
@@ -1470,7 +1473,7 @@ function smp_vp_display_elementor_palette(): array {
     return $palette;
 }
 
-function smp_vp_display_preview_profiles(int $count = 1): array {
+function smp_vp_display_preview_profiles(int $count = 3): array {
     $count = max(1, min(48, $count));
     $names = ["Mash Viral", "Verified Founder", "Editorial Source", "Industry Voice", "Featured Expert", "Profile Member"];
     $roles = ["Publication", "Founder", "Executive", "Creator", "Expert", "Verified Profile"];
