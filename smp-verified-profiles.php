@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 8.0.0
+ * Version: 8.0.1
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -45,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "8.0.0";
+    public static $plugin_version = "8.0.1";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
