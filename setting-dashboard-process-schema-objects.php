@@ -1,5 +1,8 @@
 <?php namespace smp_verified_profiles;
 
+use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
+use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
+
 /**
  * 2) Render the page with the button + report container + inline jQuery
  */
@@ -95,20 +98,27 @@ function render_reprocess_profile_schema_page() { ?>
 /**
  * 3) Handle the AJAX in small batches
  */
-add_action( 'wp_ajax_smp_vp_reprocess_schema', __NAMESPACE__ . '\\ajax_reprocess_schema' );
-function ajax_reprocess_schema() {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( [ 'message' => 'Permission denied.' ] );
-    }
+( new AjaxActionRegistry(
+    [
+        'capability'   => Config::$settings_page_capability,
+        'nonce_action' => Config::$ajax_nonce_action,
+        'nonce_field'  => Config::$ajax_nonce_field,
+    ]
+) )->register(
+    [
+        'smp_vp_reprocess_schema' => [ 'callback' => __NAMESPACE__ . '\\ajax_reprocess_schema' ],
+    ]
+);
 
-    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
+function ajax_reprocess_schema( ?AjaxRequest $request = null ): array {
+    $request ??= new AjaxRequest();
 
     // get dynamic post type from settings
     $settings  = get_verified_profile_settings();
     $post_type = isset( $settings['slug'] ) ? sanitize_key( $settings['slug'] ) : 'profile';
 
-    $offset     = isset( $_POST['offset'] )     ? intval( $_POST['offset'] )     : 0;
-    $batch_size = isset( $_POST['batch_size'] ) ? intval( $_POST['batch_size'] ) : 20;
+    $offset     = $request->int( 'offset', 0, 'post' );
+    $batch_size = max( 1, min( 100, $request->int( 'batch_size', 20, 'post' ) ) );
 
     // total published posts of this type
     $counts = wp_count_posts( $post_type );
@@ -143,11 +153,11 @@ function ajax_reprocess_schema() {
         ];
     }
 
-    wp_send_json_success( [
+    return [
         'total'    => $total,
         'batch'    => count( $items ),
         'offset'   => $offset,
         'items'    => $items,
         'postType' => $post_type,
-    ] );
+    ];
 }

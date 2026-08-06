@@ -42,7 +42,7 @@ function display_settings_shortcodes() {
         <section class="hpc-card smp-vp-shortcodes-head">
             <div>
                 <h2><?php esc_html_e( 'Verified Profiles Shortcodes', 'smp-verified-profiles' ); ?></h2>
-                <p><?php esc_html_e( 'Registry-backed catalog built from direct shortcode registrations, provider arrays, legacy snippets, and entity shortcode files. Runtime status reflects the current WordPress request.', 'smp-verified-profiles' ); ?></p>
+                <p><?php esc_html_e( 'Registry-backed catalog built from the live WordPress shortcode registry, host provider arrays, and documented metadata. Runtime status reflects the current request.', 'smp-verified-profiles' ); ?></p>
             </div>
             <div class="smp-vp-shortcodes-pills">
                 <?php echo CoreUi::pill( (string) $summary['total'] . ' discovered', 'dark' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
@@ -160,57 +160,14 @@ function display_settings_shortcodes() {
 /**
  * AJAX handler for selected profile shortcode values.
  */
-function ajax_shortcode_profile_values() {
-    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], Config::$ajax_nonce_action ) ) {
-        wp_send_json_error( 'Invalid security token' );
-    }
-
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( 'Unauthorized' );
-    }
-
-    $profile_id = isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0;
-    $profile    = $profile_id ? get_post( $profile_id ) : null;
-    $settings   = get_verified_profile_settings();
-
-    if ( ! $profile || $profile->post_type !== $settings['slug'] ) {
-        wp_send_json_error( 'Invalid verified profile selected.' );
-    }
-
-    $rows = smp_vp_build_profile_shortcode_rows( $profile_id );
-
-    ob_start();
-    ?>
-    <table class="smp-table">
-        <thead>
-            <tr>
-                <th>Field / Content</th>
-                <th>Shortcode</th>
-                <th>Value From Shortcode</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ( $rows as $row ) : ?>
-                <tr>
-                    <td><?php echo esc_html( $row['label'] ); ?></td>
-                    <td><code><?php echo esc_html( $row['shortcode'] ); ?></code></td>
-                    <td class="smp-shortcode-value"><?php echo esc_html( $row['value'] ); ?></td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php
-    $html = ob_get_clean();
-
-    wp_send_json_success( [
-        'summary' => sprintf( 'Loaded %d rows for %s.', count( $rows ), get_the_title( $profile_id ) ),
-        'html'    => $html,
-    ] );
+function ajax_shortcode_profile_values(): void {
+    \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+        [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'shortcode_profile_values' ]
+    );
 }
-add_action( 'wp_ajax_smp_vp_shortcode_profile_values', __NAMESPACE__ . '\\ajax_shortcode_profile_values' );
 
 /**
- * Discover plugin shortcodes from source and runtime providers.
+ * Discover plugin shortcodes from the live WordPress registry and host providers.
  *
  * @return array<int,array<string,mixed>>
  */
@@ -222,7 +179,7 @@ function smp_vp_discover_shortcodes() {
 
     $items = [];
 
-    foreach ( smp_vp_scan_php_shortcodes() as $tag => $data ) {
+    foreach ( smp_vp_runtime_shortcodes() as $tag => $data ) {
         smp_vp_merge_shortcode_catalog_item( $items, $tag, $data );
     }
 
@@ -382,70 +339,45 @@ function smp_vp_merge_shortcode_catalog_item( array &$items, string $tag, array 
 }
 
 /**
- * Scan plugin PHP files for direct add_shortcode calls.
+ * Read this plugin's callbacks from WordPress instead of scanning PHP source.
  *
  * @return array<string,array<string,mixed>>
  */
-function smp_vp_scan_php_shortcodes() {
+function smp_vp_runtime_shortcodes(): array {
+    global $shortcode_tags;
+
     $items = [];
-    $root  = __DIR__;
-    $files = new \RecursiveIteratorIterator(
-        new \RecursiveDirectoryIterator( $root, \FilesystemIterator::SKIP_DOTS )
-    );
+    foreach ( is_array( $shortcode_tags ) ? $shortcode_tags : [] as $tag => $callback ) {
+        $callback_name = '';
+        $owned         = false;
 
-    foreach ( $files as $file ) {
-        if ( ! $file instanceof \SplFileInfo || $file->getExtension() !== 'php' ) {
+        if ( is_string( $callback ) ) {
+            $callback_name = $callback;
+            $owned         = str_starts_with( ltrim( $callback, '\\' ), __NAMESPACE__ . '\\' );
+        } elseif ( is_array( $callback ) && isset( $callback[0], $callback[1] ) ) {
+            $owner         = is_object( $callback[0] ) ? get_class( $callback[0] ) : (string) $callback[0];
+            $callback_name = $owner . '::' . (string) $callback[1];
+            $owned         = str_starts_with( ltrim( $owner, '\\' ), __NAMESPACE__ . '\\' )
+                || str_starts_with( ltrim( $owner, '\\' ), 'SMP\\VerifiedProfiles\\' );
+        } elseif ( $callback instanceof \Closure ) {
+            $reflection = new \ReflectionFunction( $callback );
+            $file       = (string) $reflection->getFileName();
+            $owned      = '' !== $file && str_starts_with( $file, __DIR__ . DIRECTORY_SEPARATOR );
+            $callback_name = $owned ? 'closure' : '';
+        }
+
+        if ( ! $owned ) {
             continue;
         }
 
-        $path = $file->getPathname();
-        if ( str_contains( $path, DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'hexa-wordpress-plugin-core' . DIRECTORY_SEPARATOR ) ) {
-            continue;
-        }
-
-        $code = file_get_contents( $path );
-        if ( $code === false ) {
-            continue;
-        }
-
-        if ( ! preg_match_all( '/add_shortcode\s*\(\s*[\'"]([^\'"]+)[\'"]\s*,\s*([^)]+)\)/i', $code, $matches, PREG_SET_ORDER ) ) {
-            continue;
-        }
-
-        $relative = ltrim( str_replace( $root, '', $path ), DIRECTORY_SEPARATOR );
-        foreach ( $matches as $match ) {
-            $tag = $match[1];
-            if ( ! isset( $items[ $tag ] ) ) {
-                $items[ $tag ] = [ 'tag' => $tag, 'sources' => [], 'callback' => '' ];
-            }
-            $items[ $tag ]['sources'][] = $relative;
-
-            $callback = smp_vp_parse_shortcode_callback_expression( $match[2] );
-            if ( $callback !== '' ) {
-                $items[ $tag ]['callback'] = $callback;
-            }
-        }
+        $items[ (string) $tag ] = [
+            'tag'      => (string) $tag,
+            'callback' => $callback_name,
+            'sources'  => [ 'wordpress-runtime' ],
+        ];
     }
 
     return $items;
-}
-
-/**
- * Parse common shortcode callback expressions from source.
- *
- * @param string $expression Callback expression.
- * @return string
- */
-function smp_vp_parse_shortcode_callback_expression( $expression ) {
-    if ( preg_match( '/__NAMESPACE__\s*\.\s*[\'"]\\\\*([a-zA-Z0-9_]+)[\'"]/', $expression, $matches ) ) {
-        return __NAMESPACE__ . '\\' . $matches[1];
-    }
-
-    if ( preg_match( '/[\'"]([a-zA-Z0-9_\\\\]+)[\'"]/', $expression, $matches ) ) {
-        return $matches[1];
-    }
-
-    return '';
 }
 
 /**
@@ -673,7 +605,7 @@ function smp_vp_shortcode_status_html( array $item ): string {
     if ( ! empty( $item['callback_exists'] ) && empty( $item['registered'] ) ) {
         $html .= '<p>Callback exists, but WordPress has not registered the shortcode in this request.</p>';
     } elseif ( empty( $item['callback_exists'] ) && empty( $item['registered'] ) ) {
-        $html .= '<p>Discovered from source or metadata, but no callable callback is loaded.</p>';
+        $html .= '<p>Discovered from a provider or documented metadata, but no callable callback is loaded.</p>';
     } else {
         $html .= '<p>Registered in the current WordPress runtime.</p>';
     }
@@ -1134,9 +1066,15 @@ function smp_vp_extract_shortcode_tag( $shortcode ) {
  * Get a discovered shortcode callback.
  *
  * @param string $tag Shortcode tag.
- * @return string
+ * @return callable|string
  */
 function smp_vp_get_discovered_shortcode_callback( $tag ) {
+    global $shortcode_tags;
+
+    if ( isset( $shortcode_tags[ $tag ] ) && is_callable( $shortcode_tags[ $tag ] ) ) {
+        return $shortcode_tags[ $tag ];
+    }
+
     foreach ( smp_vp_discover_shortcodes() as $shortcode ) {
         if ( $shortcode['tag'] === $tag ) {
             return isset( $shortcode['callback'] ) ? (string) $shortcode['callback'] : '';

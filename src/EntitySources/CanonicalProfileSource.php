@@ -1,6 +1,6 @@
 <?php
 
-namespace smp_verified_profiles\EntitySources;
+namespace SMP\VerifiedProfiles\EntitySources;
 
 use Hexa\PluginCore\EntitySources\CanonicalEntityResolver;
 
@@ -50,4 +50,8 @@ final class CanonicalProfileSource {
 
         return isset( $ids[0] ) ? (int) $ids[0] : 0;
     }
+}
+
+if ( ! class_exists( '\\smp_verified_profiles\\EntitySources\\CanonicalProfileSource', false ) ) {
+    class_alias( CanonicalProfileSource::class, '\\smp_verified_profiles\\EntitySources\\CanonicalProfileSource' );
 }

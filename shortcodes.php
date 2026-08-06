@@ -1062,8 +1062,8 @@ function smp_vp_shortcode_profile_post_id( array $atts ): int {
         return (int) $post->ID;
     }
 
-    if ( class_exists( '\\smp_verified_profiles\\EntitySources\\CanonicalProfileSource' ) ) {
-        return \smp_verified_profiles\EntitySources\CanonicalProfileSource::profile_id();
+    if ( class_exists( \SMP\VerifiedProfiles\EntitySources\CanonicalProfileSource::class ) ) {
+        return \SMP\VerifiedProfiles\EntitySources\CanonicalProfileSource::profile_id();
     }
 
     return 0;

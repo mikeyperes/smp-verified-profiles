@@ -257,32 +257,11 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
  * Retrieves unclaimed profiles for the given user via AJAX.
  */
 if (!function_exists(__NAMESPACE__ . '\\get_unclaimed_profiles')) {
-    function get_unclaimed_profiles() {
-        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
-        if (!$user_id) {
-            wp_send_json_error( [ 'message' => 'Invalid User ID' ] );
-        }
-
-        if ( ! current_user_can( 'edit_user', $user_id ) ) {
-            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
-        }
-
-        $unclaimed_profiles = get_field('unclaimed_profiles', 'user_' . $user_id);
-        $profiles_data = [];
-
-        if ($unclaimed_profiles) {
-            foreach ($unclaimed_profiles as $profile) {
-                $profile_post = get_post($profile['profile']);
-                $profiles_data[] = array(
-                    'id' => $profile_post->ID,
-                    'name' => $profile_post->post_title
-                );
-            }
-        }
-
-        wp_send_json_success( [ 'profiles' => $profiles_data ] );
+    function get_unclaimed_profiles(): void {
+        \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+            [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'get_unclaimed_profiles' ],
+            'edit_users'
+        );
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\get_unclaimed_profiles function is already declared", true);
 
@@ -291,59 +270,11 @@ if (!function_exists(__NAMESPACE__ . '\\get_unclaimed_profiles')) {
  * Handles sending emails via AJAX.
  */
 if (!function_exists(__NAMESPACE__ . '\\handle_send_email')) {
-    function handle_send_email() {
-        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-        $user_id = isset($_POST['user_id']) ? absint($_POST['user_id']) : 0;
-        if ( ! $user_id || ! current_user_can( 'edit_user', $user_id ) ) {
-            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
-        }
-
-        $prefix = isset($_POST['prefix']) ? sanitize_key($_POST['prefix']) : '';
-        if ( ! in_array( $prefix, [ 'welcome_email', 'new_entity_email' ], true ) ) {
-            wp_send_json_error( [ 'message' => 'Invalid email template.' ], 400 );
-        }
-
-        $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
-        $message = isset($_POST['message']) ? wp_kses_post($_POST['message']) : '';
-        $profile_id = isset($_POST['profile_id']) ? absint($_POST['profile_id']) : 0;
-
-        update_field($prefix . "_message", $message, "user_" . $user_id);
-        update_field($prefix . "_subject", $subject, "user_" . $user_id);
-        $message = get_field($prefix . "_message", "user_" . $user_id);
-
-        if ($profile_id) {
-            $profile_post = get_post($profile_id);
-            if ($profile_post) {
-                $profile_name = get_the_title($profile_post);
-                $profile_permalink = get_permalink($profile_post);
-
-                $message = str_replace('{featured_profile}', '<a href="' . esc_url($profile_permalink) . '">' . esc_html($profile_name) . '</a>', $message);
-                $message = str_replace('{featured_profile_name}', $profile_name, $message);
-                $message = str_replace('{featured_profile_link}', $profile_permalink, $message);
-
-                $subject = str_replace('{featured_profile_name}', $profile_name, $subject);
-            }
-        }
-
-        $emails = get_notification_emails($user_id); // Function to get notification emails
-        $email_signature = get_field("email_signature", "options");
-        $message .= $email_signature;
-
-        $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'Reply-To: ' . get_bloginfo( 'name' ) . ' <' . get_option( 'admin_email' ) . '>',
-            'From: ' . get_bloginfo( 'name' ) . ' <' . get_option( 'admin_email' ) . '>'
+    function handle_send_email(): void {
+        \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+            [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'send_email' ],
+            'edit_users'
         );
-
-        $sent = 0;
-        foreach ($emails as $email) {
-            if ( wp_mail($email, $subject, $message, $headers) ) {
-                $sent++;
-            }
-        }
-
-        wp_send_json_success( [ 'message' => 'Email sent.', 'sent' => $sent ] );
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\handle_send_email function is already declared", true);
 
@@ -352,17 +283,11 @@ if (!function_exists(__NAMESPACE__ . '\\handle_send_email')) {
  * Handles the user refresh functionality via AJAX.
  */
 if (!function_exists(__NAMESPACE__ . '\\handle_refresh_user')) {
-    function handle_refresh_user() {
-        check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-        $user_id = intval($_POST['user_id']);
-        if ( ! $user_id || ! current_user_can( 'edit_user', $user_id ) ) {
-            wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
-        }
-
-        update_user_email_settings($user_id);
-
-        wp_send_json_success(['message' => 'User email content refreshed for user ID ' . $user_id]);
+    function handle_refresh_user(): void {
+        \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+            [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'refresh_user' ],
+            'edit_users'
+        );
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\handle_refresh_user function is already declared", true);
 

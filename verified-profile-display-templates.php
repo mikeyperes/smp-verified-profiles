@@ -5,6 +5,9 @@ namespace smp_verified_profiles;
 use Hexa\PluginCore\WpAdminComponents\CoreUi;
 use Hexa\PluginCore\WpAdminComponents\TemplateSelectionControl;
 use Hexa\PluginCore\WpAdminComponents\TypographyControl;
+use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
+use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
+use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 
 defined("ABSPATH") || exit;
 
@@ -17,11 +20,17 @@ add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_display_dashboard_
 add_filter("smp_vp_dashboard_tabs", __NAMESPACE__ . "\\smp_vp_pages_dashboard_tab");
 add_filter("smp_vp_render_dashboard_tab", __NAMESPACE__ . "\\smp_vp_render_display_dashboard_tab", 10, 2);
 add_filter("smp_vp_render_dashboard_tab", __NAMESPACE__ . "\\smp_vp_render_pages_dashboard_tab", 10, 2);
-add_action("wp_ajax_smp_vp_display_save_settings", __NAMESPACE__ . "\\smp_vp_ajax_display_save_settings");
-add_action("wp_ajax_smp_vp_display_import_elementor", __NAMESPACE__ . "\\smp_vp_ajax_display_import_elementor");
-add_action("wp_ajax_smp_vp_display_create_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_create_loop_item");
-add_action("wp_ajax_smp_vp_display_save_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_save_loop_item");
-add_action("wp_ajax_smp_vp_display_delete_loop_item", __NAMESPACE__ . "\\smp_vp_ajax_display_delete_loop_item");
+( new AjaxActionRegistry([
+    "capability" => Config::$settings_page_capability,
+    "nonce_action" => SMP_VP_DISPLAY_NONCE,
+    "nonce_field" => "nonce",
+]) )->register([
+    "smp_vp_display_save_settings" => [ "callback" => __NAMESPACE__ . "\\smp_vp_ajax_display_save_settings" ],
+    "smp_vp_display_import_elementor" => [ "callback" => __NAMESPACE__ . "\\smp_vp_ajax_display_import_elementor" ],
+    "smp_vp_display_create_loop_item" => [ "callback" => __NAMESPACE__ . "\\smp_vp_ajax_display_create_loop_item" ],
+    "smp_vp_display_save_loop_item" => [ "callback" => __NAMESPACE__ . "\\smp_vp_ajax_display_save_loop_item" ],
+    "smp_vp_display_delete_loop_item" => [ "callback" => __NAMESPACE__ . "\\smp_vp_ajax_display_delete_loop_item" ],
+]);
 add_action("admin_init", __NAMESPACE__ . "\\smp_vp_register_pages_ajax");
 add_action("save_post", __NAMESPACE__ . "\\smp_vp_display_invalidate_profile_surfaces", 20, 3);
 add_filter("the_content", __NAMESPACE__ . "\\smp_vp_display_append_to_content", 28);
@@ -1220,15 +1229,11 @@ function smp_vp_display_render_settings(): void {
     <?php
 }
 
-function smp_vp_ajax_display_save_settings(): void {
-    if (! current_user_can("manage_options")) {
-        wp_send_json_error(["message" => "Insufficient permissions."], 403);
-    }
-
-    check_ajax_referer(SMP_VP_DISPLAY_NONCE, "nonce");
-    $input = isset($_POST["settings"]) && is_array($_POST["settings"]) ? wp_unslash($_POST["settings"]) : [];
+function smp_vp_ajax_display_save_settings( AjaxRequest $request ): array {
+    $input = $request->raw( "settings", [], "post" );
+    $input = is_array( $input ) ? $input : [];
     $settings = smp_vp_display_sanitize($input);
-    $sync_target = sanitize_key(wp_unslash((string) ($_POST["sync_loop_target"] ?? "")));
+    $sync_target = $request->key( "sync_loop_target", "", "post" );
     if ($sync_target === "homepage" && ! empty($settings["loop_items"]["homepage"])) {
         $settings["loop_items"]["homepage"]["template"] = $settings["homepage_template"];
     }
@@ -1236,7 +1241,7 @@ function smp_vp_ajax_display_save_settings(): void {
         $settings["loop_items"]["single-post"]["template"] = $settings["post_template"];
     }
     update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
-    wp_send_json_success(["message" => "Feature settings saved.", "settings" => $settings, "html" => smp_vp_display_render_loop_items_admin($settings)]);
+    return ["message" => "Feature settings saved.", "settings" => $settings, "html" => smp_vp_display_render_loop_items_admin($settings)];
 }
 
 function smp_vp_display_render_loop_items_admin(array $settings): string {
@@ -1335,15 +1340,10 @@ function smp_vp_display_render_loop_preview_admin(array $item, array $templates)
     ]);
 }
 
-function smp_vp_ajax_display_create_loop_item(): void {
-    if (! current_user_can("manage_options")) {
-        wp_send_json_error(["message" => "Insufficient permissions."], 403);
-    }
-
-    check_ajax_referer(SMP_VP_DISPLAY_NONCE, "nonce");
+function smp_vp_ajax_display_create_loop_item( AjaxRequest $request ): array {
     $settings = smp_vp_display_settings();
-    $label = sanitize_text_field(wp_unslash((string) ($_POST["label"] ?? "")));
-    $context = sanitize_key(wp_unslash((string) ($_POST["context"] ?? "homepage")));
+    $label = $request->text( "label", "", "post" );
+    $context = $request->key( "context", "homepage", "post" );
     if (! isset(smp_vp_display_contexts()[$context])) {
         $context = "homepage";
     }
@@ -1353,7 +1353,7 @@ function smp_vp_ajax_display_create_loop_item(): void {
     }
 
     $id = smp_vp_display_unique_loop_id($label, $settings["loop_items"] ?? []);
-    $requested_template = sanitize_key(wp_unslash((string) ($_POST["template"] ?? "")));
+    $requested_template = $request->key( "template", "", "post" );
     $templates = smp_vp_display_template_values();
     $template = in_array($requested_template, $templates, true) ? $requested_template : ($context === "single" ? ($settings["post_template"] ?? "directory-list") : ($settings["homepage_template"] ?? "boxed-row"));
     $item = smp_vp_display_sanitize_loop_item([
@@ -1365,62 +1365,48 @@ function smp_vp_ajax_display_create_loop_item(): void {
 
     $settings["loop_items"][$item["id"]] = $item;
     update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
-    wp_send_json_success(["message" => "Loop item created.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings]);
+    return ["message" => "Loop item created.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings];
 }
 
-function smp_vp_ajax_display_save_loop_item(): void {
-    if (! current_user_can("manage_options")) {
-        wp_send_json_error(["message" => "Insufficient permissions."], 403);
-    }
-
-    check_ajax_referer(SMP_VP_DISPLAY_NONCE, "nonce");
-    $input = isset($_POST["loop_item"]) && is_array($_POST["loop_item"]) ? wp_unslash($_POST["loop_item"]) : [];
+function smp_vp_ajax_display_save_loop_item( AjaxRequest $request ): array {
+    $input = $request->raw( "loop_item", [], "post" );
+    $input = is_array( $input ) ? $input : [];
     $settings = smp_vp_display_settings();
     $item = smp_vp_display_sanitize_loop_item($input, $settings, (string) ($input["id"] ?? ""));
     if ($item["id"] === "") {
-        wp_send_json_error(["message" => "Missing loop item id."], 422);
+        throw new AjaxFailure( "Missing loop item id.", 422, "missing_loop_item" );
     }
 
     $settings["loop_items"][$item["id"]] = $item;
     update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
-    wp_send_json_success(["message" => "Loop item saved.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings]);
+    return ["message" => "Loop item saved.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings];
 }
 
-function smp_vp_ajax_display_delete_loop_item(): void {
-    if (! current_user_can("manage_options")) {
-        wp_send_json_error(["message" => "Insufficient permissions."], 403);
-    }
-
-    check_ajax_referer(SMP_VP_DISPLAY_NONCE, "nonce");
-    $id = sanitize_key(wp_unslash((string) ($_POST["id"] ?? "")));
+function smp_vp_ajax_display_delete_loop_item( AjaxRequest $request ): array {
+    $id = $request->key( "id", "", "post" );
     $settings = smp_vp_display_settings();
     if (in_array($id, ["homepage", "single-post"], true)) {
-        wp_send_json_error(["message" => "Default loop items cannot be deleted."], 422);
+        throw new AjaxFailure( "Default loop items cannot be deleted.", 422, "protected_loop_item" );
     }
 
     unset($settings["loop_items"][$id]);
     update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
-    wp_send_json_success(["message" => "Loop item deleted.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings]);
+    return ["message" => "Loop item deleted.", "html" => smp_vp_display_render_loop_items_admin($settings), "settings" => $settings];
 }
 
-function smp_vp_ajax_display_import_elementor(): void {
-    if (! current_user_can("manage_options")) {
-        wp_send_json_error(["message" => "Insufficient permissions."], 403);
-    }
-
-    check_ajax_referer(SMP_VP_DISPLAY_NONCE, "nonce");
+function smp_vp_ajax_display_import_elementor( AjaxRequest $request ): array {
     $colors = smp_vp_display_elementor_colors();
     if (empty($colors)) {
-        wp_send_json_error(["message" => "No Elementor colors found."], 404);
+        throw AjaxFailure::not_found( "No Elementor colors found." );
     }
 
-    if (! empty($_POST["preview_only"])) {
-        wp_send_json_success(["message" => "Elementor colors loaded.", "colors" => $colors, "palette" => smp_vp_display_elementor_palette()]);
+    if ( $request->bool( "preview_only", false, "post" ) ) {
+        return ["message" => "Elementor colors loaded.", "colors" => $colors, "palette" => smp_vp_display_elementor_palette()];
     }
 
     $settings = array_replace(smp_vp_display_settings(), $colors);
     update_option(SMP_VP_DISPLAY_OPTION, $settings, false);
-    wp_send_json_success(["message" => "Elementor primary/secondary colors imported.", "colors" => $colors, "settings" => $settings]);
+    return ["message" => "Elementor primary/secondary colors imported.", "colors" => $colors, "settings" => $settings];
 }
 
 function smp_vp_display_elementor_colors(): array {

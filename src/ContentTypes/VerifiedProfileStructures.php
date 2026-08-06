@@ -1,6 +1,6 @@
 <?php
 
-namespace smp_verified_profiles\ContentTypes;
+namespace SMP\VerifiedProfiles\ContentTypes;
 
 use Hexa\PluginCore\ContentTypes\ContentTypeRegistry;
 use Hexa\PluginCore\FieldStructures\AcfFieldGroupRegistry;
@@ -19,16 +19,16 @@ final class VerifiedProfileStructures {
     /** @var array<string,array<string,mixed>> */
     private static array $collection = [];
 
-    public static function boot(): void {
+    public static function prepare(): void {
         require_once dirname( __DIR__, 2 ) . '/register-acf-structure-theme-options.php';
         require_once dirname( __DIR__, 2 ) . '/register-acf-structures.php';
         require_once dirname( __DIR__, 2 ) . '/register-acf-user-profile.php';
         require_once dirname( __DIR__, 2 ) . '/register-acf-verified-profile.php';
+    }
 
-        add_action( 'init', [ self::class, 'migrate_legacy_content_type_settings' ], 3 );
-        add_action( 'init', [ self::class, 'migrate_legacy_acf_settings' ], 3 );
-        self::content_types()->register();
-        self::acf_groups()->register();
+    /** Legacy direct lifecycle retained for third-party callbacks. */
+    public static function boot(): void {
+        \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->boot();
     }
 
     public static function content_types(): ContentTypeRegistry {
@@ -368,4 +368,8 @@ final class VerifiedProfileStructures {
         }
         update_option( $legacy, $any_enabled ? 1 : 0, false );
     }
+}
+
+if ( ! class_exists( '\\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures', false ) ) {
+    class_alias( VerifiedProfileStructures::class, '\\smp_verified_profiles\\ContentTypes\\VerifiedProfileStructures' );
 }

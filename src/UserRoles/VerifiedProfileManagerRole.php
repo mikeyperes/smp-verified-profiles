@@ -2,11 +2,13 @@
 
 declare( strict_types=1 );
 
-namespace smp_verified_profiles\UserRoles;
+namespace SMP\VerifiedProfiles\UserRoles;
+
+use Hexa\PluginCore\CoreContracts\ModuleInterface;
 
 defined( 'ABSPATH' ) || exit;
 
-final class VerifiedProfileManagerRole {
+final class VerifiedProfileManagerRole implements ModuleInterface {
     public const ROLE = 'verified_profile_manager';
     public const ADMIN_FEATURE_OPTION = 'enable_snippet_adjust_wp_admin_for_profile_managers';
 
@@ -34,8 +36,19 @@ final class VerifiedProfileManagerRole {
         'delete_published_profiles',
     ];
 
+    private static bool $registered = false;
+
     public static function boot(): void {
+        if ( self::$registered ) {
+            return;
+        }
+
         add_action( 'init', [ self::class, 'ensure_when_profile_enabled' ], 1 );
+        self::$registered = true;
+    }
+
+    public function register(): void {
+        self::boot();
     }
 
     public static function ensure_when_profile_enabled(): void {
@@ -65,4 +78,8 @@ final class VerifiedProfileManagerRole {
             }
         }
     }
+}
+
+if ( ! class_exists( '\\smp_verified_profiles\\UserRoles\\VerifiedProfileManagerRole', false ) ) {
+    class_alias( VerifiedProfileManagerRole::class, '\\smp_verified_profiles\\UserRoles\\VerifiedProfileManagerRole' );
 }

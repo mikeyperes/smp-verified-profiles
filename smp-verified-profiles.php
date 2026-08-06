@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 7.1.4
+ * Version: 8.0.0
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -19,6 +19,9 @@ namespace smp_verified_profiles;
 // SECURITY: Prevent direct file access
 // ============================================================================
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
+
+require_once __DIR__ . '/src/Support/Autoloader.php';
+\SMP\VerifiedProfiles\Support\Autoloader::register( __DIR__ . '/src' );
 
 // ============================================================================
 // CONFIGURATION CLASS - All plugin-specific settings in one place
@@ -42,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "7.1.4";
+    public static $plugin_version = "8.0.0";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -462,18 +465,12 @@ include_once __DIR__ . '/generic-functions.php';
 // Hexa Plugin Core integration: shared AJAX guard, updater, and host tabs.
 include_once __DIR__ . '/hexa-core-integration.php';
 
-// Shared Core registration for the immutable Profile CPT and every active ACF
-// field group. Legacy files remain definition sources, not runtime registrars.
-require_once __DIR__ . '/src/ContentTypes/VerifiedProfileStructures.php';
-require_once __DIR__ . '/src/EntitySources/CanonicalProfileSource.php';
-require_once __DIR__ . '/src/UserRoles/VerifiedProfileManagerRole.php';
-add_action( 'plugins_loaded', [ \smp_verified_profiles\ContentTypes\VerifiedProfileStructures::class, 'boot' ], 1 );
-\smp_verified_profiles\UserRoles\VerifiedProfileManagerRole::boot();
-
-if ( function_exists( __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin' ) ) {
-    add_action( 'plugins_loaded', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 20 );
-    add_action( 'admin_init', __NAMESPACE__ . '\\smp_vp_boot_hexa_core_admin', 5 );
+// Resolve the shared package first, then boot every Core and host module once
+// through the namespaced host lifecycle.
+function smp_vp_boot_plugin(): void {
+    \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->boot();
 }
+add_action( 'plugins_loaded', __NAMESPACE__ . '\\smp_vp_boot_plugin', 1 );
 
 // ============================================================================
 // ADMIN INIT: Output buffering fix for settings page

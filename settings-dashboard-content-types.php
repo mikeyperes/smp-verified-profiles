@@ -5,7 +5,7 @@ namespace smp_verified_profiles;
 use Hexa\PluginCore\ContentTypes\ContentTypeRenderer;
 use Hexa\PluginCore\FieldStructures\AcfFieldGroupRenderer;
 use Hexa\PluginCore\FieldStructures\AcfSettingsPanel;
-use smp_verified_profiles\ContentTypes\VerifiedProfileStructures;
+use SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures;
 
 defined( 'ABSPATH' ) || exit;
 

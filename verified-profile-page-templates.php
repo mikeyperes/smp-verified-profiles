@@ -7,6 +7,8 @@ use Hexa\PluginCore\WpAdminComponents\CoreUi;
 use Hexa\PluginCore\WpAdminComponents\DetailedColorPicker;
 use Hexa\PluginCore\WpAdminComponents\TemplateSelectionControl;
 use Hexa\PluginCore\WpAdminComponents\TypographyControl;
+use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
+use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -14,7 +16,17 @@ const SMP_VP_PROFILE_PAGE_OPTION = 'smp_vp_profile_page_settings';
 const SMP_VP_PROFILE_PAGE_NONCE  = 'smp_vp_profile_page_nonce';
 const SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE = 'custom';
 
-add_action( 'wp_ajax_smp_vp_profile_page_save', __NAMESPACE__ . '\\smp_vp_ajax_profile_page_save' );
+( new AjaxActionRegistry(
+    [
+        'capability'   => Config::$settings_page_capability,
+        'nonce_action' => SMP_VP_PROFILE_PAGE_NONCE,
+        'nonce_field'  => 'nonce',
+    ]
+) )->register(
+    [
+        'smp_vp_profile_page_save' => [ 'callback' => __NAMESPACE__ . '\\smp_vp_ajax_profile_page_save' ],
+    ]
+);
 add_filter( 'the_content', __NAMESPACE__ . '\\smp_vp_profile_page_filter_content', 18 );
 add_filter( 'template_include', __NAMESPACE__ . '\\smp_vp_profile_page_template_include', 99 );
 add_filter( 'elementor/theme/get_location_templates/template_id', __NAMESPACE__ . '\\smp_vp_profile_page_elementor_single_template_id', 10, 2 );
@@ -1430,16 +1442,11 @@ function smp_vp_profile_page_admin_script( array $labels ): void {
     <?php
 }
 
-function smp_vp_ajax_profile_page_save(): void {
-    if ( ! current_user_can( 'manage_options' ) ) {
-        wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
-    }
-
-    check_ajax_referer( SMP_VP_PROFILE_PAGE_NONCE, 'nonce' );
-
-    $input    = isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : [];
+function smp_vp_ajax_profile_page_save( AjaxRequest $request ): array {
+    $input    = $request->raw( 'settings', [], 'post' );
+    $input    = is_array( $input ) ? $input : [];
     $settings = smp_vp_profile_page_sanitize( $input );
 
     update_option( SMP_VP_PROFILE_PAGE_OPTION, $settings, false );
-    wp_send_json_success( [ 'message' => 'Profile page settings saved.', 'settings' => $settings ] );
+    return [ 'message' => 'Profile page settings saved.', 'settings' => $settings ];
 }

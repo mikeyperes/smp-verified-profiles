@@ -250,71 +250,10 @@ $(document).ready(function($) {
 
 
 if (!function_exists('smp_verified_profiles\toggle_snippet')) {
-    function toggle_snippet() {
-       if ( ! current_user_can( Config::$settings_page_capability ) ) {
-           wp_send_json_error( 'Unauthorized' );
-       }
-
-       check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-       // $settings_snippets = get_settings_snippets();
-       $settings_snippets = [];
-
-       $snippets_acf = get_snippets("acf");
-       $snippets_admin = get_snippets("admin");
-       $snippets_non_admin = get_snippets("non_admin");
-
-
-// Merge all three arrays into one
-$all_snippets = array_merge($snippets_acf, $snippets_admin, $snippets_non_admin);
-
-
-        // Retrieve the snippet ID and the enable/disable state from the AJAX request
-        $snippet_id = sanitize_text_field($_POST['snippet_id']);
-        $enable = filter_var($_POST['enable'], FILTER_VALIDATE_BOOLEAN);
-
-        write_log("Toggle snippet called with ID: {$snippet_id}, enable: " . ($enable ? 'true' : 'false'));
-
-        // Find the corresponding snippet and function
-        foreach ($all_snippets as $snippet) {
-            if ($snippet['id'] === $snippet_id) {
-                // Get the current value from the database
-                $current_value = get_option($snippet_id);
-                write_log("Current value of '{$snippet_id}': " . var_export($current_value, true));
-
-                // Ensure both current and new values are booleans for accurate comparison
-                $current_value_bool = filter_var($current_value, FILTER_VALIDATE_BOOLEAN);
-
-                // Only update if the value has actually changed
-                if ($current_value_bool !== $enable) {
-                    write_log("Attempting to update '{$snippet_id}' to " . ($enable ? 'true' : 'false'));
-
-                    // Attempt the update
-                    $updated = update_option($snippet_id, $enable);
-
-                    // Log the result of the update attempt
-                    if ($updated) {
-                        write_log("Option '{$snippet_id}' updated successfully.");
-                        wp_send_json_success("Option '{$snippet_id}' updated successfully.");
-                    } else {
-                        global $wpdb;
-                        $db_error = $wpdb->last_error;
-                        write_log("Failed to update option '{$snippet_id}'. Database error: {$db_error}");
-                        wp_send_json_error("Failed to update option '{$snippet_id}'. Database error: {$db_error}");
-                    }
-                } else {
-                    write_log("No update required for '{$snippet_id}'. Current value is the same as the new value.");
-                    wp_send_json_error("No update required for '{$snippet_id}'. Current value is the same.");
-                }
-
-                exit; // Stop further processing once the correct snippet is found
-            }
-        }
-
-        write_log("Invalid snippet ID: {$snippet_id}");
-        wp_send_json_error("Invalid snippet ID: {$snippet_id}");
-
-        wp_die(); // Ensure proper termination of the script
+    function toggle_snippet(): void {
+        \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+            [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->snippet_controller(), 'toggle' ]
+        );
     }
 } else write_log("Warning: " . __NAMESPACE__ . "/smp_verified_profiles/toggle_snippet function is already declared", true);
 
@@ -323,68 +262,16 @@ $all_snippets = array_merge($snippets_acf, $snippets_admin, $snippets_non_admin)
    
 
 
-function modify_wp_config_constants_handler() {
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error(['message' => 'Unauthorized']);
-    }
-
-    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-    $constants = isset($_POST['constants']) ? $_POST['constants'] : [];
-    if (empty($constants)) {
-        wp_send_json_error(['message' => 'No constants provided']);
-    }
-
-    $result = modify_wp_config_constants($constants);
-
-    if ($result['status']) {
-        wp_send_json_success(['message' => $result['message']]);
-    } else {
-        wp_send_json_error(['message' => $result['message']]);
-    }
+function modify_wp_config_constants_handler(): void {
+    \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+        [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'modify_wp_config_constants' ]
+    );
 }
 
 
-function handle_execute_function_ajax() {
-    if ( ! current_user_can( Config::$settings_page_capability ) ) {
-        wp_send_json_error( 'Unauthorized' );
-    }
-
-    check_ajax_referer( Config::$ajax_nonce_action, Config::$ajax_nonce_field );
-
-    // Verify if the method parameter is passed and is not empty
-    if (isset($_POST['method']) && !empty($_POST['method'])) {
-        $method_name = sanitize_text_field($_POST['method']);
-
-        // Determine the correct namespace
-        $namespace =  __NAMESPACE__ ."";
-        $fully_qualified_function_name = $namespace . '\\' . $method_name;
-        $allowed_functions = [
-            'create_unclaimed_profiles_user',
-            'fix_profile_taxonomies',
-        ];
-
-        if ( ! in_array( $method_name, $allowed_functions, true ) ) {
-            wp_send_json_error( 'The requested method is not allowed.' );
-        }
-
-        write_log("handle_execute_function_ajax - Method name passed: " . $fully_qualified_function_name, true);
-
-        // Check if the function exists with the namespace
-        if (function_exists($fully_qualified_function_name)) {
-            $response = call_user_func($fully_qualified_function_name);
-        
-          
-            // Send a success response with the result of the function execution
-            wp_send_json_success($response);
-        } else {
-            write_log("The function does not exist: " . $fully_qualified_function_name, true);
-            wp_send_json_error('The function does not exist.');
-        }
-    } else {
-        wp_send_json_error('No method name provided.');
-    }
-
-    wp_die();  // This is required to properly terminate the script when doing AJAX in WordPress
+function handle_execute_function_ajax(): void {
+    \SMP\VerifiedProfiles\Admin\AdminAjaxHandlers::dispatch(
+        [ \SMP\VerifiedProfiles\Bootstrap\Plugin::instance()->ajax_handlers(), 'execute_allowed_function' ]
+    );
 }
 ?>
