@@ -8,8 +8,11 @@ $assertions = [
     'only Elementor Loop Item templates are accepted'     => str_contains( $source, '"loop-item" === (string) get_post_meta($template_id, "_elementor_template_type", true)' ),
     'each profile becomes the Elementor dynamic context'  => str_contains( $source, 'setup_postdata($profile);' ),
     'saved Loop Item is rendered through Elementor'       => str_contains( $source, 'get_builder_content_for_display($template_id, true)' ),
-    'desktop collection retains six columns'              => str_contains( $source, 'grid-template-columns:repeat(6,minmax(0,1fr))' ),
-    'mobile collection retains two columns'               => str_contains( $source, 'grid-template-columns:repeat(2,minmax(0,1fr))' ),
+    'legacy plugin design retains its compatibility grid' => str_contains( $source, 'grid-template-columns:repeat(6,minmax(0,1fr))' )
+        && str_contains( $source, 'grid-template-columns:repeat(2,minmax(0,1fr))' ),
+    'no-design mode keeps Elementor markup without plugin CSS' => str_contains( $source, 'bool $include_plugin_styles = true' )
+        && str_contains( $source, 'smp_vp_display_render_elementor_collection($ids, $elementor_template_id, $id, ! $is_custom_template)' )
+        && preg_match( '/if \(\$is_custom_template\) \{\s+return "";\s+\}/', $source ) === 1,
     'built-in renderer remains available as fallback'     => str_contains( $source, '$render_args = array_replace($settings' ),
 ];
 

@@ -777,7 +777,12 @@ function smp_vp_display_single_post_section(string $loop_html, bool $preserve_em
     }
 
     $heading_id = 'smp-vp-in-this-article-' . absint(get_the_ID());
-    return '<style>' . smp_vp_display_single_post_section_css() . '</style>'
+    $settings = smp_vp_display_settings();
+    $style = smp_vp_display_is_custom_template((string) ($settings["post_template"] ?? ""))
+        ? ''
+        : '<style>' . smp_vp_display_single_post_section_css() . '</style>';
+
+    return $style
         . '<section class="smp-vp-single-post-section" data-smp-vp-section="single-post" aria-labelledby="' . esc_attr($heading_id) . '">'
         . '<h2 id="' . esc_attr($heading_id) . '" class="smp-vp-single-post-section__title">' . esc_html__('In This Article', 'smp-verified-profiles') . '</h2>'
         . '<div class="smp-vp-single-post-section__content">' . $loop_html . '</div>'
@@ -1822,10 +1827,11 @@ function smp_vp_display_single_post_elementor_template_id(): int {
 
 /**
  * Render verified profiles through the saved Elementor Loop Item while each
- * profile is the active dynamic context. The wrapper preserves the historical
- * six-column desktop and two-column mobile behavior from the publication.
+ * profile is the active dynamic context. The optional compatibility layout is
+ * omitted when the placement selects "No plugin design" so the host Elementor
+ * element can own all presentation without losing the saved Loop Item markup.
  */
-function smp_vp_display_render_elementor_collection(array $ids, int $template_id, string $id): string {
+function smp_vp_display_render_elementor_collection(array $ids, int $template_id, string $id, bool $include_plugin_styles = true): string {
     if (! class_exists("\\Elementor\\Plugin") || $template_id <= 0) {
         return "";
     }
@@ -1855,7 +1861,9 @@ function smp_vp_display_render_elementor_collection(array $ids, int $template_id
         return "";
     }
 
-    $style = "<style>.verified-profiles-loop-single-post.smp-vp-elementor-loop{width:100%;display:block}.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem}@media(max-width:1024px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:600px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>";
+    $style = $include_plugin_styles
+        ? "<style>.verified-profiles-loop-single-post.smp-vp-elementor-loop{width:100%;display:block}.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{width:100%;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1rem}@media(max-width:1024px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(3,minmax(0,1fr))!important}}@media(max-width:600px){.verified-profiles-loop-single-post.smp-vp-elementor-loop>.shortcode{grid-template-columns:repeat(2,minmax(0,1fr))!important}}</style>"
+        : "";
     return $style . "<div class=\"verified-profiles-loop verified-profiles-loop-" . esc_attr($id) . " smp-vp-elementor-loop display_single_post_mentioned_in_article\" data-smp-vp-template-id=\"" . esc_attr((string) $template_id) . "\"><div class=\"shortcode\">" . $items . "</div></div>";
 }
 
@@ -1870,13 +1878,12 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
     $item = $items[$id];
     $requested_template = sanitize_key((string) ($atts["template"] ?? ""));
     $template = "" !== $requested_template ? $requested_template : sanitize_key((string) $item["template"]);
-    if (smp_vp_display_is_custom_template($template)) {
-        return "";
-    }
-    if (! isset(smp_vp_display_templates()[$template])) {
+    $is_custom_template = smp_vp_display_is_custom_template($template);
+    if (! $is_custom_template && ! isset(smp_vp_display_templates()[$template])) {
         $template = sanitize_key((string) $item["template"]);
+        $is_custom_template = smp_vp_display_is_custom_template($template);
     }
-    if (smp_vp_display_is_custom_template($template) || ! isset(smp_vp_display_templates()[$template])) {
+    if (! $is_custom_template && ! isset(smp_vp_display_templates()[$template])) {
         return "";
     }
 
@@ -1888,11 +1895,15 @@ function smp_vp_display_render_loop_item(string $id, array $atts = []): string {
     if ("single-post" === $id) {
         $elementor_template_id = smp_vp_display_single_post_elementor_template_id();
         if ($elementor_template_id > 0) {
-            $elementor_output = smp_vp_display_render_elementor_collection($ids, $elementor_template_id, $id);
+            $elementor_output = smp_vp_display_render_elementor_collection($ids, $elementor_template_id, $id, ! $is_custom_template);
             if ("" !== $elementor_output) {
                 return $elementor_output;
             }
         }
+    }
+
+    if ($is_custom_template) {
+        return "";
     }
 
     $render_args = array_replace($settings, [

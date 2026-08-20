@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.0.1`
+- Version: `8.0.2`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,11 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.0.2
+
+- Let the single-post "No plugin design" mode keep saved Elementor Loop Item markup while omitting the plugin's section and grid CSS, so publication-owned Elementor styling can control the complete presentation.
+- Preserved the historical responsive compatibility grid for placements that continue to use a plugin design.
 
 ### 8.0.1
 
