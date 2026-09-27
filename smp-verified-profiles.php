@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 8.0.2
+ * Version: 8.1.0
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -45,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "8.0.2";
+    public static $plugin_version = "8.1.0";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -389,71 +389,6 @@ if ( ! function_exists( __NAMESPACE__ . '\\is_elementor_context' ) ) {
     }
 }
 
-// ============================================================================
-// REQUIRED PLUGIN DEPENDENCY CHECK
-// ============================================================================
-
-/**
- * Check that required plugin groups are satisfied
- * Each group is OR logic (any one plugin satisfies), groups are AND logic
- * 
- * @param array $groups Array of plugin-file arrays
- * @return array [bool $ok, string $error_message]
- */
-function check_required_plugins( array $groups ): array {
-    // Load WP plugin helpers if needed
-    if ( ! function_exists( 'is_plugin_active' ) ) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-    
-    $missing = [];
-    
-    foreach ( $groups as $group ) {
-        $group_ok = false;
-        foreach ( $group as $plugin_file ) {
-            if ( is_plugin_active( $plugin_file ) ) {
-                $group_ok = true;
-                break;
-            }
-        }
-        if ( ! $group_ok ) {
-            $missing[] = $group;
-        }
-    }
-    
-    if ( empty( $missing ) ) {
-        return [ true, '' ];
-    }
-    
-    // Build human-readable list of missing groups
-    $labels = array_map( function( $group ) {
-        return implode( ' or ', $group );
-    }, $missing );
-    
-    $error = 'requires ' . implode( ', ', $labels ) . '.';
-    
-    return [ false, $error ];
-}
-
-// Define required plugins (ACF Pro is required)
-$required_plugins = [
-    [
-        'advanced-custom-fields-pro/acf.php',
-        'advanced-custom-fields-pro-temp/acf.php'
-    ]
-];
-
-// Check required plugins
-list( $plugins_ok, $plugin_error ) = check_required_plugins( $required_plugins );
-if ( ! $plugins_ok ) {
-    // Show admin notice if requirements not met
-    add_action( 'admin_notices', function() use ( $plugin_error ) {
-        echo '<div class="notice notice-error"><p><strong>'
-           . esc_html( Config::$plugin_name )
-           . '</strong> ' . esc_html( $plugin_error ) . '</p></div>';
-    } );
-    return; // Stop plugin execution
-}
 
 // ============================================================================
 // LOAD CORE FILES
@@ -490,9 +425,8 @@ if ( is_admin() ) {
         if (
             Config::$settings_page_slug === smp_vp_request_value( 'page' )
             && in_array( smp_vp_request_value( 'tab' ), [ 'emails', 'profile-settings' ], true )
-            && function_exists( 'acf_form_head' )
         ) {
-            acf_form_head();
+            \Hexa\PluginCore\Fields\Form::head();
         }
     } );
 }
@@ -507,19 +441,21 @@ if ( is_admin() ) {
 include_once __DIR__ . '/activate-snippets.php';
 
 // ============================================================================
-// ACF INITIALIZATION HOOK
-// Load ACF-dependent structures after ACF is fully initialized
+// FIELD GROUP REGISTRATION
+// Hexa WP Core Fields runs these on acf/init when ACF is active, otherwise on init.
 // ============================================================================
-add_action( 'acf/init', function() {
-    // ACF field group registrations
-    include_once __DIR__ . '/register-acf-structure-theme-options.php';
-    include_once __DIR__ . '/register-acf-structures.php';
-    include_once __DIR__ . '/register-acf-user-profile.php';
-    include_once __DIR__ . '/register-acf-verified-profile.php';
-    
-    // Activate ACF-related snippets
-    activate_snippets( 'acf' );
-}, 10 );
+add_action( 'plugins_loaded', function() {
+    \Hexa\PluginCore\Fields\FieldGroups::ready( function() {
+        // Field group registrations
+        include_once __DIR__ . '/register-acf-structure-theme-options.php';
+        include_once __DIR__ . '/register-acf-structures.php';
+        include_once __DIR__ . '/register-acf-user-profile.php';
+        include_once __DIR__ . '/register-acf-verified-profile.php';
+
+        // Activate field-dependent snippets
+        activate_snippets( 'acf' );
+    }, 10 );
+} );
 
 // ============================================================================
 // MAIN INIT HOOK - Load features conditionally

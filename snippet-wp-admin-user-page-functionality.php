@@ -3,7 +3,7 @@
 
 function enable_snippet_wp_admin_user_page_functionality()
 {
-add_filter('acf/load_field/name=profile', __NAMESPACE__.'\make_unclaimed_profiles_read_only');
+\Hexa\PluginCore\Fields\Hooks::on('load_field/name=profile', __NAMESPACE__.'\make_unclaimed_profiles_read_only');
 add_action('admin_footer-user-edit.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer-profile.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer', __NAMESPACE__.'\enqueue_custom_admin_scripts');
@@ -47,7 +47,7 @@ if (!function_exists(__NAMESPACE__ . '\\make_unclaimed_profiles_read_only')) {
  */
 if (!function_exists(__NAMESPACE__ . '\\list_unclaimed_profiles')) {
     function list_unclaimed_profiles($user_id) {
-        $unclaimed_profiles = get_field('unclaimed_profiles', 'user_' . $user_id);
+        $unclaimed_profiles = \Hexa\PluginCore\Fields\Field::get('unclaimed_profiles', 'user_' . $user_id);
 
         if (empty($unclaimed_profiles)) {
             return 'No unclaimed profiles found.';
@@ -109,10 +109,10 @@ if (!function_exists(__NAMESPACE__ . '\\list_user_owned_profiles')) {
 if (!function_exists(__NAMESPACE__ . '\\get_notification_emails')) {
     function get_notification_emails($user_id) {
         $emails = [];
-        if (have_rows('notification_emails', 'user_' . $user_id)) {
-            while (have_rows('notification_emails', 'user_' . $user_id)) {
-                the_row();
-                $email = get_sub_field('email');
+        if (\Hexa\PluginCore\Fields\Field::have_rows('notification_emails', 'user_' . $user_id)) {
+            while (\Hexa\PluginCore\Fields\Field::have_rows('notification_emails', 'user_' . $user_id)) {
+                \Hexa\PluginCore\Fields\Field::the_row();
+                $email = \Hexa\PluginCore\Fields\Field::get_sub_field('email');
                 if (!in_array($email, $emails)) {
                     $emails[] = $email;
                 }
@@ -299,7 +299,7 @@ if (!function_exists(__NAMESPACE__ . '\\handle_refresh_user')) {
  */
 if (!function_exists(__NAMESPACE__ . '\\update_user_profile_content')) {
     function update_user_profile_content($user_id) {
-        add_action('acf/save_post', function() use ($user_id) {
+        \Hexa\PluginCore\Fields\Hooks::on('save_post', function() use ($user_id) {
             update_user_email_settings($user_id);
         }, 20);
     }
@@ -353,7 +353,7 @@ $credentials_dashboard_content .= '<b>Password setup:</b> <a href="' . esc_url( 
                 $user_field_key = $group_key . '_' . $field;
 
                 // Fetch value from theme options.
-                $value = get_field($theme_field_key, 'options');
+                $value = \Hexa\PluginCore\Fields\Field::get($theme_field_key, 'options');
 
                 // Replace placeholders in the value with user data.
                 $value = str_replace('{full_name}', $user_full_name, $value);
@@ -367,7 +367,7 @@ $credentials_dashboard_content .= '<b>Password setup:</b> <a href="' . esc_url( 
                 }
 
                 // Update user-specific field with the processed value.
-                update_field($user_field_key, $value, 'user_' . $user_id);
+                \Hexa\PluginCore\Fields\Field::update($user_field_key, $value, 'user_' . $user_id);
             }
         }
     }

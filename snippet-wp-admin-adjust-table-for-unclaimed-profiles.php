@@ -2,7 +2,7 @@
 
 function enable_snippet_wp_admin_adjust_table_for_unclaimed_profiles()
 {
-add_filter('acf/fields/post_object/query/key=field_659a5dbd40f5b', __NAMESPACE__ . '\\filter_profiles_by_unclaimed_author', 10, 3);
+\Hexa\PluginCore\Fields\Hooks::on('fields/post_object/query/key=field_659a5dbd40f5b', __NAMESPACE__ . '\\filter_profiles_by_unclaimed_author', 10, 3);
     // Hook the function into the pre_get_users action
 add_action( 'pre_get_users', __NAMESPACE__ . '\\sort_users_by_date_registered' );
 add_filter('manage_users_columns', __NAMESPACE__ . '\\add_unclaimed_profiles_column');
@@ -90,7 +90,7 @@ if (!function_exists(__NAMESPACE__ . '\\show_unclaimed_profiles')) {
     function show_unclaimed_profiles($value, $column_name, $user_id) {
         if ('unclaimed_profiles' === $column_name) {
             $profiles_output = '';
-            $rows = function_exists( 'get_field' ) ? get_field( 'unclaimed_profiles', 'user_' . $user_id ) : [];
+            $rows = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'unclaimed_profiles', 'user_' . $user_id ) : [];
             $rows = is_array( $rows ) ? array_slice( $rows, 0, 20 ) : [];
             foreach ( $rows as $row ) {
                 $profile_id = is_array( $row ) && isset( $row['profile'] ) ? absint( $row['profile'] ) : 0;

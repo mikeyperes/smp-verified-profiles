@@ -35,7 +35,7 @@ function smp_vp_current_profile_schema(): array {
         return [];
     }
 
-    $schema_json = function_exists( 'get_field' ) ? get_field( 'schema_markup', $post->ID, false ) : '';
+    $schema_json = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'schema_markup', $post->ID, false ) : '';
     if ( is_array( $schema_json ) && ! empty( $schema_json ) ) {
         return $schema_json;
     }

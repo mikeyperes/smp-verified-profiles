@@ -34,6 +34,10 @@ function do_action( string $hook, mixed ...$args ): void {
 function did_action( string $hook ): int {
     return (int) ( $GLOBALS['smp_vp_test_actions_ran'][ $hook ] ?? 0 );
 }
+function doing_action( ?string $hook = null ): bool {
+    unset( $hook );
+    return false;
+}
 
 function is_admin(): bool { return true; }
 function wp_doing_ajax(): bool { return false; }
@@ -46,7 +50,7 @@ function get_plugin_data( string $file, bool $markup = true, bool $translate = t
     unset( $file, $markup, $translate );
     return [
         'Name'        => 'SMP Verified Profiles',
-        'Version'     => '8.0.2',
+        'Version'     => '8.1.0',
         'Author'      => 'Michael Peres',
         'PluginURI'   => 'https://github.com/mikeyperes/smp-verified-profiles',
         'Description' => 'Verified Profiles',

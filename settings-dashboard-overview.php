@@ -44,7 +44,7 @@ function get_profile_stats() {
     $stats['total']     = $stats['published'] + $stats['draft'];
     
     // Count verified profiles (if ACF field exists)
-    if ( function_exists( 'get_field' ) ) {
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
         $verified_query = new \WP_Query([
             'post_type'      => 'profile',
             'post_status'    => 'publish',
@@ -128,12 +128,11 @@ function get_snippet_stats() {
 function get_system_checks() {
     $checks = [];
     
-    // ACF Pro check
-    $acf_active = class_exists( 'ACF' ) || function_exists( 'acf_add_local_field_group' );
+    // Custom fields run on Hexa WP Core: ACF when active, native otherwise.
     $checks['acf'] = [
-        'label'  => 'ACF Pro',
-        'status' => $acf_active ? 'good' : 'bad',
-        'value'  => $acf_active ? '✓' : '✗',
+        'label'  => 'Custom fields (' . \Hexa\PluginCore\Fields\Acf::mode() . ')',
+        'status' => 'good',
+        'value'  => '✓',
     ];
     
     // Profile CPT check
@@ -211,13 +210,6 @@ function display_settings_overview() {
                     <?php render_status_card( $check['value'], $check['label'], $check['status'] ); ?>
                 <?php endforeach; ?>
             </div>
-            
-            <?php if ( ! $system_checks['acf']['status'] === 'good' ) : ?>
-                <div class="smp-info-box error">
-                    <strong>⚠️ ACF Pro Required</strong>
-                    <p>This plugin requires Advanced Custom Fields Pro to function properly.</p>
-                </div>
-            <?php endif; ?>
             
             <?php if ( $system_checks['profile_cpt']['status'] !== 'good' ) : ?>
                 <div class="smp-info-box warning">

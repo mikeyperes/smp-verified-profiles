@@ -32,7 +32,7 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_single')) {
         global $post;
         $author_id = $post->post_author;
         $muckrack_image_url = "/wp-content/uploads/2022/07/Muck-Rack-.png"; // Placeholder for image
-        $verified_field = get_field('is_verified', 'user_' . $author_id);
+        $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
 
         if ($verified_field == 'true') {
             return '<span class="muckrack-text">Journalist verified by <span style="color:#2D5277;font-weight:800">MuckRack\'s</span> editorial team </span>';
@@ -53,7 +53,7 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_author')) {
 
         // Get author ID based on nicename
         $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
-        $verified_field = get_field('is_verified', 'user_' . $author_id);
+        $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
 
         if ($verified_field == 'true') {
             return '<span class="muckrack-text">Journalist verified by <span style="color:#2D5277;font-weight:800">MuckRack\'s</span> editorial team </span>';
@@ -69,7 +69,7 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_single')) {
 
         $post_id = get_the_ID();
         $author_id = get_post_field('post_author', $post_id);
-        $verified_field = get_field('is_verified', 'user_' . $author_id);
+        $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
         $verified_image_url = "/wp-content/uploads/2022/07/checkmark.svg"; // Placeholder for image
 
         if ($verified_field == 'true') {
@@ -89,7 +89,7 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_author')) {
         $nicename = str_replace(array("herforward.com/author/", "/"), "", $pageURL);
 
         $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
-        $verified_field = get_field('is_verified', 'user_' . $author_id);
+        $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
         $verified_image_url = "/wp-content/uploads/2022/07/checkmark.svg"; // Placeholder for image
 
         if ($verified_field == 'true') {
@@ -112,7 +112,7 @@ if (!function_exists(__NAMESPACE__ . '\\acf_author_field_shortcode')) {
 
         global $post;
         $author_id = $post->post_author;
-        $field_value = get_field($atts['field'], 'user_' . $author_id);
+        $field_value = \Hexa\PluginCore\Fields\Field::get($atts['field'], 'user_' . $author_id);
 
         return $field_value ? $field_value : '';
     }
@@ -137,9 +137,9 @@ if ( ! function_exists( __NAMESPACE__ . '\\muckrack_verified' ) ) {
         ), $atts, 'muckrack_verified' );
 
         // Retrieve user meta fields.
-        $muckrack_verified  = get_field( 'profiles_muckrack_verified', 'user_' . $author_id );
-        $muckrack_url       = get_field( 'profiles_muckrack', 'user_' . $author_id );
-        $author_description = get_field( 'what_best_describe_you', 'user_' . $author_id );
+        $muckrack_verified  = \Hexa\PluginCore\Fields\Field::get( 'profiles_muckrack_verified', 'user_' . $author_id );
+        $muckrack_url       = \Hexa\PluginCore\Fields\Field::get( 'profiles_muckrack', 'user_' . $author_id );
+        $author_description = \Hexa\PluginCore\Fields\Field::get( 'what_best_describe_you', 'user_' . $author_id );
 
         if ( ! $muckrack_verified ) {
             return '';
@@ -264,8 +264,8 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_muckrack_verified')) {
     function display_profile_muckrack_verified($atts) {
         global $post;
 
-        if (get_field("social_profiles_muckrack_verified", $post->ID) && get_field("social_profiles_muckrack_url", $post->ID) != "") {
-            $muckrack_url = get_field("social_profiles_muckrack_url", $post->ID);
+        if (\Hexa\PluginCore\Fields\Field::get("social_profiles_muckrack_verified", $post->ID) && \Hexa\PluginCore\Fields\Field::get("social_profiles_muckrack_url", $post->ID) != "") {
+            $muckrack_url = \Hexa\PluginCore\Fields\Field::get("social_profiles_muckrack_url", $post->ID);
             $profile_name = get_the_title($post->ID);
 
             return '<div class="display_profile_muckrack_verified shortcode_display_profile_muckrack_verified">' . $profile_name . ' is verified by <span style="color: #2d5277; font-weight: bold;">MuckRack\'s</span> editorial team <a href="' . esc_url($muckrack_url) . '" target="_blank"> (learn more) <i class="fas fa-external-link-alt" aria-hidden="true"></i></a></div>';

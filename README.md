@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.0.2`
+- Version: `8.1.0`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -78,9 +78,9 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.0.1 |
+| Hexa WP Core bundle | 3.4.6 |
 
-ACF Pro is required for the profile field structures. Elementor/JetEngine integrations require those plugins only when their templates are used.
+ACF Pro is not required: the profile field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
 ## Installation
 
@@ -97,6 +97,12 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.1.0
+
+- Removed the ACF Pro requirement: the plugin no longer stops loading without ACF, every field group, field read/write, row loop, options page, form and ACF hook runs on Hexa WP Core 3.4.6 `Fields` (ACF when active, native otherwise), and field-group registration waits for `acf/init` or `init` through `FieldGroups::ready()`.
+- Removed ACF Pro from the plugin checks and system status, which now report the active field mode.
+- Synchronized the bundled Hexa WordPress Plugin Core to 3.4.6.
 
 ### 8.0.2
 

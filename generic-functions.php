@@ -94,11 +94,11 @@ function get_verified_profile_legacy_settings(): array {
         'rewrite_slug' => 'profile',
     ];
 
-    if ( ! function_exists( 'get_field' ) ) {
+    if ( ! \Hexa\PluginCore\Fields\Field::available() ) {
         return $defaults;
     }
 
-    $settings = get_field( 'general_settings', 'option' );
+    $settings = \Hexa\PluginCore\Fields\Field::get( 'general_settings', 'option' );
     $settings = is_array( $settings ) ? $settings : [];
 
     return [
@@ -208,8 +208,8 @@ if (!function_exists(__NAMESPACE__ . '\\is_contributor')) {
         $user = wp_get_current_user();
 
         // Get the ACF custom fields 'is_contributor' and 'is_council_member' for the current user
-        $is_contributor = get_field('is_contributor', 'user_' . $user->ID);
-        $is_council_member = get_field('is_council_member', 'user_' . $user->ID);
+        $is_contributor = \Hexa\PluginCore\Fields\Field::get('is_contributor', 'user_' . $user->ID);
+        $is_council_member = \Hexa\PluginCore\Fields\Field::get('is_council_member', 'user_' . $user->ID);
 
         // Check if the user is an admin (when not in strict mode), has the 'contributor' role, or has custom fields set
         if ((is_admin() && !$strict) || current_user_can('contributor') || $is_contributor || $is_council_member) {
@@ -246,7 +246,7 @@ if (!function_exists(__NAMESPACE__ . '\\is_plugin_auto_update_enabled')) {
 // Get the field label for an ACF field
 if (!function_exists('get_field_label')) {
     function get_field_label($field_name) {
-        $field_object = get_field_object($field_name);
+        $field_object = \Hexa\PluginCore\Fields\Field::object($field_name);
         return $field_object['label'];
     }}
     
@@ -338,7 +338,7 @@ if (!function_exists('get_field_label')) {
                     }
             
                     // Bind ACF fields (socials, profiles, etc.)
-                    if (function_exists('update_field')) {
+                    if (\Hexa\PluginCore\Fields\Field::available()) {
                         // Socials
                         $socials = array(
                             'facebook' => isset($params['facebook']) ? $params['facebook'] : '',
@@ -346,7 +346,7 @@ if (!function_exists('get_field_label')) {
                             'x' => isset($params['x']) ? $params['x'] : '',
                             'linkedin' => isset($params['linkedin']) ? $params['linkedin'] : '',
                         );
-                        update_field('socials', $socials, 'user_' . $user_id);
+                        \Hexa\PluginCore\Fields\Field::update('socials', $socials, 'user_' . $user_id);
                         write_log('Updated social fields for user: ' . $params['slug'], false);
             
                         // Profiles
@@ -354,7 +354,7 @@ if (!function_exists('get_field_label')) {
                             'crunchbase' => isset($params['crunchbase']) ? $params['crunchbase'] : '',
                             'muckrack' => isset($params['muckrack']) ? $params['muckrack'] : '',
                         );
-                        update_field('profiles', $profiles, 'user_' . $user_id);
+                        \Hexa\PluginCore\Fields\Field::update('profiles', $profiles, 'user_' . $user_id);
                         write_log('Updated profile fields for user: ' . $params['slug'], false);
                     } else 
                         write_log("ACF update_field function does not exist", false);
@@ -663,22 +663,16 @@ if (!function_exists(__NAMESPACE__ . '\\update_schema_markup')) {
  *                • <ul> for condition sets, nested <ul> for individual rules
  */
 function display_acf_structure( $group_keys ) {
-    // If ACF isn’t active, bail early.
-    if ( ! function_exists( 'acf_get_field_groups' ) ) {
-        return '';
-    }
-
     // Normalize into an array
     $keys   = is_array( $group_keys ) ? $group_keys : [ $group_keys ];
     $output = '';
 
     foreach ( $keys as $group_key ) {
         // 1) Fetch the group object (title, location, etc.)
-        $groups = acf_get_field_groups( [ 'key' => $group_key ] );
-        if ( empty( $groups ) ) {
+        $group = \Hexa\PluginCore\Fields\FieldGroups::get_group( (string) $group_key );
+        if ( empty( $group ) ) {
             continue;
         }
-        $group = reset( $groups );
 
         // 2) Open group container
         $output .= '<div style="'
@@ -710,7 +704,7 @@ function display_acf_structure( $group_keys ) {
 
       
         // 4) List all fields
-       $fields = acf_get_fields( $group_key );
+       $fields = \Hexa\PluginCore\Fields\FieldGroups::fields( $group_key );
        //$fields = acf_get_fields([ 'group_key' => $group_key ]);
         if ( ! empty( $fields ) ) {
             $output .= '<ul style="'

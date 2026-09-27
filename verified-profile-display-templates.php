@@ -1526,7 +1526,7 @@ function smp_vp_display_profile_data($profile): array {
 
 function smp_vp_display_profile_role(int $id): string {
     foreach (["title", "job_title", "role", "occupation", "profession"] as $field) {
-        $value = function_exists("get_field") ? get_field($field, $id) : get_post_meta($id, $field, true);
+        $value = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get($field, $id) : get_post_meta($id, $field, true);
         if (is_scalar($value) && trim((string) $value) !== "") {
             return trim(wp_strip_all_tags((string) $value));
         }
@@ -1697,8 +1697,8 @@ function smp_vp_display_invalidate_profile_surfaces(int $post_id, $post, bool $u
 function smp_vp_display_post_ids(int $post_id, bool $require_thumbnail = false): array {
     $ids = [];
 
-    if (function_exists("get_field")) {
-        foreach ((array) get_field("profiles", $post_id) as $row) {
+    if (\Hexa\PluginCore\Fields\Field::available()) {
+        foreach ((array) \Hexa\PluginCore\Fields\Field::get("profiles", $post_id) as $row) {
             $value = is_array($row) ? ($row["profile"] ?? reset($row)) : $row;
             if (is_object($value) && isset($value->ID)) {
                 $value = $value->ID;

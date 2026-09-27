@@ -117,11 +117,11 @@ if (!function_exists(__NAMESPACE__ . '\\custom_actions_after_successful_order'))
         if ($unclaimed_profile_id && $unclaimed_profile_id != -1) {
             wp_update_post(array('ID' => $unclaimed_profile_id, 'post_author' => $user_id));
 
-            if (function_exists('have_rows') && function_exists('delete_row')) {
-                while (have_rows('unclaimed_profiles', 'user_' . $user_id)) {
-                    the_row();
-                    if (get_sub_field('profile') == $unclaimed_profile_id) {
-                        delete_row('unclaimed_profiles', get_row_index(), 'user_' . $user_id);
+            if (\Hexa\PluginCore\Fields\Field::available() && function_exists('delete_row')) {
+                while (\Hexa\PluginCore\Fields\Field::have_rows('unclaimed_profiles', 'user_' . $user_id)) {
+                    \Hexa\PluginCore\Fields\Field::the_row();
+                    if (\Hexa\PluginCore\Fields\Field::get_sub_field('profile') == $unclaimed_profile_id) {
+                        delete_row('unclaimed_profiles', \Hexa\PluginCore\Fields\Field::get_row_index(), 'user_' . $user_id);
                         break;
                     }
                 }
@@ -143,7 +143,7 @@ if (!function_exists(__NAMESPACE__ . '\\custom_actions_after_successful_order'))
 
             if (!is_wp_error($post_id)) {
                 $entity_type = $item->get_product_id() == 14140 ? 'Person' : 'Organization';
-                update_field('entity_type', $entity_type, $post_id);
+                \Hexa\PluginCore\Fields\Field::update('entity_type', $entity_type, $post_id);
             }
         }
 
@@ -160,8 +160,8 @@ if (!function_exists(__NAMESPACE__ . '\\woocommerce_adjust_price_for_products'))
 
         if (!$user->exists()) return;
 
-        $price_verified_profile = get_field('price_verified_profile', 'user_' . $user->ID);
-        $price_leadership_council = get_field('price_leadership_council', 'user_' . $user->ID);
+        $price_verified_profile = \Hexa\PluginCore\Fields\Field::get('price_verified_profile', 'user_' . $user->ID);
+        $price_leadership_council = \Hexa\PluginCore\Fields\Field::get('price_leadership_council', 'user_' . $user->ID);
 
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
             if ($cart_item['product_id'] == $product_id_verified_profile || $cart_item['product_id'] == $product_id_leadership_council) {

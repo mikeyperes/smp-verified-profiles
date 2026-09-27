@@ -1,0 +1,20 @@
+[27-Sep-2026 07:29:36 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function Hexa\PluginCore\Fields\doing_action() in /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/Fields/FieldGroups.php:76
+Stack trace:
+#0 /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/ContentTypes/ContentTypeRegistry.php(49): Hexa\PluginCore\Fields\FieldGroups::ready(Array, 4)
+#1 /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/CoreBootstrap/CoreBootstrap.php(50): Hexa\PluginCore\ContentTypes\ContentTypeRegistry->register()
+#2 /Users/mp/Projects/smp-verified-profiles/src/Bootstrap/Plugin.php(86): Hexa\PluginCore\CoreBootstrap\CoreBootstrap->boot()
+#3 /Users/mp/Projects/smp-verified-profiles/smp-verified-profiles.php(406): SMP\VerifiedProfiles\Bootstrap\Plugin->boot()
+#4 /Users/mp/Projects/smp-verified-profiles/tests/bootstrap-runtime-unit.php(29): smp_verified_profiles\smp_vp_boot_plugin()
+#5 /Users/mp/Projects/smp-verified-profiles/tests/bootstrap-runtime-unit.php(60): do_action('plugins_loaded')
+#6 {main}
+  thrown in /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/Fields/FieldGroups.php on line 76
+[27-Sep-2026 07:29:44 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function Hexa\PluginCore\Fields\doing_action() in /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/Fields/FieldGroups.php:76
+Stack trace:
+#0 /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/ContentTypes/ContentTypeRegistry.php(49): Hexa\PluginCore\Fields\FieldGroups::ready(Array, 4)
+#1 /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/CoreBootstrap/CoreBootstrap.php(50): Hexa\PluginCore\ContentTypes\ContentTypeRegistry->register()
+#2 /Users/mp/Projects/smp-verified-profiles/src/Bootstrap/Plugin.php(86): Hexa\PluginCore\CoreBootstrap\CoreBootstrap->boot()
+#3 /Users/mp/Projects/smp-verified-profiles/smp-verified-profiles.php(406): SMP\VerifiedProfiles\Bootstrap\Plugin->boot()
+#4 /Users/mp/Projects/smp-verified-profiles/tests/bootstrap-runtime-unit.php(29): smp_verified_profiles\smp_vp_boot_plugin()
+#5 /Users/mp/Projects/smp-verified-profiles/tests/bootstrap-runtime-unit.php(60): do_action('plugins_loaded')
+#6 {main}
+  thrown in /Users/mp/Projects/smp-verified-profiles/lib/hexa-wordpress-plugin-core/src/Fields/FieldGroups.php on line 76

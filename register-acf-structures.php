@@ -46,7 +46,7 @@ function register_profile_general_acf_fields() {
     $plural   = $settings['plural'];
     $slug     = $settings['slug'];
 
-        if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+        if ( ! \Hexa\PluginCore\Fields\Field::available() ) {
             return;
         }
     
@@ -234,7 +234,7 @@ function register_profile_general_acf_fields() {
 
 function register_verified_profile_pages_custom_fields() {
     return;
-    if ( ! function_exists('acf_add_local_field_group') ) {
+    if ( ! \Hexa\PluginCore\Fields\Field::available() ) {
         return;
     }
 

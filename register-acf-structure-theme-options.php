@@ -2,7 +2,7 @@
 
 function enable_acf_theme_options() {
 
-    if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+    if ( ! \Hexa\PluginCore\Fields\Field::available() ) {
         return;
     }
 
@@ -377,7 +377,7 @@ function enable_acf_theme_options() {
 }
 
 // Inject view/edit buttons on admin footer
-add_action('acf/input/admin_footer', function() {
+\Hexa\PluginCore\Fields\Hooks::on('input/admin_footer', function() {
     $screen = get_current_screen();
     $tab = isset( $_GET['tab'] ) ? sanitize_key( (string) wp_unslash( $_GET['tab'] ) ) : '';
     if ( ! $screen || 'settings_page_' . Config::$settings_page_slug !== $screen->id || 'profile-settings' !== $tab ) {

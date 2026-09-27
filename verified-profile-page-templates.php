@@ -394,8 +394,8 @@ function smp_vp_profile_page_is_empty_display_value( $value ): bool {
 }
 
 function smp_vp_profile_page_raw_field( int $post_id, string $field ) {
-    if ( function_exists( 'get_field' ) ) {
-        $value = get_field( $field, $post_id );
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
+        $value = \Hexa\PluginCore\Fields\Field::get( $field, $post_id );
         if ( ! smp_vp_profile_page_is_empty_display_value( $value ) ) {
             return $value;
         }

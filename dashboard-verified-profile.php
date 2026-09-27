@@ -61,7 +61,7 @@ function add_styles_admin_profiles_dashboard() {
 // Display unclaimed profiles in a table
 function display_admin_unclaimed_profiles() {
     $user_id = get_current_user_id();
-    $unclaimed_profiles = get_field('unclaimed_profiles', 'user_' . $user_id);
+    $unclaimed_profiles = \Hexa\PluginCore\Fields\Field::get('unclaimed_profiles', 'user_' . $user_id);
 
     echo '<section class="container_display_admin_unclaimed_profiles"><h2 class="header">Unclaimed Profiles</h2><table class="custom-admin-table">';
     echo '<tr><th>Profile ID</th><th>Profile Name</th><th>Profile URL</th><th>Profile Type</th><th>Claim This Profile</th></tr>';
@@ -142,8 +142,8 @@ function display_admin_profiles_dashboard() {
     if (!perform_verified_profiles_plugin_prechecks()) return;
 
     $user = wp_get_current_user();
-    $price_verified_profile = get_field('price_verified_profile', 'user_' . $user->ID);
-    $price_leadership_council = get_field('price_leadership_council', 'user_' . $user->ID);
+    $price_verified_profile = \Hexa\PluginCore\Fields\Field::get('price_verified_profile', 'user_' . $user->ID);
+    $price_leadership_council = \Hexa\PluginCore\Fields\Field::get('price_leadership_council', 'user_' . $user->ID);
 
     $verified_profile_link = empty($price_verified_profile) 
         ? '#' 

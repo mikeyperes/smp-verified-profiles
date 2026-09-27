@@ -16,7 +16,7 @@ function smp_vp_acf_instruction( string $description, string $shortcode ): strin
 function register_verified_profile_custom_fields()
 {
 
-	if ( ! function_exists( 'acf_add_local_field_group' ) ) {
+	if ( ! \Hexa\PluginCore\Fields\Field::available() ) {
 		return;
 	}
 
@@ -639,7 +639,7 @@ array(
 
 	}
 
-add_filter( 'acf/fields/post_object/query/key=field_smp_vp_company_founder_profile', __NAMESPACE__ . '\\smp_vp_company_founder_profile_query', 10, 3 );
+\Hexa\PluginCore\Fields\Hooks::on( 'fields/post_object/query/key=field_smp_vp_company_founder_profile', __NAMESPACE__ . '\\smp_vp_company_founder_profile_query', 10, 3 );
 
 function smp_vp_company_founder_profile_query( array $args, array $field, int $post_id ): array {
 	$settings = get_verified_profile_settings();

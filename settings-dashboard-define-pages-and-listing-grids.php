@@ -45,7 +45,7 @@ function smp_vp_get_acf_fields($with_titles = false) {
  * @param mixed   $post_id The post_id being edited (not the result’s post ID).
  * @return string
  */
-add_filter('acf/fields/post_object/result', __NAMESPACE__ . '\\append_id_to_post_object_title', 10, 4);
+\Hexa\PluginCore\Fields\Hooks::on('fields/post_object/result', __NAMESPACE__ . '\\append_id_to_post_object_title', 10, 4);
 function append_id_to_post_object_title( $title, $post, $field, $post_id ) {
     // e.g. “My Page Title (ID: 123)”
     return sprintf(
@@ -70,7 +70,7 @@ function append_id_to_post_object_title( $title, $post, $field, $post_id ) {
  */
 function get_acf_fields_to_define_pages_and_listing_grids($with_titles = false) {
     // Fetch all local field groups
-    $field_groups = acf_get_local_field_groups();
+    $field_groups = \Hexa\PluginCore\Fields\FieldGroups::all();
 
     // Initialize the array to hold ACF fields
     $acf_fields = [];
@@ -79,7 +79,7 @@ function get_acf_fields_to_define_pages_and_listing_grids($with_titles = false) 
     foreach ($field_groups as $group) {
         if ($group['key'] === 'group_verified_profiles_settings') {
             // Fetch all fields for this group
-            $fields = acf_get_fields($group['key']);
+            $fields = \Hexa\PluginCore\Fields\FieldGroups::fields($group['key']);
 
             // Loop through the fields and store the key and label
             foreach ($fields as $field) {
@@ -121,7 +121,7 @@ function display_settings_acf_post_and_pages_form() { ?>
     <form method="post" action="options.php">
         <?php
         // Render ACF fields using only the keys
-        acf_form(array(
+        \Hexa\PluginCore\Fields\Form::render(array(
             'post_id' => 'options',
             'fields' => get_acf_fields_to_define_pages_and_listing_grids(), // Get only keys
             'submit_value' => 'Save Settings',
@@ -230,9 +230,9 @@ function display_acf_field_status() {
     $acf_fields = get_acf_fields_to_define_pages_and_listing_grids(true); // Get keys with titles
 
     foreach ($acf_fields as $acf_field_key => $acf_field_label) {
-        $field_object = acf_get_field($acf_field_key);
+        $field_object = \Hexa\PluginCore\Fields\FieldGroups::get_field($acf_field_key);
         if ($field_object) {
-            $field_value = get_field($acf_field_key, 'option');
+            $field_value = \Hexa\PluginCore\Fields\Field::get($acf_field_key, 'option');
             $field_id = $field_object['ID'];
 
             if ($field_value) {
@@ -266,9 +266,9 @@ function create_posts_and_listing_grids() {
 
     foreach ($acf_fields as $field_key => $field_title) {
         // Get field object to determine post type
-        $field_object = get_field_object($field_key);
+        $field_object = \Hexa\PluginCore\Fields\Field::object($field_key);
         $post_type = $field_object['post_type'][0];
-        $post_id = get_field($field_key, 'option');
+        $post_id = \Hexa\PluginCore\Fields\Field::get($field_key, 'option');
 
         if ($post_id) {
             $report .= '<p>ACF field <strong>' . $field_title . '</strong> already has a post assigned (ID: ' . $post_id . ')</p>';
@@ -286,7 +286,7 @@ function create_posts_and_listing_grids() {
             if (!is_wp_error($new_post_id)) {
                 $new_posts_created = true;
                 $report .= '<p>Post created successfully: ' . $field_title . ' (ID: ' . $new_post_id . ')</p>';
-                update_field($field_key, $new_post_id, 'option');
+                \Hexa\PluginCore\Fields\Field::update($field_key, $new_post_id, 'option');
             } else {
                 $report .= '<p>Failed to insert post: ' . $field_title . '</p>';
             }

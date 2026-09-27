@@ -95,7 +95,7 @@ function process_profiles_on_save($post_id, $post, $update) {
         return;
     }
 
-    $pending_profiles = get_field('pending_profiles', $post_id);
+    $pending_profiles = \Hexa\PluginCore\Fields\Field::get('pending_profiles', $post_id);
     if (empty($pending_profiles) || !is_array($pending_profiles)) {
         return;
     }
@@ -195,7 +195,7 @@ function process_profiles_on_save($post_id, $post, $update) {
         }
     }
 
-    update_field('pending_profiles', array_values($remaining_pending), $post_id);
+    \Hexa\PluginCore\Fields\Field::update('pending_profiles', array_values($remaining_pending), $post_id);
 }
 
 /**

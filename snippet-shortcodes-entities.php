@@ -21,7 +21,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\shortcode_post_mentioned_vocabulary' 
 			return $no_results;
 		}
 
-		$entities = get_field( 'mentioned_entities', $post->ID );
+		$entities = \Hexa\PluginCore\Fields\Field::get( 'mentioned_entities', $post->ID );
 		if ( empty( $entities ) ) {
 			return $no_results;
 		}

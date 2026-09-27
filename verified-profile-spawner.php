@@ -1128,8 +1128,8 @@ function smp_vp_spawn_post_profile_state( int $post_id ): array {
     $seen_titles = [];
     $seen_master_ids = [];
 
-    if ( $post_id > 0 && function_exists( 'get_field' ) ) {
-        $rows = get_field( 'profiles', $post_id, false );
+    if ( $post_id > 0 && \Hexa\PluginCore\Fields\Field::available() ) {
+        $rows = \Hexa\PluginCore\Fields\Field::get( 'profiles', $post_id, false );
         foreach ( (array) $rows as $index => $row ) {
             $profile_id = 0;
             if ( is_array( $row ) ) {
@@ -1160,7 +1160,7 @@ function smp_vp_spawn_post_profile_state( int $post_id ): array {
             ];
         }
 
-        $pending_rows = get_field( 'pending_profiles', $post_id, false );
+        $pending_rows = \Hexa\PluginCore\Fields\Field::get( 'pending_profiles', $post_id, false );
         foreach ( (array) $pending_rows as $index => $row ) {
             if ( ! is_array( $row ) ) {
                 continue;
@@ -1444,8 +1444,8 @@ function smp_vp_spawn_created_profile_id( array $row ): int {
 function smp_vp_spawn_profile_field_report( int $profile_id, array $api_row = [] ): array {
     $rows = [];
     $acf = [];
-    if ( $profile_id > 0 && function_exists( 'get_fields' ) ) {
-        $acf = get_fields( $profile_id );
+    if ( $profile_id > 0 && \Hexa\PluginCore\Fields\Field::available() ) {
+        $acf = \Hexa\PluginCore\Fields\Field::all( $profile_id );
         if ( ! is_array( $acf ) ) {
             $acf = [];
         }
@@ -1550,11 +1550,11 @@ function smp_vp_spawn_preview_value( $value ): string {
 }
 
 function smp_vp_spawn_post_has_profile( int $post_id, int $profile_id ): bool {
-    if ( $post_id <= 0 || $profile_id <= 0 || ! function_exists( 'get_field' ) ) {
+    if ( $post_id <= 0 || $profile_id <= 0 || ! \Hexa\PluginCore\Fields\Field::available() ) {
         return false;
     }
 
-    $rows = get_field( 'profiles', $post_id, false );
+    $rows = \Hexa\PluginCore\Fields\Field::get( 'profiles', $post_id, false );
     foreach ( (array) $rows as $row ) {
         $existing_id = 0;
         if ( is_array( $row ) ) {
@@ -1579,7 +1579,7 @@ function smp_vp_spawn_attach_profiles_to_post( int $post_id, array $created ): a
     $existing = [];
     $existing_titles = [];
     $existing_master_ids = [];
-    $rows = function_exists( 'get_field' ) ? get_field( 'profiles', $post_id, false ) : [];
+    $rows = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'profiles', $post_id, false ) : [];
     foreach ( (array) $rows as $row ) {
         $existing_id = 0;
         if ( is_array( $row ) ) {

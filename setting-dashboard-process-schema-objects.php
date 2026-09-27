@@ -140,7 +140,7 @@ function ajax_reprocess_schema( ?AjaxRequest $request = null ): array {
         generate_schema_markup( $post_id );
 
         // 2) now retrieve what was saved
-        $schema = get_field( 'schema_markup', $post_id );
+        $schema = \Hexa\PluginCore\Fields\Field::get( 'schema_markup', $post_id );
 
         // 3) build your response item
         $items[] = [

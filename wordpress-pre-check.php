@@ -15,7 +15,6 @@ if (!function_exists('is_plugin_active')) {
 // Plugins list
 function smp_vp_get_plugins_list() {
     return [
-        'advanced-custom-fields/acf.php' => 'ACF',
         'elementor/elementor.php' => 'Elementor',
         'elementor-pro/elementor-pro.php' => 'Elementor Pro',
         'jet-engine/jet-engine.php' => 'JetEngine',

@@ -93,17 +93,6 @@ function smp_vp_plugin_check_definitions(): array {
             'source'      => 'wordpress_org',
             'checks'      => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
         ],
-        [
-            'id'             => 'advanced-custom-fields-pro',
-            'name'           => 'Advanced Custom Fields Pro',
-            'plugin_file'    => 'advanced-custom-fields-pro/acf.php',
-            'slug'           => 'advanced-custom-fields-pro',
-            'source'         => 'pro',
-            'download_url'   => 'https://www.advancedcustomfields.com/pro/',
-            'download_label' => 'Download ACF Pro',
-            'checks'         => [ 'installed' => true, 'active' => true, 'up_to_date' => true ],
-            'notes'          => 'Required for Verified Profiles field groups and profile metadata.',
-        ],
     ];
 }
 

@@ -39,8 +39,8 @@ function check_plugin_acf()
  * unless organization-only fields contain data.
  */
 function resolve_verified_profile_schema_type( int $post_id, array $category_slugs = [] ): string {
-    $profile_type = function_exists( 'get_field' )
-        ? sanitize_key( (string) get_field( 'profile_type', $post_id ) )
+    $profile_type = \Hexa\PluginCore\Fields\Field::available()
+        ? sanitize_key( (string) \Hexa\PluginCore\Fields\Field::get( 'profile_type', $post_id ) )
         : '';
 
     if ( 'company' === $profile_type ) {
@@ -57,7 +57,7 @@ function resolve_verified_profile_schema_type( int $post_id, array $category_slu
         }
     }
 
-    if ( function_exists( 'get_field' ) ) {
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
         foreach ( [
             'organization_name',
             'legal_name',
@@ -67,7 +67,7 @@ function resolve_verified_profile_schema_type( int $post_id, array $category_slu
             'founder_profile',
             'naics',
         ] as $organization_field ) {
-            $value = get_field( $organization_field, $post_id );
+            $value = \Hexa\PluginCore\Fields\Field::get( $organization_field, $post_id );
             if ( null !== $value && '' !== $value && [] !== $value && false !== $value ) {
                 return 'organization';
             }
@@ -87,7 +87,7 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
         if (!check_plugin_acf()) {
             return;
         }
-        update_field('post_id', $post_id, $post_id);
+        \Hexa\PluginCore\Fields\Field::update('post_id', $post_id, $post_id);
     }
 } else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\save_acf_post_id function is already declared", true);
@@ -147,43 +147,43 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
 
 if ( in_array( "person", $category_slugs, true ) ) {
     // Fetch ACF fields for Person
-    $birth_place     = get_field( 'personal_birth_place',   $post_id );
-    $home_location   = get_field( 'personal_home_location', $post_id );
-    $alumni_of       = get_field( 'personal_alumni_of',     $post_id );
+    $birth_place     = \Hexa\PluginCore\Fields\Field::get( 'personal_birth_place',   $post_id );
+    $home_location   = \Hexa\PluginCore\Fields\Field::get( 'personal_home_location', $post_id );
+    $alumni_of       = \Hexa\PluginCore\Fields\Field::get( 'personal_alumni_of',     $post_id );
  // Get the short bio (fallback to full bio if empty), then strip out all HTML tags.
-$raw_bio = get_field( 'biography_short', $post_id );
+$raw_bio = \Hexa\PluginCore\Fields\Field::get( 'biography_short', $post_id );
 if ( empty( $raw_bio ) ) {
-    $raw_bio = get_field( 'biography', $post_id );
+    $raw_bio = \Hexa\PluginCore\Fields\Field::get( 'biography', $post_id );
 }
 $bio = wp_strip_all_tags( $raw_bio );
-    $gender          = get_field( 'personal_gender',         $post_id );
-    $url_website  = get_field( 'url_website',          $post_id ); // <-- new ACF field
+    $gender          = \Hexa\PluginCore\Fields\Field::get( 'personal_gender',         $post_id );
+    $url_website  = \Hexa\PluginCore\Fields\Field::get( 'url_website',          $post_id ); // <-- new ACF field
 
     // Collect and filter url profile URLs
     $url_ = array_filter( [
-        get_field( 'url_facebook',     $post_id ),
-        get_field( 'url_twitter',      $post_id ),
-        get_field( 'url_x',      $post_id ),
-        get_field( 'url_instagram',    $post_id ),
-        get_field( 'url_linkedin',     $post_id ),
-        get_field( 'url_tiktok',       $post_id ),
-        get_field( 'url_wikipedia',    $post_id ),
-        get_field( 'url_imdb',         $post_id ),
-        get_field( 'url_muckrack_url', $post_id ),
-        get_field( 'url_soundcloud',   $post_id ),
-        get_field( 'url_amazon_author',$post_id ),
-        get_field( 'url_audible',      $post_id ),
-        get_field( 'url_github',       $post_id ),
-        get_field( 'url_crunchbase',   $post_id ),
-        get_field( 'url_f6s',          $post_id ),
-        get_field( 'url_the_org',      $post_id ),
-        get_field( 'url_threads',      $post_id ),
-        get_field( 'url_linktree',     $post_id ),
-        get_field( 'url_pinterest',    $post_id ),
-        get_field( 'url_quora',        $post_id ),
-        get_field( 'url_reddit',       $post_id ),
-        get_field( 'url_youtube',      $post_id ),
-        get_field( 'url_angel_list',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_facebook',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_twitter',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_x',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_instagram',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_linkedin',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_tiktok',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_wikipedia',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_imdb',         $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_muckrack_url', $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_soundcloud',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_amazon_author',$post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_audible',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_github',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_crunchbase',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_f6s',          $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_the_org',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_threads',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_linktree',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_pinterest',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_quora',        $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_reddit',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_youtube',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_angel_list',   $post_id ),
     ], function( $url ) {
         return ! empty( $url );
     } );
@@ -278,33 +278,33 @@ $bio = wp_strip_all_tags( $raw_bio );
 
 
  elseif ( in_array( 'organization', $category_slugs, true ) ) {
-	    $company_details     = get_field( 'field_smp_vp_company_details', $post_id );
+	    $company_details     = \Hexa\PluginCore\Fields\Field::get( 'field_smp_vp_company_details', $post_id );
 	    if ( ! is_array( $company_details ) ) {
-	        $company_details = get_field( 'company_details', $post_id );
+	        $company_details = \Hexa\PluginCore\Fields\Field::get( 'company_details', $post_id );
 	    }
 	    $company_details     = is_array( $company_details ) ? $company_details : [];
 
 	    // Fetch ACF fields (adjust keys below if your ACF field names differ)
-	    $org_name            = get_field( 'organization_name', $post_id ) ?: ( $company_details['organization_name'] ?? '' );
-	    $url_website      = get_field( 'url_website',    $post_id );  // <-- Website URL
+	    $org_name            = \Hexa\PluginCore\Fields\Field::get( 'organization_name', $post_id ) ?: ( $company_details['organization_name'] ?? '' );
+	    $url_website      = \Hexa\PluginCore\Fields\Field::get( 'url_website',    $post_id );  // <-- Website URL
 	    if ( function_exists( __NAMESPACE__ . '\\smp_vp_profile_page_resolved_url' ) ) {
 	        $url_website = smp_vp_profile_page_resolved_url( $post_id, 'website', (string) $url_website );
 	    }
-	    $legal_name          = get_field( 'legal_name',         $post_id ) ?: ( $company_details['legal_name'] ?? '' );
-	    $naics               = get_field( 'naics',              $post_id );
-	    $email               = get_field( 'email',              $post_id );
-	    $acf_description     = get_field( 'description',        $post_id );
-    $alternate_name      = get_field( 'alternate_name',     $post_id );
-    $logo                = get_field( 'logo',               $post_id );
-    $award               = get_field( 'award',              $post_id );
-    $brand               = get_field( 'brand',              $post_id );
-	    $founder_profile     = get_field( 'founder_profile',    $post_id ) ?: ( $company_details['founder_profile'] ?? 0 );
+	    $legal_name          = \Hexa\PluginCore\Fields\Field::get( 'legal_name',         $post_id ) ?: ( $company_details['legal_name'] ?? '' );
+	    $naics               = \Hexa\PluginCore\Fields\Field::get( 'naics',              $post_id );
+	    $email               = \Hexa\PluginCore\Fields\Field::get( 'email',              $post_id );
+	    $acf_description     = \Hexa\PluginCore\Fields\Field::get( 'description',        $post_id );
+    $alternate_name      = \Hexa\PluginCore\Fields\Field::get( 'alternate_name',     $post_id );
+    $logo                = \Hexa\PluginCore\Fields\Field::get( 'logo',               $post_id );
+    $award               = \Hexa\PluginCore\Fields\Field::get( 'award',              $post_id );
+    $brand               = \Hexa\PluginCore\Fields\Field::get( 'brand',              $post_id );
+	    $founder_profile     = \Hexa\PluginCore\Fields\Field::get( 'founder_profile',    $post_id ) ?: ( $company_details['founder_profile'] ?? 0 );
 	    $founder_id          = '';
 	    $founder_url         = '';
 	    $founder_name        = '';
-	    $founding_date       = get_field( 'founding_date',      $post_id ) ?: ( $company_details['founding_date'] ?? '' );
-	    $number_of_employees = get_field( 'number_of_employees',$post_id ) ?: ( $company_details['number_of_employees'] ?? '' );
-	    $seeks               = get_field( 'seeks',              $post_id );
+	    $founding_date       = \Hexa\PluginCore\Fields\Field::get( 'founding_date',      $post_id ) ?: ( $company_details['founding_date'] ?? '' );
+	    $number_of_employees = \Hexa\PluginCore\Fields\Field::get( 'number_of_employees',$post_id ) ?: ( $company_details['number_of_employees'] ?? '' );
+	    $seeks               = \Hexa\PluginCore\Fields\Field::get( 'seeks',              $post_id );
 	    if ( $founder_profile instanceof \WP_Post ) {
 	        $founder_profile = $founder_profile->ID;
 	    }
@@ -314,50 +314,50 @@ $bio = wp_strip_all_tags( $raw_bio );
 	        $founder_url  = get_permalink( $founder_profile );
 	        $founder_id   = trailingslashit( $founder_url ) . '#person';
 	    } else {
-	        $founder_id   = get_field( 'founder_id',   $post_id ) ?: ( $company_details['founder_id'] ?? '' );
-	        $founder_url  = get_field( 'founder_url',  $post_id ) ?: ( $company_details['founder_url'] ?? '' );
-	        $founder_name = get_field( 'founder_name', $post_id ) ?: ( $company_details['founder_name'] ?? '' );
+	        $founder_id   = \Hexa\PluginCore\Fields\Field::get( 'founder_id',   $post_id ) ?: ( $company_details['founder_id'] ?? '' );
+	        $founder_url  = \Hexa\PluginCore\Fields\Field::get( 'founder_url',  $post_id ) ?: ( $company_details['founder_url'] ?? '' );
+	        $founder_name = \Hexa\PluginCore\Fields\Field::get( 'founder_name', $post_id ) ?: ( $company_details['founder_name'] ?? '' );
 	    }
 
     // Collect and filter url profile URLs for sameAs
     $url_ = array_filter([
-        get_field( 'url_facebook',     $post_id ),
-        get_field( 'url_twitter',      $post_id ),
-        get_field( 'url_instagram',    $post_id ),
-        get_field( 'url_linkedin',     $post_id ),
-        get_field( 'url_tiktok',       $post_id ),
-        get_field( 'url_wikipedia',    $post_id ),
-        get_field( 'url_imdb',         $post_id ),
-        get_field( 'url_muckrack_url', $post_id ),
-        get_field( 'url_soundcloud',   $post_id ),
-        get_field( 'url_amazon_author',$post_id ),
-        get_field( 'url_audible',      $post_id ),
-        get_field( 'url_github',       $post_id ),
-        get_field( 'url_crunchbase',   $post_id ),
-        get_field( 'url_f6s',          $post_id ),
-        get_field( 'url_the_org',      $post_id ),
-        get_field( 'url_threads',      $post_id ),
-        get_field( 'url_linktree',     $post_id ),
-        get_field( 'url_pinterest',    $post_id ),
-        get_field( 'url_quora',        $post_id ),
-        get_field( 'url_reddit',       $post_id ),
-        get_field( 'url_youtube',      $post_id ),
-        get_field( 'url_angel_list',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_facebook',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_twitter',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_instagram',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_linkedin',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_tiktok',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_wikipedia',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_imdb',         $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_muckrack_url', $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_soundcloud',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_amazon_author',$post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_audible',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_github',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_crunchbase',   $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_f6s',          $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_the_org',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_threads',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_linktree',     $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_pinterest',    $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_quora',        $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_reddit',       $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_youtube',      $post_id ),
+        \Hexa\PluginCore\Fields\Field::get( 'url_angel_list',   $post_id ),
     ], function ( $url ) {
         return ! empty( $url );
     } );
 
     // ContactPoint fields
-    $contact_type        = get_field( 'contact_type',     $post_id );
-    $contact_email       = get_field( 'contact_email',    $post_id );
-    $contact_tel         = get_field( 'contact_telephone',$post_id );
+    $contact_type        = \Hexa\PluginCore\Fields\Field::get( 'contact_type',     $post_id );
+    $contact_email       = \Hexa\PluginCore\Fields\Field::get( 'contact_email',    $post_id );
+    $contact_tel         = \Hexa\PluginCore\Fields\Field::get( 'contact_telephone',$post_id );
 
     // Address fields
-    $street_address      = get_field( 'street_address',   $post_id );
-    $address_locality    = get_field( 'address_locality', $post_id );
-    $address_region      = get_field( 'address_region',   $post_id );
-    $postal_code         = get_field( 'postal_code',      $post_id );
-    $address_country     = get_field( 'address_country',   $post_id );
+    $street_address      = \Hexa\PluginCore\Fields\Field::get( 'street_address',   $post_id );
+    $address_locality    = \Hexa\PluginCore\Fields\Field::get( 'address_locality', $post_id );
+    $address_region      = \Hexa\PluginCore\Fields\Field::get( 'address_region',   $post_id );
+    $postal_code         = \Hexa\PluginCore\Fields\Field::get( 'postal_code',      $post_id );
+    $address_country     = \Hexa\PluginCore\Fields\Field::get( 'address_country',   $post_id );
 
     // Featured image (if exists)
     $thumb_url = get_the_post_thumbnail_url( $post_id );
@@ -471,9 +471,9 @@ $bio = wp_strip_all_tags( $raw_bio );
                 "@id"              => get_the_permalink($post_id),
                 "url"              => get_the_permalink($post_id),
                 "name"             => get_the_title($post_id),
-                "description"      => get_field('term_description', $post_id),   // adjust your ACF key
-                "termCode"         => get_field('term_code', $post_id),          // adjust your ACF key
-                "inDefinedTermSet" => get_field('term_set', $post_id),           // adjust your ACF key
+                "description"      => \Hexa\PluginCore\Fields\Field::get('term_description', $post_id),   // adjust your ACF key
+                "termCode"         => \Hexa\PluginCore\Fields\Field::get('term_code', $post_id),          // adjust your ACF key
+                "inDefinedTermSet" => \Hexa\PluginCore\Fields\Field::get('term_set', $post_id),           // adjust your ACF key
             ];
         }
 
@@ -497,7 +497,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\generate_schema_markup' ) ) {
 
         $schema_json = ( new \Hexa\PluginCore\SchemaTools\SchemaDocumentRenderer() )->json( $schema );
         if ( '' !== $schema_json ) {
-            update_field( 'schema_markup', $schema_json, (int) $post_id );
+            \Hexa\PluginCore\Fields\Field::update( 'schema_markup', $schema_json, (int) $post_id );
         }
 
         return $schema_json;

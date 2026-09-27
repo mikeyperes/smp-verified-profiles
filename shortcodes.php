@@ -61,7 +61,7 @@ function get_profile_field( $atts ) {
 
     $field_name = sanitize_key( (string) $atts['field'] );
     // Get the ACF value
-    $value = get_field( $field_name, $post_id );
+    $value = \Hexa\PluginCore\Fields\Field::get( $field_name, $post_id );
 
     // If it's an array, flatten it to a comma-separated string
     if ( is_array( $value ) ) {
@@ -161,11 +161,11 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_council_banner')) {
      * @return string Council banner HTML or an empty string.
      */
     function display_profile_council_banner() {
-        $user_id = get_field('contributor_profile');
+        $user_id = \Hexa\PluginCore\Fields\Field::get('contributor_profile');
 
         // Ensure the user ID exists and retrieve council member status
         if ($user_id) {
-            $is_council_member = get_field('council_member', 'user_' . $user_id);
+            $is_council_member = \Hexa\PluginCore\Fields\Field::get('council_member', 'user_' . $user_id);
 
             // Return the council member banner if applicable
             if ($is_council_member === true)
@@ -189,37 +189,37 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_text_based_social
         $output = '<span class="shortcode_display_single_profile_text_based_social_profiles">';
         $profile_added = false;
 
-        $crunchbase = get_field('social_profiles_crunchbase');
+        $crunchbase = \Hexa\PluginCore\Fields\Field::get('social_profiles_crunchbase');
         if (!empty($crunchbase)) {
             $output .= "<a target=_blank href='".esc_url($crunchbase)."'>Crunchbase</a> / ";
             $profile_added = true;
         }
 
-        $f6s = get_field('social_profiles_f6s');
+        $f6s = \Hexa\PluginCore\Fields\Field::get('social_profiles_f6s');
         if (!empty($f6s)) {
             $output .= "<a target=_blank href='".esc_url($f6s)."'>F6S</a> / ";
             $profile_added = true;
         }
 
-        $the_org = get_field('social_profiles_the_org');
+        $the_org = \Hexa\PluginCore\Fields\Field::get('social_profiles_the_org');
         if (!empty($the_org)) {
             $output .= "<a target=_blank href='".esc_url($the_org)."'>The Org</a> / ";
             $profile_added = true;
         }
 
-        $imdb = get_field('social_profiles_imdb');
+        $imdb = \Hexa\PluginCore\Fields\Field::get('social_profiles_imdb');
         if (!empty($imdb)) {
             $output .= "<a target=_blank href='".esc_url($imdb)."'>IMDb</a> / ";
             $profile_added = true;
         }
 
-        $angel_list = get_field('social_profiles_angel_list');
+        $angel_list = \Hexa\PluginCore\Fields\Field::get('social_profiles_angel_list');
         if (!empty($angel_list)) {
             $output .= "<a target=_blank href='".esc_url($angel_list)."'>AngelList</a> / ";
             $profile_added = true;
         }
 
-        $muckrack = get_field('social_profiles_muckrack_url');
+        $muckrack = \Hexa\PluginCore\Fields\Field::get('social_profiles_muckrack_url');
         if (!empty($muckrack)) {
             $output .= "<a target=_blank href='".esc_url($muckrack)."'>Muck Rack</a> / ";
             $profile_added = true;
@@ -248,40 +248,40 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_quick_contact')) {
         $output = '<span class="shortcode_display_profile_quick_contact">';
         $contact_added = false;
 
-        if (get_field('contact_information_email_preferred')) {
-            $email = get_field('contact_information_email_email');
+        if (\Hexa\PluginCore\Fields\Field::get('contact_information_email_preferred')) {
+            $email = \Hexa\PluginCore\Fields\Field::get('contact_information_email_email');
             if (!empty($email)) {
                 $output .= "<a href='mailto:" . esc_html($email) . "'>" . esc_html($email) . '</a> / ';
                 $contact_added = true;
             }
         }
 
-        if (get_field('contact_information_whatsapp_preferred')) {
-            $whatsapp_link = get_field('contact_information_whatsapp_link');
+        if (\Hexa\PluginCore\Fields\Field::get('contact_information_whatsapp_preferred')) {
+            $whatsapp_link = \Hexa\PluginCore\Fields\Field::get('contact_information_whatsapp_link');
             if (!empty($whatsapp_link)) {
                 $output .= '<a href="' . esc_url($whatsapp_link) . '">WhatsApp</a> / ';
                 $contact_added = true;
             }
         }
 
-        if (get_field('contact_information_telegram_preferred')) {
-            $telegram_link = get_field('contact_information_telegram_link');
+        if (\Hexa\PluginCore\Fields\Field::get('contact_information_telegram_preferred')) {
+            $telegram_link = \Hexa\PluginCore\Fields\Field::get('contact_information_telegram_link');
             if (!empty($telegram_link)) {
                 $output .= '<a href="' . esc_url($telegram_link) . '">Telegram</a> / ';
                 $contact_added = true;
             }
         }
 
-        if (get_field('contact_information_signal_preferred')) {
-            $signal_link = get_field('contact_information_signal_link');
+        if (\Hexa\PluginCore\Fields\Field::get('contact_information_signal_preferred')) {
+            $signal_link = \Hexa\PluginCore\Fields\Field::get('contact_information_signal_link');
             if (!empty($signal_link)) {
                 $output .= '<a href="' . esc_url($signal_link) . '">Signal</a> / ';
                 $contact_added = true;
             }
         }
 
-        if (get_field('contact_information_calendly_preferred')) {
-            $calendly_link = get_field('contact_information_calendly_link');
+        if (\Hexa\PluginCore\Fields\Field::get('contact_information_calendly_preferred')) {
+            $calendly_link = \Hexa\PluginCore\Fields\Field::get('contact_information_calendly_link');
             if (!empty($calendly_link)) {
                 $output .= '<a href="' . esc_url($calendly_link) . '">Book an Appointment</a> / ';
                 $contact_added = true;
@@ -314,11 +314,11 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
         $has_school_content = false;
 
         // Check if the repeater field has rows of data
-        if (have_rows('personal_education')) {
+        if (\Hexa\PluginCore\Fields\Field::have_rows('personal_education')) {
             // Loop through each row to check for 'school' content
-            while (have_rows('personal_education')) {
-                the_row();
-                $school = get_sub_field('school');
+            while (\Hexa\PluginCore\Fields\Field::have_rows('personal_education')) {
+                \Hexa\PluginCore\Fields\Field::the_row();
+                $school = \Hexa\PluginCore\Fields\Field::get_sub_field('school');
                 if (!empty($school)) {
                     $has_school_content = true;
                     break;
@@ -330,17 +330,17 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_education')) {
                 return '<style>.profile_education{display:none !important}</style>';
 
             // Reset the loop for output generation
-            reset_rows();
+            \Hexa\PluginCore\Fields\Field::reset_rows();
 
             $output = '<span class="shortcode_display_profile_education">';
 
             // Loop through each row of data in the repeater for output
-            while (have_rows('personal_education')) {
-                the_row();
-                $school = get_sub_field('school');
+            while (\Hexa\PluginCore\Fields\Field::have_rows('personal_education')) {
+                \Hexa\PluginCore\Fields\Field::the_row();
+                $school = \Hexa\PluginCore\Fields\Field::get_sub_field('school');
                 if (empty($school)) continue;
-                $degree = get_sub_field('degree');
-                $wikipedia_url = get_sub_field('wikipedia_url');
+                $degree = \Hexa\PluginCore\Fields\Field::get_sub_field('degree');
+                $wikipedia_url = \Hexa\PluginCore\Fields\Field::get_sub_field('wikipedia_url');
 
                 // Concatenate school and degree
                 $education_text = esc_html($school) . ' - ' . esc_html($degree);
@@ -374,23 +374,23 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_organizations_fou
         $output = '<div class="shortcode_display_profile_organizations">';
 
         // Check if the 'organizations_founded' repeater field has rows of data
-        if (have_rows('organizations_founded')) {
-            $total_rows = count(get_field('organizations_founded'));
+        if (\Hexa\PluginCore\Fields\Field::have_rows('organizations_founded')) {
+            $total_rows = count(\Hexa\PluginCore\Fields\Field::get('organizations_founded'));
             $current_row = 0;
 
-            while (have_rows('organizations_founded')) {
-                the_row();
+            while (\Hexa\PluginCore\Fields\Field::have_rows('organizations_founded')) {
+                \Hexa\PluginCore\Fields\Field::the_row();
                 $current_row++;
-                $organization_id = get_sub_field('organization');
+                $organization_id = \Hexa\PluginCore\Fields\Field::get_sub_field('organization');
 
                 if (!empty($organization_id)) {
                     $organization_name = get_the_title($organization_id);
-                    $organization_link = get_field("url", $organization_id);
-                    $organization_founded = get_field("founded", $organization_id);
-                    $organization_headquarters_location = get_field("headquarters_location", $organization_id);
-                    $organization_headquarters_wikipedia_url = get_field("headquarters_wikipedia_url", $organization_id);
+                    $organization_link = \Hexa\PluginCore\Fields\Field::get("url", $organization_id);
+                    $organization_founded = \Hexa\PluginCore\Fields\Field::get("founded", $organization_id);
+                    $organization_headquarters_location = \Hexa\PluginCore\Fields\Field::get("headquarters_location", $organization_id);
+                    $organization_headquarters_wikipedia_url = \Hexa\PluginCore\Fields\Field::get("headquarters_wikipedia_url", $organization_id);
                     $founder = get_the_title();
-                    $social_profiles_crunchbase = get_field("social_profiles_crunchbase");
+                    $social_profiles_crunchbase = \Hexa\PluginCore\Fields\Field::get("social_profiles_crunchbase");
 
                     $organization_logo = get_the_post_thumbnail_url($organization_id, 'thumbnail');
 
@@ -423,7 +423,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_single_profile_organizations_fou
                     $output .= '</div>'; // Close right column
                     $output .= '</div>'; // Close organization entry
 
-                    $organization_biography = get_field('biography', $organization_id);
+                    $organization_biography = \Hexa\PluginCore\Fields\Field::get('biography', $organization_id);
 
                     if (!empty($organization_biography)) {
                         $output .= '<div style="clear:both"></div>
@@ -462,13 +462,13 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_article_writte
         $no_results = "<style>.single_profile_article_written_by{display:none !important;}</style>";
 
         global $post;
-        $contributor_id = get_field( 'contributor_profile', $post->ID );
+        $contributor_id = \Hexa\PluginCore\Fields\Field::get( 'contributor_profile', $post->ID );
         if ( empty( $contributor_id ) || count_user_posts( $contributor_id ) === 0 ) {
             return $no_results;
         }
 
         // fetch the entire Verified Profile options group once
-        $vp = get_field( 'verified_profile', 'option' );
+        $vp = \Hexa\PluginCore\Fields\Field::get( 'verified_profile', 'option' );
 
         // now pull out whichever loop‐item you need, e.g.:
         $template_id = 0;
@@ -536,7 +536,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_press_releases
         $post_ids   = [];
 
         // fetch the entire Verified Profile options group once
-        $vp = get_field( 'verified_profile', 'option' );
+        $vp = \Hexa\PluginCore\Fields\Field::get( 'verified_profile', 'option' );
 
         // pull the template ID
         $template_id = 0;
@@ -547,13 +547,13 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_press_releases
         if (!$template_id ) return '';
 
         // If no ACF rows and no Hexa PR username, hide this section
-        if ( ! have_rows( 'additional_hexa_pr_wire_releases', $profile_id )
-            && get_field( 'hexa_pr_wire_username', $profile_id ) === '' ) {
+        if ( ! \Hexa\PluginCore\Fields\Field::have_rows( 'additional_hexa_pr_wire_releases', $profile_id )
+            && \Hexa\PluginCore\Fields\Field::get( 'hexa_pr_wire_username', $profile_id ) === '' ) {
             return '<style>.single_profile_press_releases{display:none !important;}</style>';
         }
 
         $content = '<div class="single_profile_press_releases">';
-        $hexa_pr_wire_username = get_field( 'hexa_pr_wire_username', $profile_id );
+        $hexa_pr_wire_username = \Hexa\PluginCore\Fields\Field::get( 'hexa_pr_wire_username', $profile_id );
 
         // Query press releases by author_slug
         $author_slug_query = new \WP_Query( [
@@ -570,10 +570,10 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_press_releases
         $post_ids = array_merge( $post_ids, wp_list_pluck( $author_slug_query->posts, 'ID' ) );
 
         // Include additional PRs from ACF repeater
-        if ( have_rows( 'additional_hexa_pr_wire_releases', $profile_id ) ) {
-            while ( have_rows( 'additional_hexa_pr_wire_releases', $profile_id ) ) {
-                the_row();
-                $press_release_id = get_sub_field( 'press_release' );
+        if ( \Hexa\PluginCore\Fields\Field::have_rows( 'additional_hexa_pr_wire_releases', $profile_id ) ) {
+            while ( \Hexa\PluginCore\Fields\Field::have_rows( 'additional_hexa_pr_wire_releases', $profile_id ) ) {
+                \Hexa\PluginCore\Fields\Field::the_row();
+                $press_release_id = \Hexa\PluginCore\Fields\Field::get_sub_field( 'press_release' );
                 if ( $press_release_id && ! in_array( $press_release_id, $post_ids, true ) ) {
                     $post_ids[] = $press_release_id;
                 }
@@ -638,8 +638,8 @@ if (!function_exists(__NAMESPACE__ . '\\display_profile_location_born')) {
     * @return string HTML of the place of birth or CSS to hide element if none exist.
     */
     function display_profile_location_born() {
-        $location_born = get_field('personal_location_born_location_born');
-        $location_born_wikipedia_url = get_field('personal_location_born_location_born_wikipedia_url');
+        $location_born = \Hexa\PluginCore\Fields\Field::get('personal_location_born_location_born');
+        $location_born_wikipedia_url = \Hexa\PluginCore\Fields\Field::get('personal_location_born_location_born_wikipedia_url');
 
         if (empty($location_born)) {
             return '<style> .display_profile_location_born{display:none !important}</style>';
@@ -668,8 +668,8 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profile_current_residence' ) 
      * @return string HTML of current residence or CSS to hide element if none exist.
      */
     function display_profile_current_residence() {
-        $current_residence = get_field( 'personal_current_residence_current_residence' );
-        $current_residence_wikipedia_url = get_field( 'personal_current_residence_current_residence_wikipedia_url' );
+        $current_residence = \Hexa\PluginCore\Fields\Field::get( 'personal_current_residence_current_residence' );
+        $current_residence_wikipedia_url = \Hexa\PluginCore\Fields\Field::get( 'personal_current_residence_current_residence_wikipedia_url' );
 
         if ( empty( $current_residence) ) {
             return '<style>.display_profile_current_residence{display:none !important;}</style>';
@@ -702,20 +702,20 @@ if (!function_exists(__NAMESPACE__ . '\\get_profile_notable_mentions')) {
     * @return string HTML of notable recognitions or CSS to hide element if none exist.
     */
     function get_profile_notable_mentions() {
-        if (!have_rows('notable_recognitions')) {
+        if (!\Hexa\PluginCore\Fields\Field::have_rows('notable_recognitions')) {
             return "<style>.profile_notable_recognitions{display:none !important}</style>";
         }
 
         $output = '<div class="container_notable_recognitions">';
-        $total_rows = count(get_field('notable_recognitions'));
+        $total_rows = count(\Hexa\PluginCore\Fields\Field::get('notable_recognitions'));
         $current_row = 0;
 
-        while (have_rows('notable_recognitions')) {
-            the_row();
+        while (\Hexa\PluginCore\Fields\Field::have_rows('notable_recognitions')) {
+            \Hexa\PluginCore\Fields\Field::the_row();
             $current_row++;
-            $title = get_sub_field('title');
-            $link = get_sub_field('link');
-            $source = get_sub_field('source');
+            $title = \Hexa\PluginCore\Fields\Field::get_sub_field('title');
+            $link = \Hexa\PluginCore\Fields\Field::get_sub_field('link');
+            $source = \Hexa\PluginCore\Fields\Field::get_sub_field('source');
 
             if (empty($title) && empty($source)) continue;
 
@@ -762,7 +762,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_articles_featu
         }
 
         // fetch VP options
-        $vp = get_field( 'verified_profile', 'option' );
+        $vp = \Hexa\PluginCore\Fields\Field::get( 'verified_profile', 'option' );
         if ( ! is_array( $vp ) || empty( $vp['loop_items'] ) ) {
             return '<style>.profile_internal_features{display:none !important;}</style>';
         }
@@ -881,7 +881,7 @@ if (!function_exists(__NAMESPACE__ . '\\display_theme_footer_text_social_links')
 
         $links = [];
         foreach ($fields as $field => $name) {
-            $url = get_field($field, 'option');
+            $url = \Hexa\PluginCore\Fields\Field::get($field, 'option');
             if (!empty($url)) {
                 $url = rtrim($url, '/');
                 $links[] = "<a href=\"{$url}\" target=\"_blank\" style=\"color:#333; font-size:13px;\">{$name}</a>";
@@ -974,7 +974,7 @@ function contributor_network_shortcode( $atts ) {
         return '';
     }
 
-    $group = get_field( 'contributor_network', 'option' );
+    $group = \Hexa\PluginCore\Fields\Field::get( 'contributor_network', 'option' );
     if ( ! is_array( $group ) ) {
         return '';
     }
@@ -1135,19 +1135,19 @@ function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string
 	    }
 
 	    if ( 'title' === $field ) {
-	        $value = function_exists( 'get_field' ) ? get_field( 'title', $post_id ) : '';
+	        $value = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'title', $post_id ) : '';
 	        return '' !== (string) $value ? $value : get_the_title( $post_id );
 	    }
 
 	    if ( false !== strpos( $field, '.' ) ) {
 	        [ $parent, $child ] = explode( '.', $field, 2 );
-	        $value = function_exists( 'get_field' ) ? get_field( $parent, $post_id ) : null;
+	        $value = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( $parent, $post_id ) : null;
 	        if ( is_array( $value ) && array_key_exists( $child, $value ) ) {
 	            return $value[ $child ];
 	        }
 
 	        $legacy_key = $parent . '_' . str_replace( '.', '_', $child );
-	        $legacy     = function_exists( 'get_field' ) ? get_field( $legacy_key, $post_id ) : null;
+	        $legacy     = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( $legacy_key, $post_id ) : null;
 	        if ( null !== $legacy && false !== $legacy && '' !== $legacy && [] !== $legacy ) {
 	            return $legacy;
 	        }
@@ -1156,7 +1156,7 @@ function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string
 	        return '' !== $meta ? $meta : null;
 	    }
 
-	    $value = function_exists( 'get_field' ) ? get_field( $field, $post_id ) : null;
+	    $value = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( $field, $post_id ) : null;
 	    if ( null !== $value && false !== $value && '' !== $value && [] !== $value ) {
 	        return $value;
 	    }
@@ -1359,7 +1359,7 @@ function smp_vp_verified_profile_featured_image_shortcode( array $atts ): string
 	        }
 	    }
 
-	    $group = get_field( 'verified_profile', 'option' );
+	    $group = \Hexa\PluginCore\Fields\Field::get( 'verified_profile', 'option' );
 	    if ( ! is_array( $group ) ) {
         return '';
     }
@@ -1569,8 +1569,8 @@ function smp_vp_append_single_profile_frontend_fields( $content ) {
 function smp_vp_profile_field_value( int $post_id, string $field ): string {
     $value = null;
 
-    if ( \function_exists( "get_field" ) ) {
-        $value = \get_field( $field, $post_id );
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
+        $value = \Hexa\PluginCore\Fields\Field::get( $field, $post_id );
     }
 
     if ( null === $value || false === $value || "" === $value || [] === $value ) {
@@ -1599,8 +1599,8 @@ function smp_vp_profile_field_value( int $post_id, string $field ): string {
 function smp_vp_profile_education_rows( int $post_id ): array {
     $rows = [];
 
-    if ( \function_exists( "get_field" ) ) {
-        $acf_rows = \get_field( "personal_education", $post_id );
+    if ( \Hexa\PluginCore\Fields\Field::available() ) {
+        $acf_rows = \Hexa\PluginCore\Fields\Field::get( "personal_education", $post_id );
         if ( \is_array( $acf_rows ) ) {
             foreach ( $acf_rows as $row ) {
                 if ( \is_array( $row ) ) {

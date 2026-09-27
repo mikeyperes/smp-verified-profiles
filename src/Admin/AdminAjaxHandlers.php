@@ -125,7 +125,7 @@ final class AdminAjaxHandlers {
         $user_id = $request->int( 'user_id', 0, 'post' );
         self::require_user_edit_access( $user_id );
 
-        $unclaimed_profiles = function_exists( 'get_field' ) ? get_field( 'unclaimed_profiles', 'user_' . $user_id ) : [];
+        $unclaimed_profiles = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'unclaimed_profiles', 'user_' . $user_id ) : [];
         $profiles_data      = [];
 
         if ( is_array( $unclaimed_profiles ) ) {
@@ -153,9 +153,9 @@ final class AdminAjaxHandlers {
             throw AjaxFailure::bad_request( 'Invalid email template.' );
         }
 
-        if ( function_exists( 'update_field' ) ) {
-            update_field( $prefix . '_message', $message, 'user_' . $user_id );
-            update_field( $prefix . '_subject', $subject, 'user_' . $user_id );
+        if ( \Hexa\PluginCore\Fields\Field::available() ) {
+            \Hexa\PluginCore\Fields\Field::update( $prefix . '_message', $message, 'user_' . $user_id );
+            \Hexa\PluginCore\Fields\Field::update( $prefix . '_subject', $subject, 'user_' . $user_id );
         }
 
         if ( $profile_id ) {
@@ -170,7 +170,7 @@ final class AdminAjaxHandlers {
             }
         }
 
-        $email_signature = function_exists( 'get_field' ) ? get_field( 'email_signature', 'options' ) : '';
+        $email_signature = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'email_signature', 'options' ) : '';
         $message        .= is_string( $email_signature ) ? wp_kses_post( $email_signature ) : '';
         $emails          = array_filter( array_map( 'sanitize_email', \smp_verified_profiles\get_notification_emails( $user_id ) ) );
         if ( empty( $emails ) ) {

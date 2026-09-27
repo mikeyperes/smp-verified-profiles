@@ -4,8 +4,8 @@ namespace smp_verified_profiles;
 
 defined( 'ABSPATH' ) || exit;
 
-$group = acf_get_local_field_group( 'group_67e39e4171b16' );
-$fields = acf_get_local_fields( 'group_67e39e4171b16' );
+$group = \Hexa\PluginCore\Fields\FieldGroups::get_group( 'group_67e39e4171b16' );
+$fields = \Hexa\PluginCore\Fields\FieldGroups::fields( 'group_67e39e4171b16' );
 
 $field_order = array_values( array_map(
 	static function ( $field ) {
@@ -21,7 +21,7 @@ foreach ( is_array( $fields ) ? $fields : [] as $field ) {
 	}
 }
 
-$company = acf_get_field( 'field_smp_vp_company_details' );
+$company = \Hexa\PluginCore\Fields\FieldGroups::get_field( 'field_smp_vp_company_details' );
 if ( ! is_array( $company ) ) {
 	$company = $field_by_name['company_details'] ?? [];
 }
