@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.1.0`
+- Version: `8.1.1`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.1.1
+
+- When a post has no verified profiles, the empty "In This Article" state now also hides companion Elementor widgets tagged `display_single_post_mentioned_in_article` (for example a separate heading widget), matching the pre-8.0 behavior on legacy layouts.
 
 ### 8.1.0
 

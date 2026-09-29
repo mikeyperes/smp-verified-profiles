@@ -755,7 +755,9 @@ function smp_vp_display_css(): string {
 }
 
 function smp_vp_display_empty_section_assets(): string {
-    return '<style>.smp-vp-hide-if-empty:has([data-smp-vp-empty-loop]),.elementor-widget-shortcode.display_single_post_mentioned_in_article:has([data-smp-vp-empty-loop]),.smp-vp-single-post-section-host:has([data-smp-vp-empty-loop]){display:none!important}</style><script>(function(){function run(){document.querySelectorAll("[data-smp-vp-empty-loop]").forEach(function(marker){var section=marker.closest(".smp-vp-hide-if-empty,.elementor-widget-shortcode.display_single_post_mentioned_in_article,.smp-vp-single-post-section-host");if(section){section.style.display="none";}});}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
+    // Legacy layouts tag companion widgets (such as a separate "In This Article" heading) with the
+    // display_single_post_mentioned_in_article class; hide them too when no single-post section rendered.
+    return '<style>.smp-vp-hide-if-empty:has([data-smp-vp-empty-loop]),.elementor-widget-shortcode.display_single_post_mentioned_in_article:has([data-smp-vp-empty-loop]),.smp-vp-single-post-section-host:has([data-smp-vp-empty-loop]),body:has([data-smp-vp-empty-loop="single-post"]):not(:has([data-smp-vp-section="single-post"])) .display_single_post_mentioned_in_article{display:none!important}</style><script>(function(){function run(){document.querySelectorAll("[data-smp-vp-empty-loop]").forEach(function(marker){var section=marker.closest(".smp-vp-hide-if-empty,.elementor-widget-shortcode.display_single_post_mentioned_in_article,.smp-vp-single-post-section-host");if(section){section.style.display="none";}});if(document.querySelector("[data-smp-vp-empty-loop=\\"single-post\\"]")&&!document.querySelector("[data-smp-vp-section=\\"single-post\\"]")){document.querySelectorAll(".display_single_post_mentioned_in_article").forEach(function(el){el.style.display="none";});}}if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",run);}else{run();}})();</script>';
 }
 
 function smp_vp_display_empty_loop_marker(string $id): string {

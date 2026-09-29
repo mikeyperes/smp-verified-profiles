@@ -50,7 +50,7 @@ function get_plugin_data( string $file, bool $markup = true, bool $translate = t
     unset( $file, $markup, $translate );
     return [
         'Name'        => 'SMP Verified Profiles',
-        'Version'     => '8.1.0',
+        'Version'     => '8.1.1',
         'Author'      => 'Michael Peres',
         'PluginURI'   => 'https://github.com/mikeyperes/smp-verified-profiles',
         'Description' => 'Verified Profiles',
