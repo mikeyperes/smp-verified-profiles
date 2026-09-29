@@ -9,6 +9,7 @@ $assertions = [
     'empty loop is detected before section markup' => str_contains($display, "strpos(\$loop_html, 'data-smp-vp-empty-loop=')"),
     'empty Elementor shortcode host is hidden' => str_contains($display, '.elementor-widget-shortcode.display_single_post_mentioned_in_article:has([data-smp-vp-empty-loop])'),
     'empty section hides legacy companion widgets' => str_contains($display, 'body:has([data-smp-vp-empty-loop="single-post"]):not(:has([data-smp-vp-section="single-post"])) .display_single_post_mentioned_in_article'),
+    'legacy heading widget suppresses the duplicate plugin title' => str_contains($display, 'body:has(.display_single_post_mentioned_in_article:not(.elementor-widget-shortcode) :is(h1,h2,h3,h4,h5,h6)) .smp-vp-single-post-section__title{display:none!important}'),
     'plugin owns the single-post section wrapper' => str_contains($display, 'class="smp-vp-single-post-section"'),
     'plugin owns the section heading' => str_contains($display, "esc_html__('In This Article', 'smp-verified-profiles')"),
     'plugin section uses an H2 heading' => str_contains($display, '<h2 id="'),

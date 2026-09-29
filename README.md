@@ -7,7 +7,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.1.1`
+- Version: `8.1.2`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -97,6 +97,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.1.2
+
+- Legacy layouts that supply their own "In This Article" heading widget tagged `display_single_post_mentioned_in_article` keep that heading, and the plugin's section title is hidden so the heading is not shown twice.
 
 ### 8.1.1
 

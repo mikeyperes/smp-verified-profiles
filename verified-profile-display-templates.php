@@ -784,6 +784,10 @@ function smp_vp_display_single_post_section(string $loop_html, bool $preserve_em
         ? ''
         : '<style>' . smp_vp_display_single_post_section_css() . '</style>';
 
+    // Legacy layouts that supply their own heading widget tagged display_single_post_mentioned_in_article
+    // keep that heading; the plugin title is hidden so "In This Article" is not shown twice.
+    $style .= '<style>body:has(.display_single_post_mentioned_in_article:not(.elementor-widget-shortcode) :is(h1,h2,h3,h4,h5,h6)) .smp-vp-single-post-section__title{display:none!important}</style>';
+
     return $style
         . '<section class="smp-vp-single-post-section" data-smp-vp-section="single-post" aria-labelledby="' . esc_attr($heading_id) . '">'
         . '<h2 id="' . esc_attr($heading_id) . '" class="smp-vp-single-post-section__title">' . esc_html__('In This Article', 'smp-verified-profiles') . '</h2>'
