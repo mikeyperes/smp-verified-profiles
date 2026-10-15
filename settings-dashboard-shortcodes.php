@@ -948,7 +948,6 @@ function smp_vp_profile_field_examples() {
         'url_angellist'     => 'AngelList URL',
         'biography'         => 'Biography',
         'biography_short'   => 'Short Biography',
-        'schema_markup'     => 'Schema Markup',
     ];
 
     foreach ( smp_vp_scan_acf_profile_field_names() as $field ) {

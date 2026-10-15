@@ -194,17 +194,6 @@
         {"key": "field_smp_vp_personal_education_same_as", "label": "SameAs URLs", "name": "same_as", "path": "personal_education.same_as", "type": "textarea", "control": "textarea", "description": "Additional schema sameAs URLs, one per line."},
         {"key": "field_smp_vp_personal_education_description", "label": "Description", "name": "description", "path": "personal_education.description", "type": "textarea", "control": "textarea", "description": "Optional education note for display and schema description."}
       ]
-    },
-    {
-      "key": "field_67fa082b1bd36",
-      "label": "Schema Markup",
-      "name": "schema_markup",
-      "path": "schema_markup",
-      "type": "textarea",
-      "control": "textarea",
-      "read_only": true,
-      "collapsed_by_default": true,
-      "description": "Read-only schema markup JSON-LD output."
     }
   ]
 }

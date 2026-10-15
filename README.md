@@ -53,7 +53,7 @@ Legacy source values remain available as read-only migration fallbacks.
 
 ## Schema
 
-Verified Profiles constructs profile-specific schema nodes. `Hexa\PluginCore\SchemaTools` owns reusable graph normalization, deduplication, safe JSON-LD encoding, and output injection. Existing profile IDs, relationships, field mappings, and Rank Math coexistence rules remain plugin-owned and must retain output parity.
+Each profile page gets a ProfilePage about the profile's Person or Organization (plus image and breadcrumb), built when the page is viewed in `src/Schema/ProfileSchema.php` with Hexa WP Core's schema library and added to Core's shared `hexa-schema` block (`SchemaPage` source `smp-verified-profiles`, priority 10). The type comes from the profile type field, the category, or organization-only fields. Nothing is stored in the post. Rank Math's schema is controlled only by HWS Base Tools.
 
 ## Dashboard
 
@@ -78,7 +78,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.4.6 |
+| Hexa WP Core bundle | 3.22.0 |
 
 ACF Pro is not required: the profile field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
@@ -97,6 +97,11 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.2.0
+
+- Profile pages get a ProfilePage about the profile's Person or Organization, built when the page is viewed with Hexa WP Core 3.22.0's schema library and printed in Core's shared schema block, linked to the site's organization and website.
+- Removed the schema copy saved into each profile on save, its Schema Markup fields, the batch reprocess code and the unused reprocess screen.
 
 ### 8.1.2
 

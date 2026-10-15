@@ -591,29 +591,6 @@ function register_verified_profile_custom_fields()
 					array('key' => 'field_smp_vp_personal_education_description', 'label' => 'Description', 'name' => 'description', 'type' => 'textarea', 'instructions' => smp_vp_acf_instruction( 'Optional education note for profile display and schema description.', '[verified_profile field="personal_education" type="repeater" sub_field="description" output="html"]' ), 'rows' => 3, 'new_lines' => 'wpautop'),
 				),
 			),
-        // Append this to your ACF fields array (e.g. right after 'biography_short')
-array(
-    'key'               => 'field_67fa082b1bd36',
-    'label'             => 'Schema Markup',
-    'name'              => 'schema_markup',
-    'aria-label'        => '',
-    'type'              => 'textarea',
-    'instructions'      => 'Schema markup JSON‑LD output. Batch refresh schema objects here: <a href="' . admin_url('options-general.php?page=smp-verified-profiles') . '" target="_blank">Refresh Schema Objects</a>.',
-    'required'          => 0,
-    'conditional_logic' => 0,
-    'wrapper'           => array(
-        'width' => '',
-        'class' => '',
-        'id'    => '',
-    ),
-    'default_value'     => '',
-    'placeholder'       => '',
-    'maxlength'         => '',
-    'rows'              => 10,
-    'new_lines'         => 'wpautop',
-    'readonly'          => 1,
-    'allow_in_bindings' => 0,
-),
 
 	),
 	'location' => array(

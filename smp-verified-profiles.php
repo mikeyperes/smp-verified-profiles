@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 8.1.2
+ * Version: 8.2.0
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -45,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "8.1.2";
+    public static $plugin_version = "8.2.0";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -139,7 +139,6 @@ function smp_vp_settings_ajax_actions(): array {
         'smp_verified_profiles_modify_wp_config_constants',
         'smp_verified_profiles_execute_function',
         'smp_vp_force_plugin_update_check',
-        'smp_vp_reprocess_schema',
         'smp_vp_shortcode_profile_values',
         'smp_vp_display_save_settings',
         'smp_vp_display_import_elementor',
@@ -236,7 +235,6 @@ function smp_vp_load_settings_dashboard_files(): void {
     include_once __DIR__ . '/settings-dashboard-plugin-info.php';
     include_once __DIR__ . '/settings-dashboard-plugin-checks.php';
     include_once __DIR__ . '/settings-event-handling.php';
-    include_once __DIR__ . '/setting-dashboard-process-schema-objects.php';
     include_once __DIR__ . '/settings-dashboard-components.php';
     include_once __DIR__ . '/settings-dashboard-overview.php';
     include_once __DIR__ . '/settings-dashboard-snippets.php';
@@ -461,7 +459,6 @@ add_action( 'plugins_loaded', function() {
 // MAIN INIT HOOK - Load features conditionally
 // ============================================================================
 add_action( 'init', function() {
-    // The schema builder serves both admin saves and frontend fallback output.
     include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';
     
     // -------------------------------------------------------------------------

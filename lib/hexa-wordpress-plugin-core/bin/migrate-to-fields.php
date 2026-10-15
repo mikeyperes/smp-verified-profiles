@@ -164,13 +164,16 @@ function migrate( string $source, array $map, array $guards ): array {
             $arg = next_index( $tokens, $next );
             if ( null !== $arg && is_array( $tokens[ $arg ] ) && T_CONSTANT_ENCAPSED_STRING === $tokens[ $arg ][0] && preg_match( '/^([\'"])acf\//', $tokens[ $arg ][1] ) ) {
                 $method = str_starts_with( $name, 'remove' ) ? 'off' : 'on';
-                $out .= '\\Hexa\\PluginCore\\Fields\\Hooks::' . $method;
+                // A registration can run while plugins load (even inside a function), before Core's
+                // classes are autoloadable; bootstrap.php's hexa_fields_on() works at any time.
+                $load_safe = 'on' === $method;
+                $out .= $load_safe ? '\\hexa_fields_on' : '\\Hexa\\PluginCore\\Fields\\Hooks::' . $method;
                 for ( $j = $i + 1; $j < $arg; $j++ ) {
                     $out .= is_array( $tokens[ $j ] ) ? $tokens[ $j ][1] : $tokens[ $j ];
                 }
                 $out .= preg_replace( '/^([\'"])acf\//', '$1', $tokens[ $arg ][1] );
-                $changes[] = sprintf( 'L%d %s( %s ) -> Hooks::%s', $line, $name, $tokens[ $arg ][1], $method );
-                if ( ! $in_function ) {
+                $changes[] = sprintf( 'L%d %s( %s ) -> %s', $line, $name, $tokens[ $arg ][1], $load_safe ? 'hexa_fields_on' : 'Hooks::' . $method );
+                if ( ! $in_function && ! $load_safe ) {
                     $early[] = $line;
                 }
                 $i = $arg;

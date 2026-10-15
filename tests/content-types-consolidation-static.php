@@ -13,6 +13,7 @@ $files = [
     'settings'   => (string) file_get_contents( $root . '/generic-functions.php' ),
     'schema'     => (string) file_get_contents( $root . '/snippet-profile-post-wp-admin-functionality.php' ),
     'injector'   => (string) file_get_contents( $root . '/snippet-inject-schema-on-single-profile.php' ),
+    'profile_schema' => (string) file_get_contents( $root . '/src/Schema/ProfileSchema.php' ),
     'source'     => (string) file_get_contents( $root . '/src/EntitySources/CanonicalProfileSource.php' ),
     'theme_acf'  => (string) file_get_contents( $root . '/register-acf-structure-theme-options.php' ),
     'snippets'   => (string) file_get_contents( $root . '/generic-functions.php' ),
@@ -39,14 +40,13 @@ $checks = [
         && str_contains( $files['main'], "smp_vp_redirect_legacy_settings_page" ),
     'Separates the immutable key from the public URL slug.' => str_contains( $files['settings'], "'slug'         => 'profile'" )
         && str_contains( $files['settings'], "'rewrite_slug'" ),
-    'Routes schema normalization and JSON through Core.' => str_contains( $files['schema'], 'SchemaDocumentRenderer' )
-        && str_contains( $files['schema'], 'build_verified_profile_schema' ),
-    'Routes frontend schema injection through Core.' => str_contains( $files['injector'], 'SchemaInjector' )
-        && ! str_contains( $files['injector'], 'echo \'<script type="application/ld+json"\'' ),
-    'Rebuilds missing legacy profile schema without changing stored content.' => str_contains( $files['main'], "include_once __DIR__ . '/snippet-profile-post-wp-admin-functionality.php';" )
-        && str_contains( $files['schema'], 'resolve_verified_profile_schema_type' )
-        && str_contains( $files['schema'], "return 'person';" )
-        && str_contains( $files['injector'], 'build_verified_profile_schema( $post->ID )' ),
+    'Builds profile schema with the Core schema library when the page is viewed.' => str_contains( $files['profile_schema'], 'SchemaNodes::person(' )
+        && str_contains( $files['profile_schema'], 'SchemaNodes::organization(' )
+        && str_contains( $files['profile_schema'], "return 'person';" )
+        && ! str_contains( $files['schema'], 'schema_markup' ),
+    'Adds profile pages to the shared Core schema block.' => str_contains( $files['profile_schema'], 'SchemaPage::register(' )
+        && str_contains( $files['injector'], 'ProfileSchema::register()' )
+        && ! str_contains( $files['injector'], 'application/ld+json' ),
     'Consumes the optional HWS canonical entity without requiring one.' => str_contains( $files['source'], 'CanonicalEntityResolver::resolve()' )
         && str_contains( $files['source'], 'return null;' ),
     'Treats billing and account administration as one explicit ACF structure.' => str_contains( $files['structures'], "'Verified Profiles Billing & Account Administration'" )
