@@ -52,7 +52,7 @@ $checks = [
     'Treats billing and account administration as one explicit ACF structure.' => str_contains( $files['structures'], "'Verified Profiles Billing & Account Administration'" )
         && str_contains( $files['structures'], "'group_658602c9eaa49'" )
         && str_contains( $files['structures'], "'Price Verified Profile'" )
-        && str_contains( $files['structures'], "'Price Leadership Council'" )
+        && ! str_contains( $files['structures'], "'Price Leadership Council'" )
         && str_contains( $files['structures'], "'Is Contributor'" ),
     'Loads billing profile behavior only when its ACF structure is enabled.' => str_contains( $files['main'], "'requires_acf_structure' => 'verified-profile-manager-admin'" )
         && str_contains( $files['snippets'], 'VerifiedProfileStructures::acf_group_enabled' ),

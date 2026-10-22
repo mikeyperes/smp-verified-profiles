@@ -143,14 +143,10 @@ function display_admin_profiles_dashboard() {
 
     $user = wp_get_current_user();
     $price_verified_profile = \Hexa\PluginCore\Fields\Field::get('price_verified_profile', 'user_' . $user->ID);
-    $price_leadership_council = \Hexa\PluginCore\Fields\Field::get('price_leadership_council', 'user_' . $user->ID);
 
     $verified_profile_link = empty($price_verified_profile) 
         ? '#' 
         : 'https://herforward.com/checkout/?add-to-cart=14140&order_type=new';
-    $leadership_council_link = empty($price_leadership_council) 
-        ? '#' 
-        : 'https://herforward.com/checkout/?add-to-cart=14142&order_type=new';
 
     echo '<section class="display_admin_profiles_dashboard">';
     display_admin_unclaimed_profiles();
@@ -159,8 +155,9 @@ function display_admin_profiles_dashboard() {
     <a target=_blank href="https://herforward.com/my-account/">View Account Dashboard</a>';
  echo '<h2 class="header">Additional Links</h2><div class="container_display_admin_profiles_dashboard_footer">
     <a href="' . $verified_profile_link . '" class="apply-link" target="_blank">Apply for a new Her Forward Verified Profile</a>
-    <a href="https://herforward.com/her-forward-leadership-council/application-her-forward-leadership-council/" target="_blank">Apply for The Her Forward Leadership Network</a>
-    </div></section>';
+';
+    do_action( 'smp_verified_profiles_dashboard_links' );
+    echo '</div></section>';
 
     ?>
     <script type="text/javascript">

@@ -146,7 +146,6 @@ function display_admin_profiles_dashboard() {
 
     $user = wp_get_current_user();
     $price_verified_profile = \Hexa\PluginCore\Fields\Field::get('price_verified_profile', 'user_' . $user->ID);
-    $price_leadership_council = \Hexa\PluginCore\Fields\Field::get('price_leadership_council', 'user_' . $user->ID);
 
     //MIKEREVIEW 
 
@@ -154,9 +153,6 @@ $verified_profile_link = empty($price_verified_profile)
     ? '#'
     : home_url('/checkout/?add-to-cart=14140&order_type=new');
 
-$leadership_council_link = empty($price_leadership_council)
-    ? '#'
-    : home_url('/checkout/?add-to-cart=14142&order_type=new');
 
 
     echo '<section class="display_admin_profiles_dashboard">';
@@ -168,8 +164,10 @@ echo '<h2 class="header">Orders Dashboard</h2>
     echo '<h2 class="header">Additional Links</h2>
     <div class="container_display_admin_profiles_dashboard_footer">
         <a href="' . esc_url( $verified_profile_link ) . '" class="apply-link" target="_blank">Apply for a new Her Forward Verified Profile</a>
-        <a href="' . esc_url( home_url( '/her-forward-leadership-council/application-her-forward-leadership-council/' ) ) . '" target="_blank">Apply for The Her Forward Leadership Network</a>
-    </div></section>';
+';
+    // Contributor Network adds its council links here.
+    do_action( 'smp_verified_profiles_dashboard_links' );
+    echo '</div></section>';
 
 
       // Get the site's domain dynamically

@@ -353,27 +353,6 @@ function register_verified_profile_pages_custom_fields() {
         'library'       => 'all',
     ];
 
-    // Contributor network info
-    $acf_fields[] = [
-        'key'  => 'contributor_network_program_name',
-        'name' => 'contributor_network_program_name',
-        'label'=> 'Contributor Network Program Name',
-        'type' => 'text',
-    ];
-    $acf_fields[] = [
-        'key'  => 'contributor_network_program_email',
-        'name' => 'contributor_network_program_email',
-        'label'=> 'Contributor Network Program Email',
-        'type' => 'text',
-    ];
-    $acf_fields[] = [
-        'key'           => 'contributor_network_program_logo',
-        'name'          => 'contributor_network_program_logo',
-        'label'         => 'Contributor Network Program Logo',
-        'type'          => 'file',
-        'return_format' => 'url',
-        'library'       => 'all',
-    ];
     // ----------------------------------------
 
     // Register the field group on the Verified Profiles options page

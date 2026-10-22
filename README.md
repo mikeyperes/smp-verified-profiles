@@ -1,13 +1,44 @@
 # SMP Verified Profiles
 
+> Feature base for HWS Skills. Read before building on this plugin; use or
+> extend these features instead of rebuilding them.
+
+**Purpose:** verified profiles (the `profile` post type) with claiming, management, display and schema. **Admin:** WP Admin → Settings → Verified Profiles. **Depends on:** HexaWP Core (bundled); Elementor and WooCommerce for the templates and checkout pieces that use them.
+
 Verified-profile registration, claiming, management, display, spawning, shortcodes, and schema integration for Scale My Publication websites.
+
+## Features
+
+### Profiles
+- **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.
+- **Code:** `smp-verified-profiles.php`, `register-acf-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
+
+### Profile shortcodes
+- **Use:** `[display_single_profile_education]`, `[display_single_profile_organizations_founded]`, `[display_single_profile_press_releases]`, `[display_single_profile_article_written_by]`, `[display_single_profile_articles_featured_in]`, `[display_single_profile_text_based_social_profiles]`, `[display_homepage_profiles]`, `[display_single_post_mentioned_in_article]`, `[display_theme_footer_text_social_links]`, `[display_single_profile_validate_schema_button]`, `[display_profiles_featured_in_single_post]`, `[display_profile_quick_contact]`, `[display_profile_current_residence]`, `[display_profile_location_born]`, `[display_profile_notable_mentions]`, `[get_profile_field]`, `[profiles_in_articles]`, `[verified_profile_page]`, `[verified_profile field="..."]`, `[post_mentioned_vocabulary]`, `[vocabulary_mentioned_posts]`, `[wiki_mentioned_posts]`. Each is listed with an example on the Shortcodes tab.
+- **Code:** `shortcodes.php`, `settings-dashboard-shortcodes.php`.
+
+### Verified profile price at checkout
+- **Does:** a signed-in user's own Verified Profile price replaces the product price at checkout.
+- **Code:** `snippet-woocommerce-base.php`.
+
+### Profile dashboard links
+- **Does:** the profile manager dashboard's Additional Links (apply for a new profile).
+- **Extend:** action `smp_verified_profiles_dashboard_links` prints more links there; SMP Contributor Network adds the council apply link.
+- **Code:** `profile-manager-dashboard.php`.
+
+### Schema
+- **Does:** ProfilePage schema on each profile page (see Schema below).
+- **Code:** `src/Schema/ProfileSchema.php`.
+
+### Leadership Council (moved)
+- The council settings, the "Price Leadership Council" and "Is Council Member" user fields, `[contributor_network]`, `[display_profile_council_banner]`, the council checkout price and apply link moved to SMP Contributor Network (`mikeyperes/smp-contributor-network`) in 8.3.0. Install it on sites that use them. The contributor check in `generic-functions.php` still reads `is_council_member`.
 
 ## Identity
 
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.1.2`
+- Version: `8.3.0`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -78,7 +109,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.22.0 |
+| Hexa WP Core bundle | 3.34.1 |
 
 ACF Pro is not required: the profile field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
@@ -97,6 +128,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.3.0
+- Leadership Council pieces moved to SMP Contributor Network: program settings and its second copy, the two council user fields, `[contributor_network]`, `[display_profile_council_banner]`, the council product price and the council apply link. New action `smp_verified_profiles_dashboard_links` for links other plugins add to the profile dashboard.
+- Bundles Hexa WP Core 3.34.1.
 
 ### 8.2.0
 

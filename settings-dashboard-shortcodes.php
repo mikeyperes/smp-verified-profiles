@@ -389,11 +389,9 @@ function smp_vp_shortcode_metadata_map(): array {
     return array_fill_keys(
         [
             'acf_author_field',
-            'contributor_network',
             'display_homepage_profiles',
             'display_post_mentions',
             'display_profile_contributing_articles',
-            'display_profile_council_banner',
             'display_profile_current_residence',
             'display_profile_education',
             'display_profile_internal_features',
@@ -455,7 +453,7 @@ function smp_vp_infer_shortcode_group( string $tag, array $sources = [] ): strin
         return 'author_muckrack';
     }
 
-    if ( in_array( $tag, [ 'contributor_network', 'verified_profile', 'display_theme_footer_text_social_links', 'display_website_footer_external_profiles' ], true ) ) {
+    if ( in_array( $tag, [ 'verified_profile', 'display_theme_footer_text_social_links', 'display_website_footer_external_profiles' ], true ) ) {
         return 'global_options';
     }
 
@@ -658,10 +656,6 @@ function smp_vp_shortcode_metadata( $tag ) {
             'description' => 'Outputs an ACF user field for the current post author.',
             'example'     => '[acf_author_field field="profiles_muckrack"]',
         ],
-        'contributor_network' => [
-            'description' => 'Outputs a field from the Contributor Network options group.',
-            'example'     => '[contributor_network field="program_name"]',
-        ],
         'display_homepage_profiles' => [
             'description' => 'Renders recent verified profiles through the configured homepage listing template.',
             'example'     => '[display_homepage_profiles]',
@@ -673,10 +667,6 @@ function smp_vp_shortcode_metadata( $tag ) {
         'display_profile_contributing_articles' => [
             'description' => 'Legacy shortcode for articles contributed by the selected profile.',
             'example'     => '[display_profile_contributing_articles]',
-        ],
-        'display_profile_council_banner' => [
-            'description' => 'Shows the leadership council banner for a profile whose linked user is a council member.',
-            'example'     => '[display_profile_council_banner]',
         ],
         'display_profile_current_residence' => [
             'description' => 'Displays the current residence field for the selected profile.',

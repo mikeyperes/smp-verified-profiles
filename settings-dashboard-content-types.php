@@ -46,7 +46,7 @@ function smp_vp_render_profile_settings_tab(): void {
             'post_id'        => 'option',
             'field_groups'   => [ 'group_6850930366d8f', 'group_additional_shortcodes' ],
             'title'          => 'Verified Profile Program Settings',
-            'description'    => 'Manage contributor-network identity, profile-program identity, Elementor loop assignments, and required page assignments. CPT labels and the public URL slug are managed in Custom Post Types.',
+            'description'    => 'Manage profile-program identity, Elementor loop assignments, and required page assignments. CPT labels and the public URL slug are managed in Custom Post Types.',
             'submit_value'   => 'Save Profile Settings',
             'updated_message'=> 'Verified Profile settings saved.',
             'persist_key'    => 'smp-vp-profile-settings',

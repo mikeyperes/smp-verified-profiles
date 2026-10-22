@@ -1,7 +1,6 @@
 <?php namespace smp_verified_profiles;
 use Elementor\Plugin;
 
-add_shortcode( 'contributor_network', __NAMESPACE__ . '\\contributor_network_shortcode' );
 add_shortcode( 'verified_profile', __NAMESPACE__ . '\\verified_profile_shortcode' );
 
 // Function to get the list of shortcodes for both registration and listing
@@ -20,7 +19,6 @@ function get_verified_profile_shortcodes() {
         'display_single_profile_validate_schema_button' => __NAMESPACE__ . '\\display_single_profile_validate_schema_button',
 
         'display_profiles_featured_in_single_post' => __NAMESPACE__ . '\\display_profiles_featured_in_single_post',
-        'display_profile_council_banner' => __NAMESPACE__ . '\\display_profile_council_banner',
         'display_profile_quick_contact' => __NAMESPACE__ . '\\display_profile_quick_contact',
         'display_profile_current_residence' => __NAMESPACE__ . '\\display_profile_current_residence',
         'display_profile_location_born' => __NAMESPACE__ . '\\display_profile_location_born',
@@ -153,30 +151,6 @@ if (!function_exists(__NAMESPACE__ . '\\modify_posts_where_for_acf_repeater')) {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\modify_posts_where_for_acf_repeater function is already declared", true);
 }
 
-// Ensure function existence before declaring
-if (!function_exists(__NAMESPACE__ . '\\display_profile_council_banner')) {
-    /**
-     * Displays a council banner if the user is a council member.
-     *
-     * @return string Council banner HTML or an empty string.
-     */
-    function display_profile_council_banner() {
-        $user_id = \Hexa\PluginCore\Fields\Field::get('contributor_profile');
-
-        // Ensure the user ID exists and retrieve council member status
-        if ($user_id) {
-            $is_council_member = \Hexa\PluginCore\Fields\Field::get('council_member', 'user_' . $user_id);
-
-            // Return the council member banner if applicable
-            if ($is_council_member === true)
-                return '<style>.display_profile_council_banner i:before{content: "\f058";font-family: "Font Awesome 5 Free";font-weight: 900;color: red;font-size: 19px;margin-right: 10px;display: block;}</style><span class="display_profile_council_banner"><i class="fas"></i><span>Her Forward Leadership Council Member</span></span>';
-        }
-
-        return ''; // Return empty if not a council member
-    }
-} else {
-    write_log("⚠️ Warning: " . __NAMESPACE__ . "\\display_profile_council_banner function is already declared", true);
-}
 
 // Ensure function existence before declaring
 if (!function_exists(__NAMESPACE__ . '\\display_single_profile_text_based_social_profiles')) {
@@ -941,88 +915,6 @@ function find_posts_with_profile( $profile_id ) {
     return array_values( array_unique( array_map( 'absint', $the_query->posts ) ) );
 }
 
-
-/**
- * Shortcode: [contributor_network field="program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]
- *
- * Usage examples:
- *   // top-level fields
- *   [contributor_network field="program_name"]
- *   [contributor_network field="email"]
- *   [contributor_network field="logo" size="large"]
- *
- *   // nested loop_items
- *   [contributor_network field="loop_items.display_single_profile_press_releases"]
- *   [contributor_network field="loop_items.display_single_profile_article_written_by"]
- *
- *   // nested pages (no "page_" prefix)
- *   [contributor_network field="pages.verified_profiles_badges"]
- *   [contributor_network field="pages.verified_profiles_claim"]
- *   [contributor_network field="pages.verified_profiles_apply"]
- *   [contributor_network field="pages.verified_profiles_welcome"]
- */
-function contributor_network_shortcode( $atts ) {
-
-    $atts  = shortcode_atts([
-        'field' => '',
-        'size'  => 'thumbnail',
-    ], $atts, 'contributor_network');
-
-    $field = sanitize_text_field( $atts['field'] );
-    $size  = sanitize_key(       $atts['size'] );
-    if ( ! $field ) {
-        return '';
-    }
-
-    $group = \Hexa\PluginCore\Fields\Field::get( 'contributor_network', 'option' );
-    if ( ! is_array( $group ) ) {
-        return '';
-    }
-
-    $parts = explode( '.', $field, 2 );
-
-    // top-level
-    if ( count( $parts ) === 1 ) {
-        $key = $parts[0];
-        if ( empty( $group[ $key ] ) ) {
-            return '';
-        }
-        if ( $key === 'logo' ) {
-            $url = wp_get_attachment_image_url( $group['logo'], $size );
-            return $url ?: '';
-        }
-        return esc_html( $group[ $key ] );
-    }
-
-    // nested
-    list( $parent, $child ) = $parts;
-
-    // new key?
-    if ( isset( $group[ $parent ][ $child ] ) && $group[ $parent ][ $child ] !== '' ) {
-        $val = $group[ $parent ][ $child ];
-    }
-    // fallback old page_ prefix for pages
-    elseif ( $parent === 'pages' && isset( $group[ $parent ]['page_' . $child] ) && $group[ $parent ]['page_' . $child ] !== '' ) {
-        $val = $group[ $parent ]['page_' . $child];
-    }
-    else {
-        return '';
-    }
-
-    // pages → return page ID
-    if ( $parent === 'pages' ) {
-        $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        return (string) $post_id;
-    }
-
-    // loop_items → return ID
-    if ( $parent === 'loop_items' ) {
-        $post_id = is_object( $val ) && isset( $val->ID ) ? $val->ID : (int) $val;
-        return (string) $post_id;
-    }
-
-    return esc_html( $val );
-}
 
 /**
  * Shortcode: [verified_profile field="featured_image|program_name|email|logo|loop_items.<subfield>|pages.<subfield>" size="thumbnail|medium|medium_large|large"]

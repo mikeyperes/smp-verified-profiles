@@ -162,8 +162,6 @@ final class VerifiedProfileStructures {
                     'Welcome Email',
                     'Password Handling',
                     'Price Verified Profile',
-                    'Price Leadership Council',
-                    'Is Council Member',
                     'Is Contributor',
                 ],
                 null,

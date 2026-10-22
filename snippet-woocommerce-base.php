@@ -155,17 +155,15 @@ if (!function_exists(__NAMESPACE__ . '\\woocommerce_adjust_price_for_products'))
     function woocommerce_adjust_price_for_products($cart) {
         if (!check_plugin_acf()) return;
         $product_id_verified_profile = 14140;
-        $product_id_leadership_council = 14142;
         $user = wp_get_current_user();
 
         if (!$user->exists()) return;
 
         $price_verified_profile = \Hexa\PluginCore\Fields\Field::get('price_verified_profile', 'user_' . $user->ID);
-        $price_leadership_council = \Hexa\PluginCore\Fields\Field::get('price_leadership_council', 'user_' . $user->ID);
 
         foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
-            if ($cart_item['product_id'] == $product_id_verified_profile || $cart_item['product_id'] == $product_id_leadership_council) {
-                $price = $cart_item['product_id'] == $product_id_verified_profile ? $price_verified_profile : $price_leadership_council;
+            if ($cart_item['product_id'] == $product_id_verified_profile) {
+                $price = $price_verified_profile;
 
                 if (!empty($price) && is_numeric($price)) {
                     $cart_item['data']->set_price($price);
