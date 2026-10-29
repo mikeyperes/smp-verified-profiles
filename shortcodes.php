@@ -97,7 +97,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_featured_in_single_p
 
         // Query posts related to the profile
         $query = new \WP_Query( [
-            'post_type'      => 'post',
+            'post_type'      => smp_vp_integration_post_types(),
             'posts_per_page' => -1,
             'meta_query'     => [
                 [
@@ -456,7 +456,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_single_profile_article_writte
 
         // Query the latest 5 posts by that contributor
         $args  = [
-            'post_type'      => 'post',
+            'post_type'      => smp_vp_integration_post_types(),
             'posts_per_page' => 5,
             'author'         => $contributor_id,
         ];
@@ -898,7 +898,7 @@ function find_posts_with_profile( $profile_id ) {
     }
 
     $the_query = new \WP_Query( [
-        'post_type'              => 'post',
+        'post_type'              => smp_vp_integration_post_types(),
         'post_status'            => 'publish',
         'post__in'               => $candidate_ids,
         'posts_per_page'         => -1,
@@ -1353,7 +1353,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
 
         // 3) Fetch Profile CPTs without priming all their meta/term caches
         $profiles = \get_posts( [
-            'post_type'              => 'profile',
+            'post_type'              => smp_vp_profile_post_types(),
             'post__in'               => $profile_ids,
             'orderby'                => 'post__in',
             'posts_per_page'         => -1,
@@ -1411,7 +1411,7 @@ if ( ! function_exists( __NAMESPACE__ . '\\display_profiles_in_articles' ) ) {
         return;
     }
 
-    $query->set( 'post_type',              'profile' );
+    $query->set( 'post_type',              smp_vp_profile_post_types() );
     $query->set( 'post__in',               $ids );
     $query->set( 'orderby',                'post__in' );
     $query->set( 'posts_per_page',         -1 );
@@ -1433,12 +1433,12 @@ function smp_vp_append_single_profile_frontend_fields( $content ) {
         return $content;
     }
 
-    if ( \is_admin() || ! \is_singular( "profile" ) || ! \in_the_loop() || ! \is_main_query() ) {
+    if ( \is_admin() || ! \is_singular( smp_vp_standard_profile_post_types() ) || ! \in_the_loop() || ! \is_main_query() ) {
         return $content;
     }
 
     global $post;
-    if ( ! $post instanceof \WP_Post || "profile" !== $post->post_type ) {
+    if ( ! $post instanceof \WP_Post || ! in_array( $post->post_type, smp_vp_standard_profile_post_types(), true ) ) {
         return $content;
     }
 
