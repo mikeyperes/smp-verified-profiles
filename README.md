@@ -50,7 +50,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.4.0`
+- Version: `8.4.1`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -140,6 +140,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.4.1
+- `[verified_profile]` and the other profile field shortcodes read the current profile on every profile type, not only the default one.
+- The article profiles field shows on every chosen post type, including ones registered late in loading (press releases).
 
 ### 8.4.0
 - Profile types: add more kinds of profile (for example Podcasters) on the new Profile Types tab. Each is its own post type with the standard Verified Profile fields, page and schema, plus an optional Podcaster field group. Profile lookups, the profile field on articles, "in this article", schema and spawning matches cover every profile type.

@@ -947,10 +947,8 @@ function smp_vp_shortcode_profile_post_id( array $atts ): int {
     }
 
     $post = $post_id ? get_post( $post_id ) : null;
-    $settings = function_exists( __NAMESPACE__ . '\\get_verified_profile_settings' ) ? get_verified_profile_settings() : [];
-    $slug     = isset( $settings['slug'] ) && '' !== (string) $settings['slug'] ? (string) $settings['slug'] : 'profile';
 
-    if ( $post instanceof \WP_Post && $post->post_type === $slug ) {
+    if ( $post instanceof \WP_Post && smp_vp_is_profile_post_type( $post->post_type ) ) {
         return (int) $post->ID;
     }
 

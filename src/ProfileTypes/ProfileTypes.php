@@ -83,10 +83,9 @@ final class ProfileTypes {
     public static function integration_post_types(): array {
         $saved = get_option( self::INTEGRATION_OPTION, null );
         $types = is_array( $saved ) ? array_map( 'sanitize_key', $saved ) : self::DEFAULT_INTEGRATION;
+        // Not narrowed to registered post types: field locations are built during
+        // init, before plugins that register late (press releases) have run.
         $types = array_values( array_diff( array_filter( array_unique( $types ) ), self::keys() ) );
-        if ( did_action( 'init' ) ) {
-            $types = array_values( array_filter( $types, 'post_type_exists' ) );
-        }
 
         return (array) apply_filters( 'smp_vp_integration_post_types', $types );
     }
