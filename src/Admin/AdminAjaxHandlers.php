@@ -8,7 +8,6 @@ use Hexa\PluginCore\WpAdminAjax\AjaxActionRegistry;
 use Hexa\PluginCore\WpAdminAjax\AjaxFailure;
 use Hexa\PluginCore\WpAdminAjax\AjaxRequest;
 use Hexa\PluginCore\WpConfigFile\WpConfigFile;
-use SMP\VerifiedProfiles\ProfileTypes\ProfileTypes;
 use smp_verified_profiles\Config;
 
 defined( 'ABSPATH' ) || exit;
@@ -133,7 +132,7 @@ final class AdminAjaxHandlers {
             foreach ( $unclaimed_profiles as $profile ) {
                 $profile_id   = isset( $profile['profile'] ) ? absint( $profile['profile'] ) : 0;
                 $profile_post = $profile_id ? get_post( $profile_id ) : null;
-                if ( $profile_post && ProfileTypes::is_profile_type( $profile_post->post_type ) ) {
+                if ( $profile_post && 'profile' === $profile_post->post_type ) {
                     $profiles_data[] = [ 'id' => $profile_post->ID, 'name' => get_the_title( $profile_post ) ];
                 }
             }
@@ -161,7 +160,7 @@ final class AdminAjaxHandlers {
 
         if ( $profile_id ) {
             $profile_post = get_post( $profile_id );
-            if ( $profile_post && ProfileTypes::is_profile_type( $profile_post->post_type ) ) {
+            if ( $profile_post && 'profile' === $profile_post->post_type ) {
                 $profile_name      = get_the_title( $profile_post );
                 $profile_permalink = get_permalink( $profile_post );
                 $message           = str_replace( '{featured_profile}', '<a href="' . esc_url( $profile_permalink ) . '">' . esc_html( $profile_name ) . '</a>', $message );
@@ -202,40 +201,6 @@ final class AdminAjaxHandlers {
             'message' => 'User email content refreshed without storing a plaintext password.',
             'user_id' => $user_id,
         ];
-    }
-
-    public function profile_types_add( AjaxRequest $request ): array {
-        try {
-            $type = ProfileTypes::add(
-                [
-                    'singular'        => $request->text( 'singular', '', 'post' ),
-                    'plural'          => $request->text( 'plural', '', 'post' ),
-                    'key'             => $request->key( 'key', '', 'post' ),
-                    'rewrite_slug'    => $request->title_slug( 'rewrite_slug', '', 'post' ),
-                    'preset'          => $request->key( 'preset', 'blank', 'post' ),
-                    'standard_fields' => $request->bool( 'standard_fields', true, 'post' ),
-                ]
-            );
-        } catch ( \InvalidArgumentException $error ) {
-            throw AjaxFailure::bad_request( $error->getMessage() );
-        }
-
-        return [ 'type' => $type, 'message' => $type['plural'] . ' added. Reloading...' ];
-    }
-
-    public function profile_types_remove( AjaxRequest $request ): array {
-        $key = $request->key( 'key', '', 'post' );
-        if ( ! ProfileTypes::remove( $key ) ) {
-            throw AjaxFailure::bad_request( 'That profile type does not exist.' );
-        }
-
-        return [ 'key' => $key, 'message' => 'Profile type removed. Its profiles stay in the database. Reloading...' ];
-    }
-
-    public function profile_types_save_integration( AjaxRequest $request ): array {
-        $types = ProfileTypes::save_integration( $request->key_array( 'post_types', 'post' ) );
-
-        return [ 'post_types' => $types, 'message' => 'Saved.' ];
     }
 
     public static function require_user_edit_access( int $user_id ): void {

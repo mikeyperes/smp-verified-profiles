@@ -90,7 +90,9 @@ function register_profile_general_acf_fields() {
                             'class' => '',
                             'id' => '',
                         ),
-                        'post_type' => smp_vp_profile_post_types(),
+                        'post_type' => array(
+                            0 => 'profile',
+                        ),
                         'post_status' => '',
                         'taxonomy' => '',
                         'return_format' => 'id',
@@ -198,13 +200,20 @@ function register_profile_general_acf_fields() {
                 ),
             ),
         ),
-  // One rule group per integration post type; each also requires an administrator.
-  'location'          => array_map(
-            static fn( string $post_type ): array => array(
-                array( 'param' => 'post_type', 'operator' => '==', 'value' => $post_type ),
-                array( 'param' => 'current_user_role', 'operator' => '==', 'value' => 'administrator' ),
+  'location'          => array(
+            // Single rule-group: BOTH must match
+            array(
+                array(
+                    'param'    => 'post_type',
+                    'operator' => '==',
+                    'value'    => 'post',
+                ),
+                array(
+                    'param'    => 'current_user_role',
+                    'operator' => '==',
+                    'value'    => 'administrator',
+                ),
             ),
-            smp_vp_integration_post_types()
         ),
         'menu_order' => 0,
         'position' => 'normal',

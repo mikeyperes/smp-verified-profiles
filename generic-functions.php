@@ -129,25 +129,6 @@ function get_verified_profile_settings(): array {
     ];
 }
 
-/** @return list<string> Every profile post type (the default `profile` plus added profile types). */
-function smp_vp_profile_post_types(): array {
-    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types();
-}
-
-/** @return list<string> Profile post types that carry the standard Verified Profile fields and page. */
-function smp_vp_standard_profile_post_types(): array {
-    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::standard_field_keys();
-}
-
-function smp_vp_is_profile_post_type( string $post_type ): bool {
-    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type( $post_type );
-}
-
-/** @return list<string> Post types the article integration runs on (posts, press releases, ...). */
-function smp_vp_integration_post_types(): array {
-    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::integration_post_types();
-}
-
 /**
  * Adapter used by legacy field-definition files. Hexa WP Core owns the actual
  * registration; these files remain the source of their established ACF arrays.

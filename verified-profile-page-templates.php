@@ -209,7 +209,7 @@ function smp_vp_profile_page_cpt_slug(): string {
 
 function smp_vp_profile_page_is_profile_post( $post = null ): bool {
     $post = get_post( $post );
-    return $post instanceof \WP_Post && in_array( $post->post_type, smp_vp_standard_profile_post_types(), true );
+    return $post instanceof \WP_Post && smp_vp_profile_page_cpt_slug() === $post->post_type;
 }
 
 function smp_vp_profile_page_should_render_auto(): bool {
@@ -219,7 +219,7 @@ function smp_vp_profile_page_should_render_auto(): bool {
         && 'auto' === $settings['render_mode']
         && SMP_VP_PROFILE_PAGE_CUSTOM_TEMPLATE !== $settings['selected_template']
         && ! is_admin()
-        && is_singular( smp_vp_standard_profile_post_types() )
+        && is_singular( smp_vp_profile_page_cpt_slug() )
         && in_the_loop()
         && is_main_query();
 }
@@ -259,7 +259,7 @@ function smp_vp_profile_page_preview_template(): string {
 }
 
 function smp_vp_profile_page_should_use_single_template(): bool {
-    if ( is_admin() || ! is_singular( smp_vp_standard_profile_post_types() ) ) {
+    if ( is_admin() || ! is_singular( smp_vp_profile_page_cpt_slug() ) ) {
         return false;
     }
 
@@ -738,7 +738,7 @@ function smp_vp_profile_page_related_posts( int $profile_id, int $limit = 3 ): a
 
     return get_posts(
         [
-            'post_type'      => smp_vp_integration_post_types(),
+            'post_type'      => [ 'post', 'press-release' ],
             'post_status'    => 'publish',
             'post__in'       => array_map( 'absint', $post_ids ),
             'orderby'        => 'post__in',
@@ -764,7 +764,7 @@ function smp_vp_profile_page_authored_posts( int $profile_id, int $limit = 3 ): 
 
     return get_posts(
         [
-            'post_type'      => smp_vp_integration_post_types(),
+            'post_type'      => [ 'post', 'press-release' ],
             'post_status'    => 'publish',
             'author'         => $user_id,
             'posts_per_page' => absint( $limit ),

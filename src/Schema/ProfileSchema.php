@@ -9,7 +9,6 @@ use Hexa\PluginCore\SchemaTools\SchemaIds;
 use Hexa\PluginCore\SchemaTools\SchemaNodes;
 use Hexa\PluginCore\SchemaTools\SchemaPage;
 use Hexa\PluginCore\SchemaTools\SchemaSources;
-use SMP\VerifiedProfiles\ProfileTypes\ProfileTypes;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -41,7 +40,7 @@ final class ProfileSchema {
 
     /** @return list<array<string,mixed>> */
     public static function current_nodes(): array {
-        if ( ! is_singular( array_merge( ProfileTypes::post_types(), [ 'entity' ] ) ) ) {
+        if ( ! is_singular( [ 'profile', 'entity' ] ) ) {
             return [];
         }
         $post = get_queried_object();

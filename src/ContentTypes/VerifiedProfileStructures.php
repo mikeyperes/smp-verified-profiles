@@ -4,7 +4,6 @@ namespace SMP\VerifiedProfiles\ContentTypes;
 
 use Hexa\PluginCore\ContentTypes\ContentTypeRegistry;
 use Hexa\PluginCore\FieldStructures\AcfFieldGroupRegistry;
-use SMP\VerifiedProfiles\ProfileTypes\ProfileTypes;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -48,8 +47,6 @@ final class VerifiedProfileStructures {
             ]
         );
 
-        $profile_args = self::profile_post_type_args();
-
         self::$content_types->add(
             [
                 'id'                    => 'profile',
@@ -62,48 +59,39 @@ final class VerifiedProfileStructures {
                     'singular'     => 'Verified Profile',
                     'plural'       => 'Verified Profiles',
                     'rewrite_slug' => 'profile',
-                    'args'         => $profile_args,
+                    'args'         => [
+                        'public'             => true,
+                        'publicly_queryable' => true,
+                        'show_ui'            => true,
+                        'show_in_menu'       => true,
+                        'show_in_nav_menus'  => true,
+                        'show_in_admin_bar'  => true,
+                        'show_in_rest'       => true,
+                        'capability_type'    => 'post',
+                        'hierarchical'       => false,
+                        'supports'           => [
+                            'title',
+                            'author',
+                            'trackbacks',
+                            'editor',
+                            'excerpt',
+                            'revisions',
+                            'page-attributes',
+                            'thumbnail',
+                            'custom-fields',
+                            'post-formats',
+                        ],
+                        'taxonomies'       => [ 'category', 'post_tag' ],
+                        'has_archive'      => true,
+                        'rewrite'          => [ 'with_front' => false ],
+                        'query_var'        => true,
+                        'delete_with_user' => false,
+                    ],
                 ],
             ]
         );
 
-        // Profile types added on the Profile Types tab register through the same
-        // registry, so the Custom Post Types tab manages their labels and URLs too.
-        self::$content_types->add_many( ProfileTypes::content_type_definitions( $profile_args ) );
-
         return self::$content_types;
-    }
-
-    /** @return array<string,mixed> WordPress arguments shared by every profile type. */
-    private static function profile_post_type_args(): array {
-        return [
-            'public'             => true,
-            'publicly_queryable' => true,
-            'show_ui'            => true,
-            'show_in_menu'       => true,
-            'show_in_nav_menus'  => true,
-            'show_in_admin_bar'  => true,
-            'show_in_rest'       => true,
-            'capability_type'    => 'post',
-            'hierarchical'       => false,
-            'supports'           => [
-                'title',
-                'author',
-                'trackbacks',
-                'editor',
-                'excerpt',
-                'revisions',
-                'page-attributes',
-                'thumbnail',
-                'custom-fields',
-                'post-formats',
-            ],
-            'taxonomies'       => [ 'category', 'post_tag' ],
-            'has_archive'      => true,
-            'rewrite'          => [ 'with_front' => false ],
-            'query_var'        => true,
-            'delete_with_user' => false,
-        ];
     }
 
     public static function acf_groups(): AcfFieldGroupRegistry {

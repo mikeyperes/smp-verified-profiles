@@ -1280,7 +1280,9 @@ function register_user_custom_fields()
 						'class' => '',
 						'id' => '',
 					),
-					'post_type' => smp_vp_profile_post_types(),
+					'post_type' => array(
+						0 => 'profile',
+					),
 					'post_status' => '',
 					'taxonomy' => '',
 					'return_format' => 'id',

@@ -43,6 +43,7 @@ function smp_vp_spawn_defaults(): array {
         'default_status'           => 'publish',
         'default_strictness'       => 'strict',
         'default_detection_method' => 'ai',
+        'post_types'               => [ 'post', 'press-release' ],
         'last_test'      => [],
     ];
 }
@@ -56,13 +57,13 @@ function smp_vp_spawn_settings(): array {
     if ( 'existing' === (string) ( $settings['default_detection_method'] ?? '' ) ) {
         $settings['default_detection_method'] = 'direct';
     }
-    // The Profile Types tab chooses where the integration runs; the editor box follows it.
-    $settings['post_types'] = smp_vp_integration_post_types();
+    $settings['post_types'] = array_values( array_filter( array_map( 'sanitize_key', (array) $settings['post_types'] ) ) );
     return $settings;
 }
 
 function smp_vp_spawn_save_settings( array $input ): array {
     $settings = smp_vp_spawn_settings();
+    $post_types = isset( $input['post_types'] ) ? (array) $input['post_types'] : $settings['post_types'];
     $settings['enabled'] = ! empty( $input['enabled'] );
     $settings['api_base_url'] = esc_url_raw( rtrim( (string) ( $input['api_base_url'] ?? $settings['api_base_url'] ), '/' ) );
     $settings['api_key'] = sanitize_text_field( (string) ( $input['api_key'] ?? $settings['api_key'] ) );
@@ -76,10 +77,9 @@ function smp_vp_spawn_save_settings( array $input ): array {
     $settings['default_detection_method'] = in_array( $method, [ 'direct', 'ai' ], true ) ? $method : 'ai';
     $status = sanitize_key( (string) ( $input['default_status'] ?? $settings['default_status'] ) );
     $settings['default_status'] = in_array( $status, [ 'publish', 'draft', 'private', 'pending' ], true ) ? $status : 'publish';
-    unset( $settings['post_types'] );
+    $settings['post_types'] = array_values( array_filter( array_map( 'sanitize_key', $post_types ) ) );
 
     update_option( SMP_VP_SPAWN_OPTION, $settings, false );
-    $settings['post_types'] = smp_vp_integration_post_types();
     return $settings;
 }
 
@@ -130,6 +130,7 @@ function smp_vp_spawn_render_settings(): void {
 
     $settings = smp_vp_spawn_settings();
     $nonce = wp_create_nonce( SMP_VP_SPAWN_NONCE );
+    $types = get_post_types( [ 'show_ui' => true ], 'objects' );
     ?>
     <style>
         .smp-vp-spawn-card{border:1px solid #dcdcde;background:#fff;border-radius:10px;padding:18px;margin:14px 0;max-width:1120px}
@@ -186,7 +187,12 @@ function smp_vp_spawn_render_settings(): void {
         <p><label><input type="checkbox" id="smp-vp-spawn-enabled" <?php checked( ! empty( $settings['enabled'] ) ); ?>> Enable editor spawning interface</label></p>
         <div class="smp-vp-spawn-field">
             <label>Post types</label>
-            <p class="description">The editor box shows on <?php echo esc_html( implode( ', ', array_map( static fn( string $type ): string => (string) ( get_post_type_object( $type )->labels->name ?? $type ), $settings['post_types'] ) ) ?: 'no post types' ); ?>. <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'profile-types' ) ); ?>">Change on the Profile Types tab</a>.</p>
+            <div class="smp-vp-spawn-checks">
+                <?php foreach ( $types as $type => $object ) : ?>
+                    <?php if ( ! in_array( $type, [ 'post', 'press-release' ], true ) ) { continue; } ?>
+                    <label><input type="checkbox" class="smp-vp-spawn-post-type" value="<?php echo esc_attr( $type ); ?>" <?php checked( in_array( $type, $settings['post_types'], true ) ); ?>> <?php echo esc_html( $object->labels->singular_name ?? $type ); ?></label>
+                <?php endforeach; ?>
+            </div>
         </div>
         <div class="smp-vp-spawn-actions">
             <?php
@@ -201,6 +207,8 @@ function smp_vp_spawn_render_settings(): void {
         var nonce = '<?php echo esc_js( $nonce ); ?>';
         var dyn = window.HexaWpCoreDynamicButton || {start:function(b,t){$(b).prop('disabled',true).text(t||'Working...')},success:function(b,t){$(b).prop('disabled',false).text(t||'Done')},error:function(b,t){$(b).prop('disabled',false).text(t||'Failed')},reset:function(b){$(b).prop('disabled',false)}};
         function collect(){
+            var postTypes = [];
+            $('.smp-vp-spawn-post-type:checked').each(function(){ postTypes.push($(this).val()); });
             return {
                 enabled: $('#smp-vp-spawn-enabled').is(':checked') ? 1 : 0,
                 api_base_url: $('#smp-vp-spawn-api-base').val(),
@@ -208,7 +216,8 @@ function smp_vp_spawn_render_settings(): void {
                 default_mode: $('#smp-vp-spawn-default-mode').val(),
                 default_detection_method: $('#smp-vp-spawn-default-detection-method').val(),
                 default_strictness: $('#smp-vp-spawn-default-strictness').val(),
-                default_status: $('#smp-vp-spawn-default-status').val()
+                default_status: $('#smp-vp-spawn-default-status').val(),
+                post_types: postTypes
             };
         }
         function log(message){ $('#smp-vp-spawn-settings-log').text(message || 'Done.'); }
@@ -942,17 +951,19 @@ function smp_vp_spawn_find_existing_profile( string $name ): ?array {
         return null;
     }
     global $wpdb;
-    $post_types = smp_vp_profile_post_types();
+    $post_type = smp_vp_spawn_profile_post_type();
     $slug = sanitize_title( $name );
-    $type_placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
     $sql = $wpdb->prepare(
         "SELECT ID FROM {$wpdb->posts}
-         WHERE post_type IN ($type_placeholders)
+         WHERE post_type = %s
            AND post_status IN ('publish','draft','pending','private')
            AND (LOWER(post_title) = LOWER(%s) OR post_name = %s)
          ORDER BY CASE WHEN post_name = %s THEN 0 ELSE 1 END, post_date ASC, ID ASC
          LIMIT 1",
-        ...array_merge( $post_types, [ $name, $slug, $slug ] )
+        $post_type,
+        $name,
+        $slug,
+        $slug
     );
     $id = (int) $wpdb->get_var( $sql );
     if ( $id <= 0 ) {
@@ -1079,7 +1090,7 @@ function smp_vp_ajax_spawn_attach_existing(): void {
     }
 
     $profile_post = get_post( $profile_id );
-    if ( ! $profile_post || ! smp_vp_is_profile_post_type( $profile_post->post_type ) ) {
+    if ( ! $profile_post || smp_vp_spawn_profile_post_type() !== $profile_post->post_type ) {
         wp_send_json_error( [ 'message' => 'Selected item is not a verified profile.' ], 200 );
     }
 

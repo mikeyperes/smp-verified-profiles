@@ -50,7 +50,7 @@ function get_plugin_data( string $file, bool $markup = true, bool $translate = t
     unset( $file, $markup, $translate );
     return [
         'Name'        => 'SMP Verified Profiles',
-        'Version'     => '8.3.0',
+        'Version'     => '8.4.2',
         'Author'      => 'Michael Peres',
         'PluginURI'   => 'https://github.com/mikeyperes/smp-verified-profiles',
         'Description' => 'Verified Profiles',
@@ -59,13 +59,6 @@ function get_plugin_data( string $file, bool $markup = true, bool $translate = t
 function sanitize_key( mixed $value ): string { return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) ) ?: ''; }
 function sanitize_text_field( mixed $value ): string { return trim( strip_tags( (string) $value ) ); }
 function wp_unslash( mixed $value ): mixed { return $value; }
-function get_option( string $name, mixed $default = false ): mixed { return $GLOBALS['smp_vp_test_options'][ $name ] ?? $default; }
-function sanitize_title( mixed $value ): string { return trim( preg_replace( '/[^a-z0-9]+/', '-', strtolower( (string) $value ) ) ?: '', '-' ); }
-function apply_filters( string $hook, mixed $value, mixed ...$args ): mixed { unset( $hook, $args ); return $value; }
-
-$GLOBALS['smp_vp_test_options']['smp_vp_profile_types'] = [
-    [ 'key' => 'podcaster', 'singular' => 'Podcaster', 'plural' => 'Podcasters', 'rewrite_slug' => 'podcasters', 'preset' => 'podcaster', 'standard_fields' => true ],
-];
 
 require $root . '/smp-verified-profiles.php';
 do_action( 'plugins_loaded' );
@@ -78,13 +71,6 @@ $checks  = [
     'Content-type registration was scheduled.' => ! empty( $GLOBALS['smp_vp_test_hooks']['init'] ),
     'Core and host admin AJAX actions were registered.' => ! empty( $GLOBALS['smp_vp_test_hooks']['wp_ajax_smp_vp_core_updater_force_update_check'] )
         && ! empty( $GLOBALS['smp_vp_test_hooks']['wp_ajax_smp_vp_load_tab'] ),
-    'Profile type actions were registered.' => ! empty( $GLOBALS['smp_vp_test_hooks']['wp_ajax_smp_vp_profile_types_add'] )
-        && ! empty( $GLOBALS['smp_vp_test_hooks']['wp_ajax_smp_vp_profile_types_save_integration'] ),
-    'An added profile type registers as its own post type next to profile.' => null !== \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'podcaster' )
-        && null !== \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'profile' ),
-    'The podcaster preset brings its own field group.' => 'group_smp_vp_podcaster_podcaster' === ( \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'podcaster' )['field_groups'][0]['group_key'] ?? '' ),
-    'Profile types are profile plus every added type.' => [ 'profile', 'podcaster' ] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::keys(),
-    'The integration defaults to posts and press releases.' => [ 'post', 'press-release' ] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::integration_post_types(),
 ];
 
 foreach ( $checks as $label => $passed ) {

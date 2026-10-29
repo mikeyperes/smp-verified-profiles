@@ -18,9 +18,6 @@ final class AdminAjaxModule implements ModuleInterface {
         $actions = [
             'smp_vp_load_tab' => [ 'callback' => [ $this->handlers, 'load_tab' ] ],
             'smp_vp_shortcode_profile_values' => [ 'callback' => [ $this->handlers, 'shortcode_profile_values' ] ],
-            'smp_vp_profile_types_add' => [ 'callback' => [ $this->handlers, 'profile_types_add' ] ],
-            'smp_vp_profile_types_remove' => [ 'callback' => [ $this->handlers, 'profile_types_remove' ] ],
-            'smp_vp_profile_types_save_integration' => [ 'callback' => [ $this->handlers, 'profile_types_save_integration' ] ],
             'smp_verified_profiles_modify_wp_config_constants' => [ 'callback' => [ $this->handlers, 'modify_wp_config_constants' ] ],
             'smp_verified_profiles_execute_function' => [ 'callback' => [ $this->handlers, 'execute_allowed_function' ] ],
             'get_unclaimed_profiles' => [

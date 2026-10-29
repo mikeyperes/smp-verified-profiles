@@ -14,7 +14,7 @@ function custom_post_admin_footer_scripts() {
     global $pagenow, $typenow;
 
     // Check if we're on a 'post' post type edit page
-    if (!in_array((string) $typenow, smp_vp_integration_post_types(), true) || ($pagenow != 'post-new.php' && $pagenow != 'post.php')) {
+    if ($typenow != 'post' || ($pagenow != 'post-new.php' && $pagenow != 'post.php')) {
         return;
     }
     ?>
@@ -90,8 +90,8 @@ function custom_post_admin_footer_scripts() {
  * @param bool $update Whether this is an existing post being updated.
  */
 function process_profiles_on_save($post_id, $post, $update) {
-    // Skip autosave, post types outside the integration, or when ACF is inactive.
-    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !in_array($post->post_type, smp_vp_integration_post_types(), true) || !check_plugin_acf()) {
+    // Skip autosave and if not a 'post' post type or ACF plugin is inactive.
+    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || $post->post_type !== 'post' || !check_plugin_acf()) {
         return;
     }
 
@@ -205,8 +205,8 @@ function process_profiles_on_save($post_id, $post, $update) {
 function add_edit_profile_links_inside_label() {
     global $post_type;
 
-    // Only apply to the integration's post types
-    if (!in_array((string) $post_type, smp_vp_integration_post_types(), true)) {
+    // Only apply to 'post' post type
+    if ('post' !== $post_type) {
         return;
     }
 
@@ -251,11 +251,8 @@ function add_edit_profile_links_inside_label() {
  * Register "Find Profiles" box specifically on Post edit screens (Classic + Block Editor).
  * (Builds on your code exactly — keeps your get_verified_profile_settings() without leading backslash.)
  */
-add_action('add_meta_boxes', __NAMESPACE__ . '\\add_find_profiles_metabox', 10, 2);
-function add_find_profiles_metabox($post_type, $post = null) {
-    if (!in_array((string) $post_type, smp_vp_integration_post_types(), true)) {
-        return;
-    }
+add_action('add_meta_boxes_post', __NAMESPACE__ . '\\add_find_profiles_metabox');
+function add_find_profiles_metabox($post) {
     if ( function_exists( __NAMESPACE__ . '\\smp_vp_spawn_settings' ) ) {
         $settings = smp_vp_spawn_settings();
         if ( ! empty( $settings['enabled'] ) ) {
@@ -266,7 +263,7 @@ function add_find_profiles_metabox($post_type, $post = null) {
         'smpvp_find_profiles',
         __('Verified Profiles', 'smpvp'),
         __NAMESPACE__ . '\\render_find_profiles_metabox',
-        $post_type,
+        'post',
         'normal',
         'high'
     );
@@ -657,21 +654,23 @@ function ajax_lookup_profile() {
         ]);
     }
 
-    // Every profile type (the default Verified Profile plus added types)
-    $profile_types = smp_vp_profile_post_types();
+    // Dynamic CPT settings (your function)
     $profile_settings = get_verified_profile_settings();
-    $profile_slug = implode(',', $profile_types);
+
+    // Slug -> DB post_type key
+    $raw_slug     = (string) ($profile_settings['slug'] ?? '');
+    $profile_slug = sanitize_key( str_replace('-', '_', $raw_slug) );
 
     global $wpdb;
 
-    $type_placeholders = implode(',', array_fill(0, count($profile_types), '%s'));
     $sql = $wpdb->prepare(
         "SELECT ID FROM {$wpdb->posts}
-         WHERE post_type IN ($type_placeholders)
+         WHERE post_type = %s
            AND post_status = 'publish'
            AND LOWER(post_title) = LOWER(%s)
          LIMIT 1",
-        ...array_merge($profile_types, [$name])
+        $profile_slug,
+        $name
     );
 
     $post_id = (int) $wpdb->get_var($sql);
