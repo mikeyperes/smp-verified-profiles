@@ -37,6 +37,10 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - **Use:** `[smp_vp_claim_profile]` (optional `profile="<ID>"`, `label="..."`) on the profile page. On an unclaimed profile (author: the Unclaimed Profiles user) it shows a "Claim this profile" button and a short form (name, email, note); elsewhere nothing. Free claims wait for an admin's Approve or Reject on the Features tab; with payments on and a claim price set, the claimer pays through Stripe and the claim approves itself. Approving makes the claimer the profile's author and a Verified Profile Manager, creating and emailing their account when needed.
 - **Code:** `src/Features/ClaimProfile.php` (claims stored on the profile in `_smp_vp_claims`).
 
+### Elementor dynamic tags
+- **Use:** in Elementor, group "Verified Profiles": **Profile field (plain text)** shows one field of the current post (a profile in a profile loop) with HTML removed, optionally hidden when it only repeats the name (a role equal to the person's name); **Linked profile** shows "<label> <name> →" linking to the profile whose ID a field holds (for example an episode's `profiles_0_profile`, label "Guest"), with markup `<a><span class="mpp-guest-k">…</span><span class="mpp-guest-n">…</span><span class="mpp-guest-arrow">→</span></a>`. They replace JetEngine dynamic fields.
+- **Code:** `src/Elementor/`.
+
 ### Payments (Stripe through HWS Base Tools)
 - **Does:** profile and claim payments run through HWS Base Tools' one Stripe connection (Payments tab there), once or as a subscription, using a Stripe price ID per item. A paid claim is approved by Stripe's `checkout.session.completed` event; a paid profile adds one to the buyer's `smp_vp_profile_credits`. WooCommerce is no longer used.
 - **Code:** `src/Features/ProfilePayments.php`.
@@ -148,6 +152,9 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.6.0
+- Elementor dynamic tags "Profile field (plain text)" and "Linked profile" (group Verified Profiles), so profile cards no longer need JetEngine.
 
 ### 8.5.0
 - Profile types (for example podcast profiles) are back: each its own post type with its own section, beside verified profiles.
