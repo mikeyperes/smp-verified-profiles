@@ -1753,7 +1753,7 @@ function smp_vp_display_author_ids(int $author_id, int $limit, bool $require_thu
     }
 
     $post_ids = get_posts([
-        "post_type" => ["post", "press-release"],
+        "post_type" => smp_vp_integration_post_types(),
         "post_status" => "publish",
         "author" => $author_id,
         "posts_per_page" => 80,
@@ -2046,7 +2046,7 @@ function smp_vp_verified_profiles_loop_shortcode($atts = []): string {
 
 function smp_vp_display_append_to_content(string $content): string {
     $settings = smp_vp_display_settings();
-    if (empty($settings["enabled"]) || smp_vp_display_is_custom_template((string) ($settings["post_template"] ?? "")) || ($settings["single_injection"] ?? "after_content") !== "after_content" || is_admin() || ! is_singular(["post", "press-release"]) || ! in_the_loop() || ! is_main_query()) {
+    if (empty($settings["enabled"]) || smp_vp_display_is_custom_template((string) ($settings["post_template"] ?? "")) || ($settings["single_injection"] ?? "after_content") !== "after_content" || is_admin() || ! is_singular(smp_vp_integration_post_types()) || ! in_the_loop() || ! is_main_query()) {
         return $content;
     }
 

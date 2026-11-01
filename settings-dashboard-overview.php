@@ -81,7 +81,7 @@ function get_user_stats() {
     
     // Profile managers (custom role or capability)
     $profile_managers = get_users([
-        'role'   => 'profile_manager',
+        'role'   => \SMP\VerifiedProfiles\UserRoles\VerifiedProfileManagerRole::ROLE,
         'fields' => 'ID',
     ]);
     $stats['profile_managers'] = count( $profile_managers );
@@ -198,6 +198,13 @@ function display_settings_overview() {
         render_stat_box( $profile_stats['verified'], 'Verified Profiles', 'blue' );
         render_stat_box( $snippet_stats['enabled'] . '/' . $snippet_stats['total'], 'Active Snippets', 'orange' );
         render_stat_box( $user_stats['profile_managers'], 'Profile Managers' );
+        // One count per extra profile type (for example podcast profiles), next to the verified profiles.
+        if ( class_exists( '\\SMP\\VerifiedProfiles\\ProfileTypes\\ProfileTypes' ) ) {
+            foreach ( \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::custom() as $type_key => $type ) {
+                $type_count = wp_count_posts( $type_key );
+                render_stat_box( (int) ( $type_count->publish ?? 0 ), (string) $type['plural'], 'green' );
+            }
+        }
         ?>
     </div>
     

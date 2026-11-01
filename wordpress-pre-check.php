@@ -17,13 +17,9 @@ function smp_vp_get_plugins_list() {
     return [
         'elementor/elementor.php' => 'Elementor',
         'elementor-pro/elementor-pro.php' => 'Elementor Pro',
-        'jet-engine/jet-engine.php' => 'JetEngine',
         'seo-by-rank-math/rank-math.php' => 'Rank Math SEO',
         'seo-by-rank-math-pro/rank-math-pro.php' => 'Rank Math Pro',
-        'woo-checkout-field-editor-pro/woocommerce-checkout-field-editor-pro.php' => 'Checkout Field Editor for WooCommerce',
-        'woocommerce/woocommerce.php' => 'WooCommerce',
-        'woocommerce-subscriptions/woocommerce-subscriptions.php' => 'WooCommerce Subscriptions',
-        'woocommerce-gateway-stripe/woocommerce-gateway-stripe.php' => 'Payment Plugins for Stripe WooCommerce',
+        'simple-local-avatars/simple-local-avatars.php' => 'Simple Local Avatars',
     ];
 }
 

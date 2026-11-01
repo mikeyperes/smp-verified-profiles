@@ -115,7 +115,7 @@ function smp_vp_resolve_dashboard_tab( $tab_id, array $tabs ): string {
 function smp_vp_dashboard_tab_groups( array $tabs ): array {
     $groups = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
-        [ 'label' => 'Profiles', 'tabs' => [ 'content-types', 'profile-settings', 'features', 'pages', 'spawning-api' ] ],
+        [ 'label' => 'Profiles', 'tabs' => [ 'profile-types', 'content-types', 'profile-settings', 'features', 'pages', 'spawning-api' ] ],
         [ 'label' => 'Configuration', 'tabs' => [ 'emails' ] ],
         [ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ],
         [ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ],

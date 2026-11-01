@@ -26,3 +26,4 @@ vendor/
 *.swo
 *~
 .git-backup/
+error_log

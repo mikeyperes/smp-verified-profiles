@@ -23,7 +23,6 @@ function register_verified_profile_custom_fields()
 
 
     $verified_profile_settings = get_verified_profile_settings();
-    $verified_profile_settings_slug = $verified_profile_settings["slug"]; 
 
 
 	smp_vp_register_local_acf_group( array(
@@ -143,7 +142,7 @@ function register_verified_profile_custom_fields()
 						'name' => 'founder_profile',
 						'type' => 'post_object',
 						'instructions' => smp_vp_acf_instruction( 'Select the person verified profile that founded this company.', '[verified_profile field="company_details.founder_profile" output="link"]' ),
-						'post_type' => array($verified_profile_settings_slug),
+						'post_type' => smp_vp_profile_post_types(),
 						'post_status' => array('publish', 'draft', 'pending'),
 						'return_format' => 'id',
 						'ui' => 1,
@@ -593,14 +592,10 @@ function register_verified_profile_custom_fields()
 			),
 
 	),
-	'location' => array(
-		array(
-			array(
-				'param' => 'post_type',
-				'operator' => '==',
-				'value' => $verified_profile_settings_slug,
-			),
-		),
+	// One rule group per profile type that carries the standard fields.
+	'location' => array_map(
+		static fn( string $post_type ): array => array( array( 'param' => 'post_type', 'operator' => '==', 'value' => $post_type ) ),
+		smp_vp_standard_profile_post_types()
 	),
 	'menu_order' => 0,
 	'position' => 'normal',

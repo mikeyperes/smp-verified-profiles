@@ -13,13 +13,33 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.
 - **Code:** `smp-verified-profiles.php`, `register-acf-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
 
+### Profile types
+- **Does:** adds more kinds of profile next to the default Verified Profile, for example Podcasters. Each type is its own post type with its own admin menu, web address and archive, the standard Verified Profile fields, page and schema (optional), and an optional preset field group (Podcaster: show name, role, show links, topics, episode count, booking email). Removing a type keeps its posts. Labels and web addresses of every type are edited on the Custom Post Types tab.
+- **Use:** WP Admin → Settings → Verified Profiles → Profile Types. Preset fields read with `[verified_profile field="podcast_name"]`.
+- **Extend:** filter `smp_vp_profile_post_types` (every profile post type); helpers `smp_verified_profiles\smp_vp_profile_post_types()` and `smp_vp_is_profile_post_type()`.
+- **Code:** `src/ProfileTypes/ProfileTypes.php`, `settings-dashboard-profile-types.php`.
+
+### Article integration post types
+- **Does:** chooses the post types the article integration runs on (posts, press releases, any public post type): the profiles box and profile detection in the editor, profile creation, the "in this article" section, and each profile's "featured in" and "articles written" lists. Defaults to posts and press releases, as before.
+- **Use:** Profile Types tab → "Where the article integration runs".
+- **Extend:** filter `smp_vp_integration_post_types`; helper `smp_verified_profiles\smp_vp_integration_post_types()`.
+- **Code:** `src/ProfileTypes/ProfileTypes.php`, `register-acf-structures.php`, `snippet-post-functionality.php`, `verified-profile-spawner.php`.
+
 ### Profile shortcodes
 - **Use:** `[display_single_profile_education]`, `[display_single_profile_organizations_founded]`, `[display_single_profile_press_releases]`, `[display_single_profile_article_written_by]`, `[display_single_profile_articles_featured_in]`, `[display_single_profile_text_based_social_profiles]`, `[display_homepage_profiles]`, `[display_single_post_mentioned_in_article]`, `[display_theme_footer_text_social_links]`, `[display_single_profile_validate_schema_button]`, `[display_profiles_featured_in_single_post]`, `[display_profile_quick_contact]`, `[display_profile_current_residence]`, `[display_profile_location_born]`, `[display_profile_notable_mentions]`, `[get_profile_field]`, `[profiles_in_articles]`, `[verified_profile_page]`, `[verified_profile field="..."]`, `[post_mentioned_vocabulary]`, `[vocabulary_mentioned_posts]`, `[wiki_mentioned_posts]`. Each is listed with an example on the Shortcodes tab.
 - **Code:** `shortcodes.php`, `settings-dashboard-shortcodes.php`.
 
-### Verified profile price at checkout
-- **Does:** a signed-in user's own Verified Profile price replaces the product price at checkout.
-- **Code:** `snippet-woocommerce-base.php`.
+### Features (each off by default)
+- **Does:** the Features tab (Settings → Verified Profiles → Features) switches on, one by one: profile managers (their Profiles Dashboard, and with payments a "Buy a verified profile" button that adds a paid profile credit), claiming a profile from the site, and payments. A site that already had profile managers keeps their dashboard on.
+- **Code:** `src/Features/FeatureSettings.php`, `settings-dashboard-features.php`, `src/Features/FeaturesAdmin.php`.
+
+### Claim this profile
+- **Use:** `[smp_vp_claim_profile]` (optional `profile="<ID>"`, `label="..."`) on the profile page. On an unclaimed profile (author: the Unclaimed Profiles user) it shows a "Claim this profile" button and a short form (name, email, note); elsewhere nothing. Free claims wait for an admin's Approve or Reject on the Features tab; with payments on and a claim price set, the claimer pays through Stripe and the claim approves itself. Approving makes the claimer the profile's author and a Verified Profile Manager, creating and emailing their account when needed.
+- **Code:** `src/Features/ClaimProfile.php` (claims stored on the profile in `_smp_vp_claims`).
+
+### Payments (Stripe through HWS Base Tools)
+- **Does:** profile and claim payments run through HWS Base Tools' one Stripe connection (Payments tab there), once or as a subscription, using a Stripe price ID per item. A paid claim is approved by Stripe's `checkout.session.completed` event; a paid profile adds one to the buyer's `smp_vp_profile_credits`. WooCommerce is no longer used.
+- **Code:** `src/Features/ProfilePayments.php`.
 
 ### Profile dashboard links
 - **Does:** the profile manager dashboard's Additional Links (apply for a new profile).
@@ -38,7 +58,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 - Repository: `mikeyperes/smp-verified-profiles`
 - Plugin slug: `smp-verified-profiles`
 - Namespace: `smp_verified_profiles`
-- Version: `8.4.2`
+- Version: `8.4.1`
 - PHP requirement: `8.0+`
 
 ## Ownership
@@ -109,7 +129,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | --- | --- |
 | WordPress | 5.0 |
 | PHP | 8.0 |
-| Hexa WP Core bundle | 3.34.1 |
+| Hexa WP Core bundle | 3.46.2 |
 
 ACF Pro is not required: the profile field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not. Elementor/JetEngine integrations require those plugins only when their templates are used.
 
@@ -129,8 +149,21 @@ Live release verification must also exercise claiming, spawning, role restrictio
 
 ## Changelog
 
-### 8.4.2
-- Reverts 8.4.0 and 8.4.1 (profile types and selectable integration post types). The plugin is back to the 8.3.0 behavior.
+### 8.5.0
+- Profile types (for example podcast profiles) are back: each its own post type with its own section, beside verified profiles.
+- New Features tab, every feature off by default: profile managers (dashboard and paid profiles), claim this profile (`[smp_vp_claim_profile]`, free with admin approval or paid through Stripe) and payments through HWS Base Tools' Stripe connection.
+- Removed the unused WooCommerce price and Stripe snippets; the plugin check no longer asks for JetEngine, WooCommerce or WP User Avatars and asks for Simple Local Avatars.
+- The dashboard counts profile managers by their real role and shows a count per profile type.
+- `error_log` is no longer tracked. Bundles Hexa WP Core 3.47.0.
+
+### 8.4.1
+- `[verified_profile]` and the other profile field shortcodes read the current profile on every profile type, not only the default one.
+- The article profiles field shows on every chosen post type, including ones registered late in loading (press releases).
+
+### 8.4.0
+- Profile types: add more kinds of profile (for example Podcasters) on the new Profile Types tab. Each is its own post type with the standard Verified Profile fields, page and schema, plus an optional Podcaster field group. Profile lookups, the profile field on articles, "in this article", schema and spawning matches cover every profile type.
+- The article integration runs on the post types chosen on the Profile Types tab (default posts and press releases). The profiles field on articles now also shows on press releases; the Profile Generation tab's own post-type list is replaced by this one setting.
+- Bundles Hexa WP Core 3.46.2.
 
 ### 8.3.0
 - Leadership Council pieces moved to SMP Contributor Network: program settings and its second copy, the two council user fields, `[contributor_network]`, `[display_profile_council_banner]`, the council product price and the council apply link. New action `smp_verified_profiles_dashboard_links` for links other plugins add to the profile dashboard.

@@ -61,7 +61,9 @@ final class Plugin {
             ->add_module( VerifiedProfileStructures::content_types() )
             ->add_module( VerifiedProfileStructures::acf_groups() )
             ->add_module( new StructureMigrations() )
-            ->add_module( new VerifiedProfileManagerRole() );
+            ->add_module( new VerifiedProfileManagerRole() )
+            ->add_module( new \SMP\VerifiedProfiles\Features\ClaimProfile() )
+            ->add_module( new \SMP\VerifiedProfiles\Features\ProfilePayments() );
 
         if ( $this->is_admin_runtime() ) {
             $updater_ajax = new UpdaterAjaxController( Updates::plugin_config() );
@@ -79,6 +81,7 @@ final class Plugin {
                     )
                 )
                 ->add_module( new AdminAjaxModule( $this->ajax_handlers() ) )
+                ->add_module( new \SMP\VerifiedProfiles\Features\FeaturesAdmin() )
                 ->add_module( new RegisterMethodModule( $this->plugin_checks_module() ) )
                 ->add_module( $this->core_tab_module() );
         }
