@@ -299,7 +299,7 @@ final class ProfileTypes {
                     'select',
                     [
                         'choices'       => [ 'host' => 'Host', 'co_host' => 'Co-host', 'guest' => 'Guest', 'producer' => 'Producer' ],
-                        'default_value' => 'guest',
+                        'default_value' => self::GUEST_TYPE === $type['key'] ? 'guest' : 'host',
                         'return_format' => 'value',
                     ]
                 ),

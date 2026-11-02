@@ -35,3 +35,8 @@ PodcastSection::set_enabled(false);
 expect_podcast(get_option('rank-math-options-sitemap')['pt_podcast-guest_sitemap']==='off','Turning off hides the Rank Math guest sitemap');
 
 expect_podcast(isset($GLOBALS['smp_vp_test_hooks']['wp'][1]),'Migrated guest redirects run before historical SEO redirect rules');
+
+$guestDefinition=VerifiedProfileStructures::content_types()->definition('podcast-guest');
+$otherDefinition=VerifiedProfileStructures::content_types()->definition('podcaster');
+expect_podcast($guestDefinition['field_groups'][0]['definition']['fields'][1]['default_value']==='guest','Managed guests default to the Guest role');
+expect_podcast($otherDefinition['field_groups'][0]['definition']['fields'][1]['default_value']==='host','Other Podcaster presets retain their existing Host default');
