@@ -64,7 +64,8 @@ final class Plugin {
             ->add_module( new VerifiedProfileManagerRole() )
             ->add_module( new \SMP\VerifiedProfiles\Features\ClaimProfile() )
             ->add_module( new \SMP\VerifiedProfiles\Features\ProfilePayments() )
-            ->add_module( new \SMP\VerifiedProfiles\Elementor\DynamicTags() );
+            ->add_module( new \SMP\VerifiedProfiles\Elementor\DynamicTags() )
+            ->add_module( new \SMP\VerifiedProfiles\Elementor\EpisodeQueries() );
 
         if ( $this->is_admin_runtime() ) {
             $updater_ajax = new UpdaterAjaxController( Updates::plugin_config() );

@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Episode relationship Loop Grid queries. [Usage and HTML](docs/episode-elementor.md).
+
 ### Profiles
 - **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.
 - **Code:** `smp-verified-profiles.php`, `register-acf-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
