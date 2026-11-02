@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- **Podcast section screen:** one switch separates podcast guests into their own profile type, with the guest count and links to manage guests, the guest list and the guest sitemap. Turning it on or off never changes Rank Math; HWS Base Tools recommends the guest sitemap.
+
 - Opt-in profile display shortcodes and related-profile callbacks preserve existing HTML with no plugin styling or site-specific IDs. See [Profile presentation](docs/profile-presentation.md).
 
 - Separate podcast guests via the existing ProfileTypes Podcaster preset, a Guest default for its Podcaster role (other Podcaster types keep Host), independent on/off storage, Rank Math guest sitemap synchronization, migrated-address redirects before historical SEO rules and a placeholder Podcast tab. Existing admin routes, list controls and prechecks follow active profile types. Spawning requests carry the selected target type and checkout credits retain it. [Backend endpoint](docs/podcast-section.md).

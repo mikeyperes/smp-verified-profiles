@@ -1,6 +1,6 @@
 # Podcast backend contract
 
-The Podcast tab renders only `<div id="smp-vp-podcast-settings"></div>`. No screen design or new visitor styling is included. Existing profile templates and standard fields are reused unchanged.
+The Podcast tab shows one switch, "Separate podcast guests", the published guest count and links to manage guests, the guest list and the guest sitemap. No new visitor styling is included. Existing profile templates and standard fields are reused unchanged.
 
 ## Saving
 
@@ -14,7 +14,7 @@ Storage is the existing Core content-type settings option `smp_vp_content_type_s
 
 Only published guests marked `_smp_vp_guest_migrated` redirect from their previous profile slug (option `smp_vp_guest_legacy_slug`, default `profile`) to their current permalink. Unmigrated verified profiles and unknown addresses are untouched. Redirects are 301 and disabled while guests are hidden.
 
-When Rank Math is active, the explicit Podcast toggle also saves `pt_podcast-guest_sitemap` in its sitemap settings and invalidates its sitemap cache after rewrite registration. No other sitemap choice changes.
+The toggle never changes Rank Math. HWS Base Tools recommends the guest sitemap and changes Rank Math only when an administrator presses its button. Rank Math's sitemap cache is invalidated after rewrite registration.
 
 The migrated-address handler runs on `wp` at priority 1, before Rank Math historical redirections. It applies only to marked migrated guests and never changes the stored Rank Math rules.
 

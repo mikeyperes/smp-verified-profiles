@@ -15,7 +15,41 @@ final class PodcastSection implements ModuleInterface {
     }
     public static function render($rendered, string $tab) {
         if ($tab !== 'podcast') { return $rendered; }
-        echo '<div id="smp-vp-podcast-settings"></div>';
+        \Hexa\PluginCore\WpAdminComponents\CoreUi::render_assets();
+        $on = ProfileTypes::guest_type() !== '';
+        $count = $on ? (int)(wp_count_posts(ProfileTypes::GUEST_TYPE)->publish ?? 0) : 0;
+        $archive = $on ? get_post_type_archive_link(ProfileTypes::GUEST_TYPE) : '';
+        ?>
+        <div id="smp-vp-podcast-settings" class="hpc-ui" data-nonce="<?php echo esc_attr(wp_create_nonce('smp_verified_profiles_podcast')); ?>" style="max-width:760px">
+            <h2 style="margin:4px 0 4px;font-size:22px">Podcast</h2>
+            <p style="margin:0 0 18px;color:#646970">Podcast guests get their own profile pages, separate from verified profiles, with their own list and sitemap. A guest does not need an episode.</p>
+            <div style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:16px">
+                <?php echo \Hexa\PluginCore\WpAdminComponents\CoreUi::toggle('smp_vp_podcast_enabled', $on, 'Separate podcast guests', ['id' => 'smp-vp-podcast-toggle']); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                <p style="margin:10px 0 0;color:#50575e;font-size:13px" data-role="state"><?php echo esc_html($on ? sprintf('On. %d published guests at /guest/<name>/.', $count) : 'Off. Guests are stored as ordinary verified profiles.'); ?></p>
+                <p style="margin:6px 0 0;color:#787c82;font-size:12px">Turning it off only hides the guest pages; no guest is deleted. The guest sitemap is recommended in HWS Base Tools, which never changes Rank Math by itself.</p>
+                <div class="hpc-actions" style="margin-top:12px" data-role="links"<?php echo $on ? '' : ' hidden'; ?>>
+                    <a class="hpc-button secondary" href="<?php echo esc_url(admin_url('edit.php?post_type=' . ProfileTypes::GUEST_TYPE)); ?>">Manage guests</a>
+                    <?php if ($archive) : ?><a class="hpc-button secondary hpc-external" href="<?php echo esc_url($archive); ?>" target="_blank" rel="noopener">View guest list</a><?php endif; ?>
+                    <a class="hpc-button secondary hpc-external" href="<?php echo esc_url(home_url('/' . ProfileTypes::GUEST_TYPE . '-sitemap.xml')); ?>" target="_blank" rel="noopener">Guest sitemap</a>
+                </div>
+                <p style="margin:10px 0 0;font-size:12px" data-role="notice" role="status" aria-live="polite"></p>
+            </div>
+        </div>
+        <script>
+        (function(){
+            var root = document.getElementById('smp-vp-podcast-settings'); if (!root || root.dataset.ready) return; root.dataset.ready = '1';
+            var box = root.querySelector('#smp-vp-podcast-toggle'), note = root.querySelector('[data-role=notice]');
+            box.addEventListener('change', function(){
+                box.disabled = true; note.style.color = '#50575e'; note.textContent = 'Saving…';
+                var body = new URLSearchParams({action:'smp_verified_profiles_save_podcast', nonce: root.dataset.nonce, enabled: box.checked ? '1' : '0'});
+                fetch(ajaxurl, {method:'POST', credentials:'same-origin', body: body}).then(function(r){ return r.json(); }).then(function(j){
+                    if (!j || !j.success) throw new Error((j && j.data && j.data.message) || 'Not saved.');
+                    note.style.color = '#00701a'; note.textContent = 'Saved. Reloading…'; setTimeout(function(){ location.reload(); }, 600);
+                }).catch(function(e){ box.checked = !box.checked; box.disabled = false; note.style.color = '#b32d2e'; note.textContent = e.message; });
+            });
+        })();
+        </script>
+        <?php
         return true;
     }
     public static function set_enabled(bool $enabled): void {
@@ -30,11 +64,6 @@ final class PodcastSection implements ModuleInterface {
             'plural' => $current['post_type']['plural'], 'rewrite_slug' => $current['post_type']['rewrite_slug'],
             'enabled_field_groups' => array_unique($groups),
         ]);
-        if (defined('RANK_MATH_VERSION')) {
-            $sitemap = (array)get_option('rank-math-options-sitemap', []);
-            $sitemap['pt_' . ProfileTypes::GUEST_TYPE . '_sitemap'] = $enabled ? 'on' : 'off';
-            update_option('rank-math-options-sitemap', $sitemap, false);
-        }
         update_option('smp_vp_podcast_rewrite_pending', 1, false);
     }
     public static function save(): void {
