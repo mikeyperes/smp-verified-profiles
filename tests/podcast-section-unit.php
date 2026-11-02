@@ -33,3 +33,5 @@ PodcastSection::set_enabled(true);
 expect_podcast(get_option('rank-math-options-sitemap')['pt_podcast-guest_sitemap']==='on','Turning on includes the Rank Math guest sitemap');
 PodcastSection::set_enabled(false);
 expect_podcast(get_option('rank-math-options-sitemap')['pt_podcast-guest_sitemap']==='off','Turning off hides the Rank Math guest sitemap');
+
+expect_podcast(isset($GLOBALS['smp_vp_test_hooks']['wp'][1]),'Migrated guest redirects run before historical SEO redirect rules');

@@ -10,7 +10,8 @@ final class PodcastSection implements ModuleInterface {
         add_action('wp_ajax_smp_verified_profiles_save_podcast', [self::class, 'save']);
         add_filter('acf/load_field/name=profiles', [self::class, 'guest_field']);
         add_action('init', static function(): void { if (get_option('smp_vp_podcast_rewrite_pending')) { flush_rewrite_rules(false); if (class_exists('RankMath\\Sitemap\\Cache')) { \RankMath\Sitemap\Cache::invalidate_storage(); } delete_option('smp_vp_podcast_rewrite_pending'); } }, 99);
-        add_action('template_redirect', [self::class, 'redirect'], 1);
+        // Resolve migrated URLs before SEO plugins apply historical redirects on wp.
+        add_action('wp', [self::class, 'redirect'], 1);
     }
     public static function render($rendered, string $tab) {
         if ($tab !== 'podcast') { return $rendered; }
