@@ -140,6 +140,11 @@ function get_verified_profile_settings( string $post_type = '' ): array {
     ];
 }
 
+/** Existing admin controls scoped to every active profile type. */
+function smp_vp_profile_admin_selector(string $pattern): string {
+    return implode(',', array_map(static fn(string $type): string => str_replace('%type%', $type, $pattern), smp_vp_profile_post_types()));
+}
+
 /** @return list<string> Every profile post type (the default `profile` plus added profile types). */
 function smp_vp_profile_post_types(): array {
     return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types();
@@ -435,7 +440,7 @@ $info_display = "
     <p><a href='{$user_info['view_link']}' target='_blank'>View Profile</a></p>
     <p><a href='" . admin_url('user-edit.php?user_id=' . $user->ID) . "' target='_blank'>Edit User</a></p>
     <p><a href='{$user_info['view_link']}' target='_blank'>View User</a></p>
-    <p><a href='" . admin_url('edit.php?post_type=profile&author=' . $user->ID) . "' target='_blank'>View Posts</a></p>
+    <p><a href='" . admin_url('edit.php?post_type=' . get_verified_profile_settings()['slug'] . '&author=' . $user->ID) . "' target='_blank'>View Posts</a></p>
 ";
                 
                             write_log("Unclaimed user exists: {$user_info['name']}", false);
@@ -526,11 +531,11 @@ $info_display = "
     <p>Tags assigned to 'profile': " . ($tags_assigned ? 'Yes' : 'No') . "</p>
     <p>Category 'person' exists: " . ($person_category_exists ? 'Yes' : 'No') . "</p>
     <p>Number of Profiles in 'person' category: 
-        <a href='" . admin_url("edit.php?post_type=profile&category_name=person") . "' target='_blank'>{$person_profiles_count}</a>
+        <a href='" . admin_url("edit.php?post_type=" . get_verified_profile_settings()["slug"] . "&category_name=person") . "' target='_blank'>{$person_profiles_count}</a>
     </p>
     <p>Category 'organization' exists: " . ($organization_category_exists ? 'Yes' : 'No') . "</p>
     <p>Number of Profiles in 'organization' category: 
-        <a href='" . admin_url("edit.php?post_type=profile&category_name=organization") . "' target='_blank'>{$organization_profiles_count}</a>
+        <a href='" . admin_url("edit.php?post_type=" . get_verified_profile_settings()["slug"] . "&category_name=organization") . "' target='_blank'>{$organization_profiles_count}</a>
     </p>
 ";
                     

@@ -39,8 +39,8 @@ function smp_vp_perform_prechecks() {
         }
     }
 
-    if (!does_post_type_exist('profile')) {
-        $messages[] = '<p><strong>"Profile" Custom Post Type not enabled:</strong> The "profile" custom post type is not active. Please register it to use the Hello World Plugin.</p>';
+    if (empty(smp_vp_profile_post_types())) {
+        $messages[] = '<p><strong>"Profile" Custom Post Type not enabled:</strong> No profile content type is active. Enable a profile type in Verified Profiles settings.</p>';
     }
 
     if (!does_user_exist('unclaimed-profile')) {

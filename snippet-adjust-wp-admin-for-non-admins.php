@@ -48,7 +48,7 @@ function redirect_profile_manager_after_login($redirect_to, $request, $user) {
     if (isset($user->roles) && is_array($user->roles)) {
         // Check if the user is a Profile Manager
         if (is_profile_manager(true)) {
-            return admin_url('edit.php?post_type=profile'); // Redirect to 'Profile' post type
+            return admin_url('edit.php?post_type=' . get_verified_profile_settings()['slug']); // Redirect to 'Profile' post type
         }
     }
     return $redirect_to; // Return default redirection if not a Profile Manager
@@ -62,7 +62,7 @@ function redirect_verified_profile_manager() {
 
     // Only redirect if the user is a Profile Manager and is accessing the dashboard
     if (is_profile_manager(true) && !wp_doing_ajax() && $pagenow === 'index.php') {
-        wp_redirect(admin_url('edit.php?post_type=profile'));
+        wp_redirect(admin_url('edit.php?post_type=' . get_verified_profile_settings()['slug']));
         exit;
     }
 }
@@ -176,11 +176,11 @@ function hide_add_new_buttons_in_sidebar() {
         $style .= '.post-type-post .page-title-action,';
     }
     $style .= '
-        .post-type-profile .page-title-action,
+        ' . smp_vp_profile_admin_selector('.post-type-%type% .page-title-action') . ',
         #edit-slug-box,
         #menu-posts li a[href="post-new.php"],
         .subsubsub .count,
-        #menu-posts-profile li a[href="post-new.php?post_type=profile"] {
+        ' . smp_vp_profile_admin_selector('#menu-posts-%type% li a[href="post-new.php?post_type=%type%"]') . ' {
             display: none !important;
         }
     </style>';
@@ -195,11 +195,12 @@ function modify_profile_post_link() {
         ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
+                const profileActions = <?php echo wp_json_encode(smp_vp_profile_admin_selector('a.page-title-action[href*="post_type=%type%"]')); ?>;
                 // Change 'Add New' button text and link to Profile Dashboard
-                $('a.page-title-action[href*="post_type=profile"]').text('View Profile Dashboard').attr('target', '_blank');
+                $(profileActions).text('View Profile Dashboard').attr('target', '_blank');
 
                 // Redirect to custom profile dashboard
-                $(document).on('click', 'a.page-title-action[href*="post_type=profile"]', function(e) {
+                $(document).on('click', profileActions, function(e) {
                     e.preventDefault();
                     window.open(window.location.origin + '/wp-admin/admin.php?page=profiles-dashboard', '_blank');
                 });

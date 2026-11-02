@@ -14,7 +14,7 @@ if (!function_exists(__NAMESPACE__ . '\\get_claim_profile_data')) {
 
             $verified_profile_settings = get_verified_profile_settings();
 
-            if ($profile_post && $profile_post->post_type === $verified_profile_settings["slug"]) {
+            if ($profile_post && smp_vp_is_profile_post_type((string)$profile_post->post_type)) {
                 $response = array(
                     'title' => get_the_title($profile_post),
                     'featured_image' => get_the_post_thumbnail_url($profile_post, 'full'),

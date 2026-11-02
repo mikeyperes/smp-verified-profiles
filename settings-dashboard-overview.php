@@ -235,8 +235,8 @@ function display_settings_overview() {
         <div class="smp-panel-body">
             <div class="smp-quick-links">
                 <?php if ( ! empty(smp_vp_profile_post_types()) ) : ?>
-                    <a href="<?php echo admin_url( 'edit.php?post_type=profile' ); ?>">📋 All Profiles</a>
-                    <a href="<?php echo admin_url( 'post-new.php?post_type=profile' ); ?>">➕ Add New Profile</a>
+                    <a href="<?php echo admin_url( 'edit.php?post_type=' . get_verified_profile_settings()['slug'] ); ?>">📋 All Profiles</a>
+                    <a href="<?php echo admin_url( 'post-new.php?post_type=' . get_verified_profile_settings()['slug'] ); ?>">➕ Add New Profile</a>
                 <?php endif; ?>
                 <a href="<?php echo admin_url( 'users.php' ); ?>">👥 Manage Users</a>
                 <a href="<?php echo esc_url( smp_vp_settings_tab_url( 'snippets' ) ); ?>">✂️ Configure Snippets</a>
@@ -275,7 +275,7 @@ function display_settings_overview() {
             </table>
             
             <p style="margin-top: 15px;">
-                <a href="<?php echo admin_url( 'edit.php?post_type=profile' ); ?>" class="smp-btn smp-btn-secondary">View All Profiles</a>
+                <a href="<?php echo admin_url( 'edit.php?post_type=' . get_verified_profile_settings()['slug'] ); ?>" class="smp-btn smp-btn-secondary">View All Profiles</a>
             </p>
         </div>
     </div>
