@@ -9,7 +9,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
-- Separate podcast guests via the existing ProfileTypes Podcaster preset, independent on/off storage and a placeholder Podcast tab. [Backend endpoint](docs/podcast-section.md).
+- Separate podcast guests via the existing ProfileTypes Podcaster preset, independent on/off storage, Rank Math guest sitemap synchronization and a placeholder Podcast tab. [Backend endpoint](docs/podcast-section.md).
 
 - Episode relationship compatibility API forwards to SMP Core Podcast Integration. [Usage](docs/episode-elementor.md).
 

@@ -13,3 +13,5 @@ Storage is the existing Core content-type settings option `smp_vp_content_type_s
 ## Migrated addresses
 
 Only published guests marked `_smp_vp_guest_migrated` redirect from their previous profile slug (option `smp_vp_guest_legacy_slug`, default `profile`) to their current permalink. Unmigrated verified profiles and unknown addresses are untouched. Redirects are 301 and disabled while guests are hidden.
+
+When Rank Math is active, the explicit Podcast toggle also saves `pt_podcast-guest_sitemap` in its sitemap settings and invalidates its sitemap cache after rewrite registration. No other sitemap choice changes.

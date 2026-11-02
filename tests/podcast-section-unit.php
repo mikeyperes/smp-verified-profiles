@@ -27,3 +27,9 @@ foreach ([[false,'valid','1','error:403'],[true,'bad','1','invalid nonce'],[true
     $GLOBALS['test_podcast_admin']=$admin; $_POST=['nonce'=>$nonce,'enabled'=>$enabled];
     try { PodcastSection::save(); throw new RuntimeException('No response'); } catch (RuntimeException $e) { expect_podcast(strpos($e->getMessage(),$expected)===0,'Save boundary '.$expected.' enabled='.$enabled); }
 }
+
+define('RANK_MATH_VERSION','test');
+PodcastSection::set_enabled(true);
+expect_podcast(get_option('rank-math-options-sitemap')['pt_podcast-guest_sitemap']==='on','Turning on includes the Rank Math guest sitemap');
+PodcastSection::set_enabled(false);
+expect_podcast(get_option('rank-math-options-sitemap')['pt_podcast-guest_sitemap']==='off','Turning off hides the Rank Math guest sitemap');

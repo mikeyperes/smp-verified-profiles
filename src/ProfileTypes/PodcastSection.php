@@ -9,7 +9,7 @@ final class PodcastSection implements ModuleInterface {
         add_filter('smp_vp_render_dashboard_tab', [self::class, 'render'], 10, 2);
         add_action('wp_ajax_smp_verified_profiles_save_podcast', [self::class, 'save']);
         add_filter('acf/load_field/name=profiles', [self::class, 'guest_field']);
-        add_action('init', static function(): void { if (get_option('smp_vp_podcast_rewrite_pending')) { flush_rewrite_rules(false); delete_option('smp_vp_podcast_rewrite_pending'); } }, 99);
+        add_action('init', static function(): void { if (get_option('smp_vp_podcast_rewrite_pending')) { flush_rewrite_rules(false); if (class_exists('RankMath\\Sitemap\\Cache')) { \RankMath\Sitemap\Cache::invalidate_storage(); } delete_option('smp_vp_podcast_rewrite_pending'); } }, 99);
         add_action('template_redirect', [self::class, 'redirect'], 1);
     }
     public static function render($rendered, string $tab) {
@@ -29,6 +29,11 @@ final class PodcastSection implements ModuleInterface {
             'plural' => $current['post_type']['plural'], 'rewrite_slug' => $current['post_type']['rewrite_slug'],
             'enabled_field_groups' => array_unique($groups),
         ]);
+        if (defined('RANK_MATH_VERSION')) {
+            $sitemap = (array)get_option('rank-math-options-sitemap', []);
+            $sitemap['pt_' . ProfileTypes::GUEST_TYPE . '_sitemap'] = $enabled ? 'on' : 'off';
+            update_option('rank-math-options-sitemap', $sitemap, false);
+        }
         update_option('smp_vp_podcast_rewrite_pending', 1, false);
     }
     public static function save(): void {
