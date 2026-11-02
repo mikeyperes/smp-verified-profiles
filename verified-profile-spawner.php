@@ -874,12 +874,14 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
 }
 
 function smp_vp_spawn_profile_post_type(): string {
-    $source_id = absint($_REQUEST['post_id'] ?? get_the_ID());
+    $source_id = absint($_POST['post_id'] ?? $_REQUEST['post_id'] ?? get_the_ID());
     if (class_exists('SMP\\Podcast\\Settings\\PodcastSettings') && \SMP\Podcast\Settings\PodcastSettings::is_podcast_content($source_id)) {
         $guest = \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::guest_type();
         if ($guest !== '') { return $guest; }
     }
-    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type();
+    $selected = sanitize_key((string)($_POST['profile_post_type'] ?? $_REQUEST['profile_post_type'] ?? ''));
+    $types = smp_vp_profile_post_types();
+    return in_array($selected, $types, true) ? $selected : \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type();
 }
 
 function smp_vp_spawn_clean_entity_name( $name ): string {
@@ -944,7 +946,9 @@ function smp_vp_spawn_find_existing_profile( string $name ): ?array {
         return null;
     }
     global $wpdb;
-    $post_types = smp_vp_profile_post_types();
+    $target = smp_vp_spawn_profile_post_type();
+    if ($target === '') { return null; }
+    $post_types = [$target];
     $slug = sanitize_title( $name );
     $type_placeholders = implode( ',', array_fill( 0, count( $post_types ), '%s' ) );
     $sql = $wpdb->prepare(
@@ -1295,6 +1299,7 @@ function smp_vp_spawn_request_payload(): array {
         'manual_names' => isset( $_POST['manual_names'] ) && is_array( $_POST['manual_names'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['manual_names'] ) ) : [],
         'status' => sanitize_key( (string) ( $_POST['status'] ?? smp_vp_spawn_settings()['default_status'] ) ),
         'post_id' => $post_id,
+        'profile_post_type' => smp_vp_spawn_profile_post_type(),
         'post_type' => sanitize_key( (string) ( $_POST['post_type'] ?? ( $post ? $post->post_type : '' ) ) ),
         'title' => $title,
         'url' => esc_url_raw( (string) ( $_POST['url'] ?? ( $post ? get_permalink( $post ) : '' ) ) ),

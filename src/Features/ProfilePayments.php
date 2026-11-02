@@ -37,7 +37,7 @@ final class ProfilePayments implements ModuleInterface {
 
     public static function handle_buy(): void {
         check_admin_referer( 'smp_vp_buy_profile' );
-        $url = self::buy_profile_url( get_current_user_id() );
+        $url = self::buy_profile_url( get_current_user_id(), sanitize_key((string)($_REQUEST['profile_post_type'] ?? '')) );
         if ( '' === $url ) {
             wp_die( 'Payments are not available right now.' );
         }

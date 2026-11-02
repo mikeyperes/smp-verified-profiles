@@ -9,7 +9,7 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
-- Separate podcast guests via the existing ProfileTypes Podcaster preset, independent on/off storage, Rank Math guest sitemap synchronization, migrated-address redirects before historical SEO rules and a placeholder Podcast tab. Existing admin routes, list controls and prechecks follow active profile types. [Backend endpoint](docs/podcast-section.md).
+- Separate podcast guests via the existing ProfileTypes Podcaster preset, independent on/off storage, Rank Math guest sitemap synchronization, migrated-address redirects before historical SEO rules and a placeholder Podcast tab. Existing admin routes, list controls and prechecks follow active profile types. Spawning requests carry the selected target type and checkout credits retain it. [Backend endpoint](docs/podcast-section.md).
 
 - Episode relationship compatibility API forwards to SMP Core Podcast Integration. [Usage](docs/episode-elementor.md).
 

@@ -17,3 +17,9 @@ Only published guests marked `_smp_vp_guest_migrated` redirect from their previo
 When Rank Math is active, the explicit Podcast toggle also saves `pt_podcast-guest_sitemap` in its sitemap settings and invalidates its sitemap cache after rewrite registration. No other sitemap choice changes.
 
 The migrated-address handler runs on `wp` at priority 1, before Rank Math historical redirections. It applies only to marked migrated guests and never changes the stored Rank Math rules.
+
+## Other type-aware consumers
+
+The spawner scopes local matching and search to its resolved target type and includes `profile_post_type` in its normal creation request. Episodes select the guest type; other contexts accept an explicitly selected active type or use the active default. The remote entities API owns creation and must honor this target; no external API creation is exercised by the migration.
+
+The existing buy-profile handler accepts `profile_post_type` as an active type selector. Checkout metadata retains that type; returned credits are stored independently per type while the legacy verified-profile credit key is preserved.
