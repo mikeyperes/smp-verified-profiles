@@ -33,12 +33,13 @@ function get_profile_stats() {
     ];
     
     // Check if profile post type exists
-    if ( ! post_type_exists( 'profile' ) ) {
+    if ( ! ! empty(smp_vp_profile_post_types()) ) {
         return $stats;
     }
     
     // Get post counts
-    $counts = wp_count_posts( 'profile' );
+    $counts = (object)['publish'=>0, 'draft'=>0];
+    foreach (smp_vp_profile_post_types() as $type) { $c=wp_count_posts($type); $counts->publish += (int)($c->publish ?? 0); $counts->draft += (int)($c->draft ?? 0); }
     $stats['published'] = isset( $counts->publish ) ? (int) $counts->publish : 0;
     $stats['draft']     = isset( $counts->draft ) ? (int) $counts->draft : 0;
     $stats['total']     = $stats['published'] + $stats['draft'];
@@ -46,7 +47,7 @@ function get_profile_stats() {
     // Count verified profiles (if ACF field exists)
     if ( \Hexa\PluginCore\Fields\Field::available() ) {
         $verified_query = new \WP_Query([
-            'post_type'      => 'profile',
+            'post_type'      => smp_vp_profile_post_types(),
             'post_status'    => 'publish',
             'posts_per_page' => -1,
             'fields'         => 'ids',
@@ -136,7 +137,7 @@ function get_system_checks() {
     ];
     
     // Profile CPT check
-    $profile_cpt = post_type_exists( 'profile' );
+    $profile_cpt = ! empty(smp_vp_profile_post_types());
     $checks['profile_cpt'] = [
         'label'  => 'Profile CPT',
         'status' => $profile_cpt ? 'good' : 'warn',
@@ -233,7 +234,7 @@ function display_settings_overview() {
         <div class="smp-panel-header">🔗 Quick Links</div>
         <div class="smp-panel-body">
             <div class="smp-quick-links">
-                <?php if ( post_type_exists( 'profile' ) ) : ?>
+                <?php if ( ! empty(smp_vp_profile_post_types()) ) : ?>
                     <a href="<?php echo admin_url( 'edit.php?post_type=profile' ); ?>">📋 All Profiles</a>
                     <a href="<?php echo admin_url( 'post-new.php?post_type=profile' ); ?>">➕ Add New Profile</a>
                 <?php endif; ?>
@@ -246,7 +247,7 @@ function display_settings_overview() {
     </div>
     
     <!-- Profile Statistics -->
-    <?php if ( post_type_exists( 'profile' ) ) : ?>
+    <?php if ( ! empty(smp_vp_profile_post_types()) ) : ?>
     <div class="smp-panel">
         <div class="smp-panel-header">📊 Profile Statistics</div>
         <div class="smp-panel-body">

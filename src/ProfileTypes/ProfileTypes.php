@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
  * the in-article profile section) runs on the post types chosen here.
  */
 final class ProfileTypes {
+    public const GUEST_TYPE = 'podcast-guest';
     public const DEFAULT_TYPE       = 'profile';
     public const TYPES_OPTION       = 'smp_vp_profile_types';
     public const INTEGRATION_OPTION = 'smp_vp_integration_post_types';
@@ -45,7 +46,19 @@ final class ProfileTypes {
             }
         }
 
+        // Podcast is a managed ProfileTypes preset, using the same Core registry.
+        $types[self::GUEST_TYPE] = [ 'key' => self::GUEST_TYPE, 'singular' => 'Podcast Guest', 'plural' => 'Podcast Guests', 'rewrite_slug' => 'guest', 'preset' => 'podcaster', 'standard_fields' => true ];
         return $types;
+    }
+
+    public static function guest_type(): string {
+        $settings = get_option( 'smp_vp_content_type_settings', [] );
+        return ! empty( $settings[self::GUEST_TYPE]['enabled'] ) ? self::GUEST_TYPE : '';
+    }
+
+    public static function default_type(): string {
+        $types = self::post_types();
+        return in_array( self::DEFAULT_TYPE, $types, true ) ? self::DEFAULT_TYPE : ( $types[0] ?? '' );
     }
 
     /** @return list<string> Every configured profile type key, registered or not. */
@@ -147,7 +160,7 @@ final class ProfileTypes {
                 'id'              => $type['key'],
                 'owner'           => 'SMP Verified Profiles',
                 'description'     => $type['plural'] . ': a Verified Profile type added on the Profile Types tab.',
-                'enabled_default' => true,
+                'enabled_default' => self::GUEST_TYPE !== $type['key'],
                 'post_type'       => [
                     'key'          => $type['key'],
                     'singular'     => $type['singular'],
@@ -215,6 +228,7 @@ final class ProfileTypes {
 
     /** Remove a custom profile type. Its posts stay in the database untouched. */
     public static function remove( string $key ): bool {
+        if ($key === self::GUEST_TYPE) { return false; }
         $types = self::custom();
         if ( ! isset( $types[ $key ] ) ) {
             return false;
@@ -285,7 +299,7 @@ final class ProfileTypes {
                     'select',
                     [
                         'choices'       => [ 'host' => 'Host', 'co_host' => 'Co-host', 'guest' => 'Guest', 'producer' => 'Producer' ],
-                        'default_value' => 'host',
+                        'default_value' => 'guest',
                         'return_format' => 'value',
                     ]
                 ),

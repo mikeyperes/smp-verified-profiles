@@ -78,7 +78,7 @@ if (!function_exists(__NAMESPACE__ . '\\list_unclaimed_profiles')) {
 if (!function_exists(__NAMESPACE__ . '\\list_user_owned_profiles')) {
     function list_user_owned_profiles($user_id) {
         $args = array(
-            'post_type' => 'profile',
+            'post_type' => \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types(),
             'author' => $user_id,
             'posts_per_page' => -1
         );

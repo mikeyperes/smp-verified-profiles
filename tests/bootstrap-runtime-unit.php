@@ -84,7 +84,7 @@ $checks  = [
     'An added profile type registers as its own post type next to profile.' => null !== \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'podcaster' )
         && null !== \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'profile' ),
     'The podcaster preset brings its own field group.' => 'group_smp_vp_podcaster_podcaster' === ( \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition( 'podcaster' )['field_groups'][0]['group_key'] ?? '' ),
-    'Profile types are profile plus every added type.' => [ 'profile', 'podcaster' ] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::keys(),
+    'Profile types are profile plus every added type.' => [ 'profile', 'podcaster', 'podcast-guest' ] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::keys(),
     'The integration defaults to posts and press releases.' => [ 'post', 'press-release' ] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::integration_post_types(),
 ];
 

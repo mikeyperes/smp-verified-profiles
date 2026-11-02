@@ -77,7 +77,7 @@ function redirect_verified_profile_manager() {
  * @return array The modified post type arguments.
  */
 function modify_profile_post_type_labels($args, $post_type) {
-    if ('profile' === $post_type && is_profile_manager(true)) {
+    if (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)$post_type) && is_profile_manager(true)) {
         // Change post type labels for Profile Managers
         $args['labels']['name'] = 'Claimed Profiles';
         $args['labels']['singular_name'] = 'Claimed Profile';
@@ -118,9 +118,9 @@ function create_verified_profile_manager_role() {
  */
 function remove_meta_boxes() {
     if (is_profile_manager(true)) {
-        remove_meta_box('categorydiv', 'profile', 'side');
-        remove_meta_box('tagsdiv-post_tag', 'profile', 'side');
-        remove_meta_box('authordiv', 'profile', 'normal');
+        foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { remove_meta_box('categorydiv', $type, 'side'); }
+        foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { remove_meta_box('tagsdiv-post_tag', $type, 'side'); }
+        foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { remove_meta_box('authordiv', $type, 'normal'); }
     }
 }
 
@@ -224,7 +224,7 @@ function change_profile_menu_label() {
 function restrict_verified_profile_manager_to_own_posts($query) {
     if (is_admin() && (is_profile_manager(true) || is_contributor(true))) {
         $user_id = get_current_user_id();
-        if ($query->is_main_query() && $query->get('post_type') === 'profile') {
+        if ($query->is_main_query() && \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)$query->get('post_type'))) {
             $query->set('author', $user_id);
         } elseif ($query->is_main_query() && $query->get('post_type') === 'post') {
             $query->set('author', $user_id);

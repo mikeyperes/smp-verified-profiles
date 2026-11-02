@@ -116,6 +116,7 @@ function smp_vp_dashboard_tab_groups( array $tabs ): array {
     $groups = [
         [ 'label' => 'Overview', 'tabs' => [ 'overview' ] ],
         [ 'label' => 'Profiles', 'tabs' => [ 'profile-types', 'content-types', 'profile-settings', 'features', 'pages', 'spawning-api' ] ],
+        [ 'label' => 'Podcast', 'tabs' => [ 'podcast' ] ],
         [ 'label' => 'Configuration', 'tabs' => [ 'emails' ] ],
         [ 'label' => 'System', 'tabs' => [ 'system-checks', 'plugins' ] ],
         [ 'label' => 'Developer', 'tabs' => [ 'snippets', 'shortcodes', 'hexa-core' ] ],

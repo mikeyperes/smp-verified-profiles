@@ -7,7 +7,7 @@ add_action('init',  __NAMESPACE__.'\disable_content_editor_for_profile');
  * Removes the WordPress content editor from the 'profile' post type.
  */
 function disable_content_editor_for_profile() {
-    remove_post_type_support('profile', 'editor');
+    foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { remove_post_type_support($type, 'editor'); }
 }
 
 ?>

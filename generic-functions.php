@@ -116,7 +116,18 @@ function get_verified_profile_legacy_settings(): array {
  *
  * @return array{singular:string,plural:string,slug:string,rewrite_slug:string}
  */
-function get_verified_profile_settings(): array {
+function get_verified_profile_settings( string $post_type = '' ): array {
+    if ('' === $post_type) {
+        $context = sanitize_key((string)($_REQUEST['post_type'] ?? get_post_type(absint($_REQUEST['post'] ?? $_REQUEST['post_ID'] ?? 0))));
+        $post_type = \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type($context) ? $context : \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type();
+    }
+    if ($post_type !== '' && $post_type !== 'profile') {
+        $definition = \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->definition($post_type);
+        if ($definition) {
+            $resolved = \SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures::content_types()->store()->resolve($definition);
+            return ['slug'=>$post_type, 'singular'=>$resolved['post_type']['singular'], 'plural'=>$resolved['post_type']['plural'], 'rewrite_slug'=>$resolved['post_type']['rewrite_slug']];
+        }
+    }
     $legacy = get_verified_profile_legacy_settings();
     $saved  = get_option( 'smp_vp_content_type_settings', [] );
     $saved  = is_array( $saved ) && is_array( $saved['profile'] ?? null ) ? $saved['profile'] : [];

@@ -108,7 +108,7 @@ function display_admin_claimed_profiles() {
 
     // Query for profiles where the current user is the author
     $claimed_profiles = new \WP_Query([
-        'post_type' => 'profile',
+        'post_type' => smp_vp_profile_post_types(),
         'author'    => $user_id,
     ]);
 

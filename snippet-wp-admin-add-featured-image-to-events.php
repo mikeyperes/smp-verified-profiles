@@ -2,12 +2,12 @@
 
 function add_wp_admin_add_featured_image_to_events(){
 // Add our custom column only for the 'profile' post type.
-add_filter( 'manage_edit-profile_columns', __NAMESPACE__ . '\\add_profile_featured_image_column' );
-add_action( 'manage_profile_posts_custom_column', __NAMESPACE__ . '\\display_profile_featured_image_column', 10, 2 );
+add_action('init', static function(): void { foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { add_filter( "manage_edit-" . $type . "_columns", __NAMESPACE__ . '\\add_profile_featured_image_column' ); } }, 20);
+add_action('init', static function(): void { foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { add_action( "manage_" . $type . "_posts_custom_column", __NAMESPACE__ . '\\display_profile_featured_image_column', 10, 2 ); } }, 20);
 add_filter( 'pre_get_posts', __NAMESPACE__ . '\\jpn_structure_filter_profiles_by_featured' );
 
 // Add "Filter by Featured Profiles" link to the profile listing page.
-add_filter( 'views_edit-profile', __NAMESPACE__ . '\\add_featured_profile_filter_link' );
+add_action('init', static function(): void { foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { add_filter( "views_edit-" . $type . "", __NAMESPACE__ . '\\add_featured_profile_filter_link' ); } }, 20);
 
 } 
 
@@ -87,7 +87,7 @@ function add_featured_profile_filter_link( $views ) {
     // Check if the filter is active.
     $current = ( isset( $_GET['featured_filter'] ) && '1' === $_GET['featured_filter'] ) ? ' class="current"' : '';
     // Create the URL for filtering by featured profiles.
-    $url = admin_url( 'edit.php?post_type=profile&featured_filter=1' );
+    $url = admin_url( 'edit.php?post_type=' . get_verified_profile_settings()['slug'] . '&featured_filter=1' );
     // Add the new view link.
     $views['featured'] = '<a href="' . esc_url( $url ) . '"' . $current . '>Filter by Featured Profiles</a>';
     return $views;

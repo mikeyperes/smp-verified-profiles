@@ -9,7 +9,9 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
-- Episode relationship Loop Grid queries. [Usage and HTML](docs/episode-elementor.md).
+- Separate podcast guests via the existing ProfileTypes Podcaster preset, independent on/off storage and a placeholder Podcast tab. [Backend endpoint](docs/podcast-section.md).
+
+- Episode relationship compatibility API forwards to SMP Core Podcast Integration. [Usage](docs/episode-elementor.md).
 
 ### Profiles
 - **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.

@@ -874,10 +874,12 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
 }
 
 function smp_vp_spawn_profile_post_type(): string {
-    $profile_settings = function_exists( __NAMESPACE__ . '\\get_verified_profile_settings' ) ? get_verified_profile_settings() : [];
-    $raw_slug = (string) ( $profile_settings['slug'] ?? 'profile' );
-    $post_type = sanitize_key( str_replace( '-', '_', $raw_slug ) );
-    return post_type_exists( $post_type ) ? $post_type : 'profile';
+    $source_id = absint($_REQUEST['post_id'] ?? get_the_ID());
+    if (class_exists('SMP\\Podcast\\Settings\\PodcastSettings') && \SMP\Podcast\Settings\PodcastSettings::is_podcast_content($source_id)) {
+        $guest = \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::guest_type();
+        if ($guest !== '') { return $guest; }
+    }
+    return \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type();
 }
 
 function smp_vp_spawn_clean_entity_name( $name ): string {

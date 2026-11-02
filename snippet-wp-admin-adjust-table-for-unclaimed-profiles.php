@@ -149,7 +149,7 @@ if (!function_exists(__NAMESPACE__ . '\\show_profile_post_count')) {
      */
     function show_profile_post_count($value, $column_name, $user_id) {
         if ('profile_posts' === $column_name) {
-            return (string) count_user_posts( (int) $user_id, 'profile', true );
+            return (string) count_user_posts( (int) $user_id, \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types(), true );
         }
         return $value;
     }
@@ -182,7 +182,7 @@ if (!function_exists(__NAMESPACE__ . '\\show_claimed_profiles')) {
     function show_claimed_profiles($value, $column_name, $user_id) {
         if ('claimed_profiles' === $column_name) {
             $posts = get_posts([
-                'post_type' => 'profile',
+                'post_type' => \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types(),
                 'author' => $user_id,
                 'posts_per_page' => 20,
                 'fields' => 'ids',

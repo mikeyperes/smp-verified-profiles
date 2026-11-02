@@ -43,7 +43,7 @@ final class VerifiedProfileManagerRole implements ModuleInterface {
             return;
         }
 
-        add_action( 'init', [ self::class, 'ensure_when_profile_enabled' ], 1 );
+        add_action( 'init', [ self::class, 'ensure_when_profile_enabled' ], 20 );
         self::$registered = true;
     }
 
@@ -52,7 +52,7 @@ final class VerifiedProfileManagerRole implements ModuleInterface {
     }
 
     public static function ensure_when_profile_enabled(): void {
-        if ( ! (bool) get_option( 'register_profile_custom_post_type', false ) ) {
+        if ( [] === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() ) {
             return;
         }
 

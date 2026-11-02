@@ -22,7 +22,7 @@ final class CanonicalProfileSource {
             return 0;
         }
 
-        if ( 'post' === ( $entity['kind'] ?? '' ) && 'profile' === ( $entity['post_type'] ?? '' ) ) {
+        if ( 'post' === ( $entity['kind'] ?? '' ) && \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)($entity['post_type'] ?? '')) ) {
             return (int) ( $entity['id'] ?? 0 );
         }
 
@@ -35,7 +35,7 @@ final class CanonicalProfileSource {
 
         $ids = get_posts(
             [
-                'post_type'              => 'profile',
+                'post_type'              => \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types(),
                 'post_status'            => [ 'publish', 'draft', 'pending', 'private' ],
                 'author'                 => $user_id,
                 'posts_per_page'         => 1,

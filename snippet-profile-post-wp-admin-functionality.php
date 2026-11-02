@@ -56,7 +56,7 @@ if (!function_exists(__NAMESPACE__ . '\\save_acf_post_id')) {
 if (!function_exists(__NAMESPACE__ . '\\enforce_featured_image_with_jquery')) {
     function enforce_featured_image_with_jquery() {
         global $typenow;
-        if (false && $typenow == 'profile') {  // Replace 'profile' with your actual custom post type
+        if (false && \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)$typenow)) {  // Replace 'profile' with your actual custom post type
             ?>
             <script type="text/javascript">
                 jQuery(document).ready(function($) {
@@ -128,7 +128,7 @@ if (!function_exists(__NAMESPACE__ . '\\custom_quick_edit_javascript')) {
 if (!function_exists(__NAMESPACE__ . '\\remove_content_editor_from_profile_cpt')) {
     function remove_content_editor_from_profile_cpt() {
         // Remove 'editor' support from 'profile' CPT
-        remove_post_type_support('profile', 'editor');
+        foreach (\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types() as $type) { remove_post_type_support($type, 'editor'); }
     }
 } else {
     write_log("⚠️ Warning: " . __NAMESPACE__ . "\\remove_content_editor_from_profile_cpt function is already declared", true);
@@ -145,7 +145,7 @@ if (!function_exists(__NAMESPACE__ . '\\wpadmin_profile_display_associated_profi
         global $wpdb;
 
         // Ensure this function runs only for the custom post type 'profile'
-        if ('profile' !== $post->post_type) {
+        if (!\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)$post->post_type)) {
             return;
         }
 

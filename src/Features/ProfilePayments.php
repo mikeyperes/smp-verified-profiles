@@ -16,6 +16,9 @@ defined( 'ABSPATH' ) || exit;
 final class ProfilePayments implements ModuleInterface {
     public const CREDITS_META = 'smp_vp_profile_credits';
 
+    public static function credit_key(string $post_type): string {
+        return $post_type === \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::DEFAULT_TYPE ? self::CREDITS_META : self::CREDITS_META . '_' . sanitize_key($post_type);
+    }
     public function register(): void {
         add_action( 'hws_base_tools_stripe_event', [ self::class, 'handle_event' ] );
         add_action( 'admin_post_smp_vp_buy_profile', [ self::class, 'handle_buy' ] );
@@ -27,7 +30,7 @@ final class ProfilePayments implements ModuleInterface {
         if ( ! FeatureSettings::on( 'profile_managers' ) || ! FeatureSettings::payments_ready() || '' === (string) $s['profile_price_id'] ) {
             return;
         }
-        $credits = (int) get_user_meta( get_current_user_id(), self::CREDITS_META, true );
+        $credits = (int) get_user_meta( get_current_user_id(), self::credit_key(\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type()), true );
         echo '<p><a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=smp_vp_buy_profile' ), 'smp_vp_buy_profile' ) ) . '">Buy a verified profile</a>'
             . ( $credits > 0 ? ' <span>Paid profiles not used yet: ' . esc_html( (string) $credits ) . '</span>' : '' ) . '</p>';
     }
@@ -43,7 +46,9 @@ final class ProfilePayments implements ModuleInterface {
     }
 
     /** A Stripe Checkout address for one more profile for the signed-in manager, or an error message. */
-    public static function buy_profile_url( int $user_id ): string {
+    public static function buy_profile_url( int $user_id, string $post_type = '' ): string {
+        $post_type = $post_type ?: \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::default_type();
+        if (!in_array($post_type, \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::post_types(), true)) { return ''; }
         $settings = FeatureSettings::all();
         if ( ! FeatureSettings::on( 'profile_managers' ) || ! FeatureSettings::payments_ready() || '' === (string) $settings['profile_price_id'] ) {
             return '';
@@ -55,7 +60,7 @@ final class ProfilePayments implements ModuleInterface {
             'email'       => $user ? (string) $user->user_email : '',
             'success_url' => admin_url( '?smp_vp_paid=1' ),
             'cancel_url'  => admin_url(),
-            'metadata'    => [ 'smp_vp_action' => 'profile', 'user_id' => (string) $user_id ],
+            'metadata'    => [ 'smp_vp_action' => 'profile', 'user_id' => (string) $user_id, 'profile_post_type' => $post_type ],
         ] );
 
         return is_wp_error( $session ) ? '' : (string) ( $session['url'] ?? '' );
@@ -71,9 +76,12 @@ final class ProfilePayments implements ModuleInterface {
             ClaimProfile::approve( (int) ( $meta['profile_id'] ?? 0 ), (string) ( $meta['claim_id'] ?? '' ) );
         }
         if ( 'profile' === ( $meta['smp_vp_action'] ?? '' ) && FeatureSettings::on( 'profile_managers' ) ) {
+            $post_type = (string)($meta['profile_post_type'] ?? \SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::DEFAULT_TYPE);
+            if (!\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type($post_type)) { return; }
+            $credit_key = self::credit_key($post_type);
             $user_id = (int) ( $meta['user_id'] ?? 0 );
             if ( $user_id > 0 ) {
-                update_user_meta( $user_id, self::CREDITS_META, (int) get_user_meta( $user_id, self::CREDITS_META, true ) + 1 );
+                update_user_meta( $user_id, $credit_key, (int) get_user_meta( $user_id, $credit_key, true ) + 1 );
                 wp_mail( (string) get_option( 'admin_email' ), 'Paid verified profile', 'User #' . $user_id . ' paid for a verified profile.' );
             }
         }
