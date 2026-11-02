@@ -65,6 +65,7 @@ final class Plugin {
             ->add_module( new \SMP\VerifiedProfiles\Features\ClaimProfile() )
             ->add_module( new \SMP\VerifiedProfiles\Features\ProfilePayments() )
             ->add_module( new \SMP\VerifiedProfiles\Elementor\DynamicTags() )
+            ->add_module( new \SMP\VerifiedProfiles\Elementor\ProfilePresentation() )
             ->add_module( new \SMP\VerifiedProfiles\ProfileTypes\PodcastSection() );
 
         if ( $this->is_admin_runtime() ) {
