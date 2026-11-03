@@ -32,6 +32,10 @@ Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `
 - **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.
 - **Code:** `smp-verified-profiles.php`, `register-acf-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
 
+### Sitemaps
+- **Does:** declares one sitemap per profile type, podcast guests included, recommended on. The Sitemaps tab shows each one's Rank Math state, address and a turn on/off button; HWS Base Tools shows them read-only and links here.
+- **Code:** `src/Sitemaps/SitemapTypes.php` (Hexa WP Core `SitemapProviders`, `SitemapsPanel`).
+
 ### Profile types
 - **Does:** adds more kinds of profile next to the default Verified Profile, for example Podcasters. Each type is its own post type with its own admin menu, web address and archive, the standard Verified Profile fields, page and schema (optional), and an optional preset field group (Podcaster: show name, role, show links, topics, episode count, booking email). Removing a type keeps its posts. Labels and web addresses of every type are edited on the Custom Post Types tab.
 - **Use:** WP Admin → Settings → Verified Profiles → Profile Types. Preset fields read with `[verified_profile field="podcast_name"]`.
@@ -171,6 +175,10 @@ for file in tests/*.php; do php "$file" || exit 1; done
 Live release verification must also exercise claiming, spawning, role restrictions, templates, shortcodes, and schema output through their visible WordPress workflows.
 
 ## Changelog
+
+### 8.9.0
+
+- Sitemaps tab and plugin-owned sitemap declarations (Hexa WP Core 3.51.0).
 
 ### 8.8.9
 

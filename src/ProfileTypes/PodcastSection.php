@@ -26,7 +26,7 @@ final class PodcastSection implements ModuleInterface {
             <div style="background:#fff;border:1px solid #dcdcde;border-radius:6px;padding:16px">
                 <?php echo \Hexa\PluginCore\WpAdminComponents\CoreUi::toggle('smp_vp_podcast_enabled', $on, 'Separate podcast guests', ['id' => 'smp-vp-podcast-toggle']); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 <p style="margin:10px 0 0;color:#50575e;font-size:13px" data-role="state"><?php echo esc_html($on ? sprintf('On. %d published guests at /guest/<name>/.', $count) : 'Off. Guests are stored as ordinary verified profiles.'); ?></p>
-                <p style="margin:6px 0 0;color:#787c82;font-size:12px">Turning it off only hides the guest pages; no guest is deleted. The guest sitemap is recommended in HWS Base Tools, which never changes Rank Math by itself.</p>
+                <p style="margin:6px 0 0;color:#787c82;font-size:12px">Turning it off only hides the guest pages; no guest is deleted. The guest sitemap is on the Sitemaps tab.</p>
                 <div class="hpc-actions" style="margin-top:12px" data-role="links"<?php echo $on ? '' : ' hidden'; ?>>
                     <a class="hpc-button secondary" href="<?php echo esc_url(admin_url('edit.php?post_type=' . ProfileTypes::GUEST_TYPE)); ?>">Manage guests</a>
                     <?php if ($archive) : ?><a class="hpc-button secondary hpc-external" href="<?php echo esc_url($archive); ?>" target="_blank" rel="noopener">View guest list</a><?php endif; ?>
