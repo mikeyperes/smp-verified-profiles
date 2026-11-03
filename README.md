@@ -165,6 +165,10 @@ Live release verification must also exercise claiming, spawning, role restrictio
 
 ## Changelog
 
+### 8.8.9
+
+- Defines the settings-driven profile directory and conditional Voices guest directory with preserved aliases.
+
 ### 8.6.0
 - Elementor dynamic tags "Profile field (plain text)" and "Linked profile" (group Verified Profiles), so profile cards no longer need JetEngine.
 
