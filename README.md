@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Canonical page catalog: [src/Pages/PageTypes.php](src/Pages/PageTypes.php) defines titles, addresses, parents, designs, default states, conditions and content sources. Ordinary-page adapters preserve existing assignments; query layouts and repeated profiles stay outside page creation.
+
 - **Podcast section screen:** one switch separates podcast guests into their own profile type, with the guest count and links to manage guests, the guest list and the guest sitemap. Turning it on or off never changes Rank Math; HWS Base Tools recommends the guest sitemap.
 
 - Opt-in profile display shortcodes and related-profile callbacks preserve existing HTML with no plugin styling or site-specific IDs. See [Profile presentation](docs/profile-presentation.md).

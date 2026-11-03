@@ -81,14 +81,7 @@ function smp_vp_pages_actions(): array {
 }
 
 function smp_vp_pages_definitions(): array {
-    return [
-        "profiles_archive" => [
-            "title" => "Profiles",
-            "slug" => "profiles",
-            "template" => true,
-            "children" => [],
-        ],
-    ];
+    return \SMP\VerifiedProfiles\Pages\PageTypes::pages();
 }
 
 function smp_vp_pages_default_templates(): array {
@@ -187,10 +180,20 @@ function smp_vp_render_pages_dashboard(): void {
 
 function smp_vp_pages_get_assignment(string $page_key): int {
     $settings = smp_vp_display_settings();
+    $definition = \SMP\VerifiedProfiles\Pages\PageTypes::definitions()[$page_key] ?? [];
+    if ( ! empty( $definition['field'] ) ) {
+        $stored = \Hexa\PluginCore\Fields\Field::get( $definition['field'], 'option' );
+        return absint( is_object( $stored ) ? $stored->ID : $stored );
+    }
     return absint($settings["pages"][$page_key] ?? 0);
 }
 
 function smp_vp_pages_save_assignment(string $page_key, int $page_id): void {
+    $definition = \SMP\VerifiedProfiles\Pages\PageTypes::definitions()[$page_key] ?? [];
+    if ( ! empty( $definition['field'] ) ) {
+        \Hexa\PluginCore\Fields\Field::update( $definition['field'], $page_id, 'option' );
+    }
+
     $settings = smp_vp_display_settings();
     $settings["pages"] = is_array($settings["pages"] ?? null) ? $settings["pages"] : [];
     if ($page_id > 0) {

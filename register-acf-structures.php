@@ -259,28 +259,12 @@ function register_verified_profile_pages_custom_fields() {
             'post_types' => [ 'elementor_library' ],
         ],
 
-        // Pages
-        [
-            'id'         => 'page_verified_profiles_badges',
-            'label'      => 'Page: Verified Profiles - Verified Profile Badges',
-            'post_types' => [ 'page' ],
-        ],
-        [
-            'id'         => 'page_verified_profiles_claim',
-            'label'      => 'Page: Verified Profiles - Claim a Profile',
-            'post_types' => [ 'page' ],
-        ],
-        [
-            'id'         => 'page_verified_profiles_apply',
-            'label'      => 'Page: Verified Profiles - Apply for a Profile?',
-            'post_types' => [ 'page' ],
-        ],
-        [
-            'id'         => 'page_verified_profiles_welcome',
-            'label'      => 'Page: Verified Profiles - Welcome?',
-            'post_types' => [ 'page' ],
-        ],
     ];
+    foreach ( \SMP\VerifiedProfiles\Pages\PageTypes::definitions() as $page ) {
+        if ( ! empty( $page['field'] ) ) {
+            $fields_config[] = [ 'id' => $page['field'], 'label' => 'Page: Verified Profiles - ' . $page['title'], 'post_types' => [ 'page' ] ];
+        }
+    }
     // ----------------------------------------
 
     // Build actual ACF field definitions from config

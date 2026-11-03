@@ -1,36 +1,5 @@
 <?php namespace smp_verified_profiles;
-/*
-// Centralized function to return ACF fields with an option for either keys or titles
-function smp_vp_get_acf_fields($with_titles = false) {
-    $acf_fields = [
 
-   
-        'display_single_profile_education' => 'display_single_profile_education',
-        'display_single_profile_organizations_founded' => 'display_single_profile_organizations_founded',
-        'display_single_profile_press_releases' => 'display_single_profile_press_releases',
-        'display_single_profile_article_written_by' => 'display_single_profile_article_written_by',
-        'display_single_profile_articles_featured_in' => 'display_single_profile_articles_featured_in',
-        'display_single_profile_text_based_social_profiles' => 'display_single_profile_text_based_social_profiles',
-        'display_single_post_mentioned_in_article' => 'display_single_post_mentioned_in_article',
-        'display_homepage_profiles' => 'display_homepage_profiles',
-        'display_theme_footer_text_social_links' => 'display_theme_footer_text_social_links',
-        'display_homepage_profiles' => 'display_homepage_profiles',
-        'display_single_profile_validate_schema_button' => 'display_single_profile_validate_schema_button',
-        
-        'page_verified_profiles_badges' => 'Verified Profiles - Badges',
-        'page_verified_profiles_claim' => 'Verified Profiles - Claim',
-        'page_verified_profiles_apply' => 'Verified Profiles - Apply',
-        'page_verified_profiles_welcome' => 'Verified Profiles - Welcome',
-        'single_profile' => 'Profile - mentions on single.php',
-        'page_profile_archive' => 'Profile - archive.php',
-        'home_profile_archive' => 'Profile - archive on home.php',
-    
-        
-    ];
-
-    // If titles are not required, return only the keys
-    return $with_titles ? $acf_fields : array_keys($acf_fields);
-}*/
 
 
 
