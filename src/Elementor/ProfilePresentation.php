@@ -7,6 +7,19 @@ use Hexa\PluginCore\ShortcodeRegistry\ShortcodeDefinition;
 defined('ABSPATH') || exit;
 /** Opt-in profile presentation. Existing CSS hooks are retained for theme compatibility. */
 final class ProfilePresentation implements ModuleInterface {
+    /** Read-only computed fields for conditions, reusing the profile presentation owners. */
+    public static function computed_profile_field($value, $post_id, $key, $single) {
+        if ($value !== null || !in_array($key, ['_smp_profile_has_image', '_smp_profile_has_no_image', '_smp_profile_has_socials', '_smp_profile_has_episodes'], true)) return $value;
+        if (!\SMP\VerifiedProfiles\ProfileTypes\ProfileTypes::is_profile_type((string)get_post_type($post_id))) return $value;
+        $present = match ($key) {
+            '_smp_profile_has_image' => self::profile_has_usable_image($post_id),
+            '_smp_profile_has_no_image' => !self::profile_has_usable_image($post_id) && self::profile_initials($post_id) !== '',
+            '_smp_profile_has_socials' => self::profile_page_social_links_shortcode(['post_id' => $post_id]) !== '',
+            '_smp_profile_has_episodes' => self::episode_ids($post_id) !== [],
+        };
+        $result = $present ? '1' : '';
+        return $single ? $result : [$result];
+    }
     public static function callbacks(): array { return [
         'smp_profile_page_field' => [self::class, 'profile_page_field_shortcode'],
         'smp_profile_page_heading' => [self::class, 'profile_page_heading_shortcode'],
@@ -20,6 +33,7 @@ final class ProfilePresentation implements ModuleInterface {
     public function register(): void {
         require_once __DIR__ . '/ProfileCallbacks.php';
         add_action('init', [self::class, 'register_shortcodes']);
+        add_filter('get_post_metadata', [self::class, 'computed_profile_field'], 10, 4);
         add_filter('jet-engine/listings/allowed-callbacks', [self::class, 'allowed_callbacks']);
     }
     public static function register_shortcodes(): void {

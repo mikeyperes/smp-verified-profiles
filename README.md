@@ -9,6 +9,10 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+### Computed profile condition fields
+Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `_smp_profile_has_socials`, and `_smp_profile_has_episodes` expose the existing usable-photo, initials fallback, social-link and published episode checks to display conditions. They reuse the profile presentation and podcast relationship owners, store no duplicate data, and add no output or assets. Plain editorial fields remain directly readable.
+
+
 - One settings-driven profile directory with search and filters; when the podcast option is on, one Voices guest directory (guest archive is an alternate address) with single guest profiles. Existing linked pages and configured addresses are preserved.
 
 - Canonical page catalog: [src/Pages/PageTypes.php](src/Pages/PageTypes.php) defines titles, addresses, parents, designs, default states, conditions and content sources. Ordinary-page adapters preserve existing assignments; query layouts and repeated profiles stay outside page creation.
