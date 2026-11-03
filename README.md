@@ -9,6 +9,9 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Profile schema registers immediately when its loader runs during init, so enabled guest and other profile types contribute Person or Organization nodes to the shared Hexa schema graph.
+
+
 ### Computed profile condition fields
 Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `_smp_profile_has_socials`, and `_smp_profile_has_episodes` expose the existing usable-photo, initials fallback, social-link and published episode checks to display conditions. They reuse the profile presentation and podcast relationship owners, store no duplicate data, and add no output or assets. Plain editorial fields remain directly readable.
 

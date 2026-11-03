@@ -17,4 +17,10 @@ function enable_snippet_inject_schema_on_single_profile(): void {
     \SMP\VerifiedProfiles\Schema\ProfileSchema::register();
     $registered = true;
 }
-add_action( 'init', __NAMESPACE__ . '\\enable_snippet_inject_schema_on_single_profile' );
+// This file is loaded by the plugin's init callback. Register immediately
+// when init is already running, rather than scheduling an elapsed priority.
+if ( did_action( 'init' ) ) {
+    enable_snippet_inject_schema_on_single_profile();
+} else {
+    add_action( 'init', __NAMESPACE__ . '\\enable_snippet_inject_schema_on_single_profile' );
+}
