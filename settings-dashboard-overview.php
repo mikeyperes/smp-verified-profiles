@@ -129,7 +129,7 @@ function get_snippet_stats() {
 function get_system_checks() {
     $checks = [];
     
-    // Custom fields run on Hexa WP Core: ACF when active, native otherwise.
+    // Core owns custom fields and their editing screens.
     $checks['acf'] = [
         'label'  => 'Hexa WP Core fields',
         'status' => 'good',

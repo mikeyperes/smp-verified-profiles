@@ -342,7 +342,7 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
     <div id="smp-vp-spawn-box" class="hpc-ui" data-post-id="<?php echo esc_attr( $post->ID ); ?>" data-post-type="<?php echo esc_attr( $post->post_type ); ?>" data-status="<?php echo esc_attr( $settings['default_status'] ); ?>" data-strictness="<?php echo esc_attr( $settings['default_strictness'] ); ?>" data-detection-method="<?php echo esc_attr( $settings['default_detection_method'] ); ?>">
         <div class="smp-vp-spawn-head">
             <strong>Verified Profiles</strong>
-            <div class="smp-vp-entity-meta">Current ACF profiles load automatically. Use Scan to detect article entities, then attach or spawn only what is needed.</div>
+            <div class="smp-vp-entity-meta">Current profiles load automatically. Use Scan to detect article entities, then attach or spawn only what is needed.</div>
         </div>
         <div class="smp-vp-spawn-body">
             <div class="smp-vp-spawn-actions smp-vp-spawn-auto">

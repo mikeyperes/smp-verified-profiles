@@ -95,7 +95,7 @@ Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `
 Verified Profiles owns:
 
 - The immutable `profile` custom post type.
-- Verified Profile, profile-manager, program-settings, and public profile ACF structures.
+- Verified Profile, profile-manager, program-settings, and public profile field structures.
 - Profile claiming, application, assignment, spawning, and profile-manager roles/capabilities.
 - Profile display cards, page templates, listing templates, MuckRack output, and profile shortcodes.
 - Verified Profile schema object construction and profile-page injection rules.
@@ -139,7 +139,7 @@ Each profile page gets a ProfilePage about the profile's Person or Organization 
 
 The settings dashboard uses Hexa WP Core grouped tabs and collapsible components. Major areas include:
 
-- Overview, Profile Settings, Custom Post Types, and ACF structures.
+- Overview, Profile Settings, Custom Post Types, and Field Structures.
 - Profile cards, full profile-page templates, page/listing templates, shortcodes, and snippets.
 - Profile generation/spawning and processing tools.
 - Plugins, updates, Hexa WP Core, and developer diagnostics.
