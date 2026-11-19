@@ -205,7 +205,7 @@ final class VerifiedProfileStructures {
                 'enable_acf_theme_options',
                 'enable_acf_theme_options',
                 'Verified Profiles Profile Settings tab',
-                [ 'Additional shortcode reference', 'Registered ACF structure reference' ]
+                [ 'Additional shortcode reference', 'Registered field structure reference' ]
             ),
         ];
     }

@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Snippet and shortcode help identify the existing groups as Field Structures. Stored profile fields and legacy shortcodes retain their keys.
+
 - Hexa WP Core 3.64.0 owns the Verified Profile and article association editors. The existing profile, link and repeater keys continue to resolve.
 
 - Profile schema registers immediately when its loader runs during init, so enabled guest and other profile types contribute Person or Organization nodes to the shared Hexa schema graph.

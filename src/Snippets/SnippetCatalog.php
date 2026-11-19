@@ -30,7 +30,7 @@ final class SnippetCatalog {
     public static function categories(): array {
         return [
             'acf' => [
-                'label'       => 'ACF Field Groups',
+                'label'       => 'Field Structures',
                 'description' => 'Register Hexa WP Core field groups, profile structures, and supporting post types.',
             ],
             'admin' => [

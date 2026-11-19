@@ -653,7 +653,7 @@ function smp_vp_render_shortcode_dashboard_styles(): void {
 function smp_vp_shortcode_metadata( $tag ) {
     $map = [
         'acf_author_field' => [
-            'description' => 'Outputs an ACF user field for the current post author.',
+            'description' => 'Outputs a user field for the current post author.',
             'example'     => '[acf_author_field field="profiles_muckrack"]',
         ],
         'display_homepage_profiles' => [
@@ -765,7 +765,7 @@ function smp_vp_shortcode_metadata( $tag ) {
             'example'     => '[featured_in_posts]',
         ],
         'get_profile_field' => [
-            'description' => 'Outputs a selected ACF field from the current verified profile.',
+            'description' => 'Outputs a selected field from the current verified profile.',
             'example'     => '[get_profile_field field="title"]',
         ],
         'muckrack_verified' => [

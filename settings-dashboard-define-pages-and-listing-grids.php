@@ -238,7 +238,7 @@ function create_posts_and_listing_grids() {
         $post_id = \Hexa\PluginCore\Fields\Field::get($field_key, 'option');
 
         if ($post_id) {
-            $report .= '<p>ACF field <strong>' . $field_title . '</strong> already has a post assigned (ID: ' . $post_id . ')</p>';
+            $report .= '<p>Field <strong>' . $field_title . '</strong> already has a post assigned (ID: ' . $post_id . ')</p>';
         } else {
             // Prepare post data
             $post_data = array(
