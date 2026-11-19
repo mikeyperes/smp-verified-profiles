@@ -957,8 +957,8 @@ function smp_vp_profile_field_examples() {
 function smp_vp_scan_acf_profile_field_names() {
     $field_names = [];
     $files       = [
-        __DIR__ . '/register-acf-verified-profile.php',
-        __DIR__ . '/register-acf-structures.php',
+        __DIR__ . '/register-field-verified-profile.php',
+        __DIR__ . '/register-field-structures.php',
     ];
 
     foreach ( $files as $file ) {

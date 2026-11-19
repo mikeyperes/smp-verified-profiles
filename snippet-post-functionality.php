@@ -22,7 +22,7 @@ function custom_post_admin_footer_scripts() {
         jQuery(document).ready(function($) {
 
             // Add 'Process profiles' button next to ACF field
-            $('.acf-field[data-name="pending_profiles"]').after('<button id="process-profiles" class="button button-primary">Process profiles</button>');
+            $('.hexa-field[data-name="pending_profiles"]').after('<button id="process-profiles" class="button button-primary">Process profiles</button>');
 
             // Handle click event for 'Process profiles' button
             $('#process-profiles').click(function(e) {
@@ -49,8 +49,8 @@ function custom_post_admin_footer_scripts() {
                         var nameExists = false;
 
                         // Check if the selected text is already in the 'pending_profiles' ACF field
-                        $('.acf-field[data-name="pending_profiles"] .acf-row:not(.acf-clone)').each(function() {
-                            var currentName = $(this).find('.acf-field[data-name="name"] input').val().toUpperCase();
+                        $('.hexa-field[data-name="pending_profiles"] .hexa-repeater-row').each(function() {
+                            var currentName = $(this).find('.hexa-field[data-name="name"] input').val().toUpperCase();
                             if (currentName === selectedText.toUpperCase()) {
                                 nameExists = true;
                                 return false;
@@ -59,10 +59,10 @@ function custom_post_admin_footer_scripts() {
 
                         // If the name doesn't exist, add it to 'pending_profiles'
                         if (selectedText && !nameExists) {
-                            $('.acf-field[data-name="pending_profiles"] .acf-button[data-event="add-row"]').click();
+                            $('.hexa-field[data-name="pending_profiles"] .hexa-repeater-add').click();
                             setTimeout(function() {
-                                var $lastRow = $('.acf-field[data-name="pending_profiles"] .acf-row:not(.acf-clone)').last();
-                                $lastRow.find('.acf-field[data-name="name"] input').val(selectedText).change();
+                                var $lastRow = $('.hexa-field[data-name="pending_profiles"] .hexa-repeater-row').last();
+                                $lastRow.find('.hexa-field[data-name="name"] input').val(selectedText).change();
                             }, 100);
                             alert('Added ' + selectedText);
                         }
@@ -214,8 +214,8 @@ function add_edit_profile_links_inside_label() {
     <script type="text/javascript">
         jQuery(document).ready(function($) {
             // Add 'Edit Profile' link to each profile in the repeater field
-            $('.acf-field[data-name="profiles"] .acf-row').each(function() {
-                var profileSelect = $(this).find('.acf-field[data-name="profile"] select');
+            $('.hexa-field[data-name="profiles"] .hexa-repeater-row').each(function() {
+                var profileSelect = $(this).find('.hexa-field[data-name="profile"] select');
                 var profileID = profileSelect.val(); // Get selected profile ID
 
                 if (profileID) {
@@ -229,7 +229,7 @@ function add_edit_profile_links_inside_label() {
                     });
 
                     // Append the link inside the ACF label
-                    profileSelect.closest('.acf-field').find('.acf-label').append(editLink);
+                    profileSelect.closest('.hexa-field').find('.hexa-field-label').append(editLink);
                 }
             });
         });
@@ -410,13 +410,13 @@ function render_find_profiles_metabox(\WP_Post $post) {
             }
 
             function repeaterPresent(){
-                return $('.acf-field[data-name="profiles"]').length > 0;
+                return $('.hexa-field[data-name="profiles"]').length > 0;
             }
 
             function getCurrentProfileIds(){
                 var ids = [];
-                $('.acf-field[data-name="profiles"] .acf-row:not(.acf-clone)').each(function(){
-                    var $sub = $(this).find('.acf-field[data-name="profile"]');
+                $('.hexa-field[data-name="profiles"] .hexa-repeater-row').each(function(){
+                    var $sub = $(this).find('.hexa-field[data-name="profile"]');
                     var v = $sub.find('input[type="hidden"]').val()
                          || $sub.find('select').val()
                          || '';
@@ -428,49 +428,21 @@ function render_find_profiles_metabox(\WP_Post $post) {
                 return ids;
             }
 
-            // Force-select value for ACF Post Object (handles select2 AJAX fields)
+            // A newly selected profile may be outside the options loaded for the editor.
             function setPostObjectValue($sub, id, text){
-                var done = false;
-
-                // 1) Try ACF API first
-                try {
-                    if (typeof acf !== 'undefined' && typeof acf.getField === 'function') {
-                        var field = acf.getField($sub);
-                        if (field && typeof field.val === 'function') {
-                            // ACF accepts either ID or {id,text}
-                            field.val(id);
-                            done = true;
-                        }
-                    }
-                } catch(e){}
-
-                var $select = $sub.find('select');
-                var $hidden = $sub.find('input[type="hidden"]');
-
-                // 2) Ensure the option exists in the select so select2 can display it
-                if ($select.length) {
-                    if (!$select.find('option[value="'+id+'"]').length) {
-                        $select.append($('<option>', {value: String(id), text: text || ('#'+id)}));
-                    }
-                    $select.val(String(id)).trigger('change');
-                    done = true;
+                var $select = $sub.find('select').first();
+                if (!$select.length) return false;
+                if (!$select.find('option[value="' + id + '"]').length) {
+                    $select.append($('<option>', {value: String(id), text: text || ('#' + id)}));
                 }
-
-                // 3) Set hidden input too (ACF mirrors to this)
-                if ($hidden.length) {
-                    $hidden.val(String(id)).trigger('change');
-                    done = true;
-                }
-
-                // Verify
-                var verifyVal = ($select.length ? $select.val() : null) || ($hidden.length ? $hidden.val() : null);
-                return done && String(verifyVal) === String(id);
+                $select.val(String(id)).trigger('change');
+                return String($select.val()) === String(id);
             }
 
             function addProfileToRepeater(profileId, profileTitle){
-                var $rep = $('.acf-field[data-name="profiles"]');
+                var $rep = $('.hexa-field[data-name="profiles"]');
                 if (!$rep.length) {
-                    log('⚠️  WARNING: ACF repeater "profiles" not found — cannot add.');
+                    log('⚠️  WARNING: profiles repeater "profiles" not found — cannot add.');
                     return false;
                 }
 
@@ -482,14 +454,14 @@ function render_find_profiles_metabox(\WP_Post $post) {
                 }
 
                 // Add row
-                $rep.find('.acf-button[data-event="add-row"]').trigger('click');
+                $rep.find('.hexa-repeater-add').trigger('click');
 
                 // Wait for row/subfield to exist and be ready
                 var attempts = 0;
                 (function waitAndSet(){
                     attempts++;
-                    var $lastRow = $rep.find('.acf-row:not(.acf-clone)').last();
-                    var $sub = $lastRow.find('.acf-field[data-name="profile"]');
+                    var $lastRow = $rep.find('.hexa-repeater-row').last();
+                    var $sub = $lastRow.find('.hexa-field[data-name="profile"]');
 
                     if (!$sub.length || !$sub.find('select, input[type="hidden"]').length) {
                         if (attempts < 30) return setTimeout(waitAndSet, 100);
@@ -499,7 +471,7 @@ function render_find_profiles_metabox(\WP_Post $post) {
 
                     var ok = setPostObjectValue($sub, profileId, profileTitle);
                     if (ok) {
-                        log('➕ ADDED: ' + profileTitle + ' (ID ' + profileId + ') to ACF repeater.');
+                        log('➕ ADDED: ' + profileTitle + ' (ID ' + profileId + ') to profiles repeater.');
                         // Show what the inputs hold now
                         var _sel = $sub.find('select').val() || '';
                         var _hid = $sub.find('input[type="hidden"]').val() || '';
@@ -544,7 +516,7 @@ function render_find_profiles_metabox(\WP_Post $post) {
 
             function processNamesSequentially(names, idx){
                 if (idx >= names.length) {
-                    log('✅ DONE: Scan complete. Remember to Update the post to save ACF changes.');
+                    log('✅ DONE: Scan complete. Remember to Update the post to save profile changes.');
                     unblockSaves();
                     processing = false;
                     return;
@@ -624,7 +596,7 @@ function render_find_profiles_metabox(\WP_Post $post) {
                 filtered.forEach(function(n){ log('• "' + n + '"'); });
 
                 if (!repeaterPresent()) {
-                    log('⚠️  WARNING: ACF repeater "profiles" not present. Additions may fail.');
+                    log('⚠️  WARNING: profiles repeater "profiles" not present. Additions may fail.');
                 }
 
                 processNamesSequentially(filtered, 0);

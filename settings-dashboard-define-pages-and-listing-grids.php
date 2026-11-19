@@ -99,7 +99,6 @@ function display_settings_acf_post_and_pages_form() { ?>
     </form>
     <script>
         jQuery(document).ready(function($) {
-            acf.add_action('ready', function() {
                 $.ajax({
                     url: ajaxurl,
                     type: 'GET',
@@ -110,7 +109,7 @@ function display_settings_acf_post_and_pages_form() { ?>
                         if (response.success) {
                             $.each(response.data, function(field, message) {
                                 var statusMessage = message ? 'Post ID: ' + message.post_id + ' - <a href="' + message.view_link + '">View</a> - <a href="' + message.edit_link + '">Edit</a>' : 'No post assigned';
-                                var labelContainer = $('div[data-key="' + field + '"] .acf-label');
+                                var labelContainer = $('.hexa-field[data-key="' + field + '"] .hexa-field-label');
                                 if (labelContainer.length) {
                                     labelContainer.append('<div class="acf-status" style="font-size: 0.9em; color: #666; margin-top: 5px;">' + statusMessage + '</div>');
                                 }
@@ -118,7 +117,6 @@ function display_settings_acf_post_and_pages_form() { ?>
                         }
                     }
                 });
-            });
         });
     </script>
 <?php }

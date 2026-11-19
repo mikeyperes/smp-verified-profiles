@@ -21,10 +21,10 @@ final class VerifiedProfileStructures {
     private static array $collection = [];
 
     public static function prepare(): void {
-        require_once dirname( __DIR__, 2 ) . '/register-acf-structure-theme-options.php';
-        require_once dirname( __DIR__, 2 ) . '/register-acf-structures.php';
-        require_once dirname( __DIR__, 2 ) . '/register-acf-user-profile.php';
-        require_once dirname( __DIR__, 2 ) . '/register-acf-verified-profile.php';
+        require_once dirname( __DIR__, 2 ) . '/register-field-theme-options.php';
+        require_once dirname( __DIR__, 2 ) . '/register-field-structures.php';
+        require_once dirname( __DIR__, 2 ) . '/register-field-user-profile.php';
+        require_once dirname( __DIR__, 2 ) . '/register-field-verified-profile.php';
     }
 
     /** Legacy direct lifecycle retained for third-party callbacks. */
@@ -237,7 +237,7 @@ final class VerifiedProfileStructures {
             'definition'      => $definition_callback ?? static fn(): array => self::legacy_group( $legacy_function, $group_key ),
             'location'        => $location,
             'fields'          => $fields,
-            'dependencies'    => [ 'Advanced Custom Fields Pro' ],
+
         ];
     }
 

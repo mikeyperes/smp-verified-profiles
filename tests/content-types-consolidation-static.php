@@ -15,7 +15,7 @@ $files = [
     'injector'   => (string) file_get_contents( $root . '/snippet-inject-schema-on-single-profile.php' ),
     'profile_schema' => (string) file_get_contents( $root . '/src/Schema/ProfileSchema.php' ),
     'source'     => (string) file_get_contents( $root . '/src/EntitySources/CanonicalProfileSource.php' ),
-    'theme_acf'  => (string) file_get_contents( $root . '/register-acf-structure-theme-options.php' ),
+    'theme_acf'  => (string) file_get_contents( $root . '/register-field-theme-options.php' ),
     'snippets'   => (string) file_get_contents( $root . '/generic-functions.php' ),
 ];
 

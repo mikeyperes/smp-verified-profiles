@@ -3,7 +3,7 @@
 
 function enable_snippet_wp_admin_user_page_functionality()
 {
-\Hexa\PluginCore\Fields\Hooks::on('load_field/name=profile', __NAMESPACE__.'\make_unclaimed_profiles_read_only');
+\Hexa\PluginCore\Fields\Hooks::on('prepare_field/name=profile', __NAMESPACE__.'\make_unclaimed_profiles_read_only');
 add_action('admin_footer-user-edit.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer-profile.php', __NAMESPACE__.'\add_custom_email_buttons');
 add_action('admin_footer', __NAMESPACE__.'\enqueue_custom_admin_scripts');
@@ -143,8 +143,8 @@ if (!function_exists(__NAMESPACE__ . '\\add_custom_email_buttons')) {
                 }
             }
 
-            var welcomeEmailEditor = $('[data-key="field_658602dc4ea03"] .acf-field-wysiwyg').last();
-            var newEntityEmailEditor = $('[data-key="field_6586031ac6afc"] .acf-field-wysiwyg').last();
+            var welcomeEmailEditor = $('[data-key="field_658602dc4ea03"] .hexa-field-wysiwyg').last();
+            var newEntityEmailEditor = $('[data-key="field_6586031ac6afc"] .hexa-field-wysiwyg').last();
 
             appendButtonIfNotExist(welcomeEmailEditor, 'send-welcome-email-btn', 'Send Welcome Email');
             appendButtonIfNotExist(newEntityEmailEditor, 'send-new-entity-email-btn', 'Send New Entity Email');
@@ -172,18 +172,18 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
 
                 // Function to extract email content from TinyMCE editor using ACF field key
                 function getEmailContentFromACF(fieldKey) {
-                    var iframeId = $('.acf-field-' + fieldKey + ' .wp-editor-wrap iframe').attr('id');
+                    var iframeId = $('.hexa-field[data-key="' + fieldKey + '"] .wp-editor-wrap iframe').attr('id');
                     if (iframeId && tinyMCE.get(iframeId)) {
                         return tinyMCE.get(iframeId).getContent();
                     } else {
-                        return $('.acf-field-' + fieldKey + ' textarea').val(); // Fallback if TinyMCE is not active
+                        return $('.hexa-field[data-key="' + fieldKey + '"] textarea').val(); // Fallback if TinyMCE is not active
                     }
                 }
 
                 // Click event for 'Send New Entity Email' button
                 $(document).on('click', '#send-new-entity-email-btn', function(e) {
                     e.preventDefault();
-                    var emailSubject = $('#acf-field_6586031ac6afc-field_65860330c6afd').val();
+                    var emailSubject = $('.hexa-field[data-key=field_65860330c6afd] input').val();
                     var emailContent = getEmailContentFromACF('6586033cc6afe');
 
                     $.ajax({

@@ -215,7 +215,7 @@ function enable_acf_theme_options() {
             ),
             array(
                 'key'           => 'field_acf_structures',
-                'label'         => 'Plugin ACF Structures',
+                'label'         => 'Plugin Field Structures',
                 'name'          => 'acf_structures',
                 'type'          => 'message',
                 'instructions'  => 'options_page:verified-profiles-settings > acf_structures:message',
@@ -248,7 +248,7 @@ function enable_acf_theme_options() {
 }
 
 // Inject view/edit buttons on admin footer
-\Hexa\PluginCore\Fields\Hooks::on('input/admin_footer', function() {
+add_action('admin_footer', function() {
     $screen = get_current_screen();
     $tab = isset( $_GET['tab'] ) ? sanitize_key( (string) wp_unslash( $_GET['tab'] ) ) : '';
     if ( ! $screen || 'settings_page_' . Config::$settings_page_slug !== $screen->id || 'profile-settings' !== $tab ) {
@@ -267,8 +267,8 @@ function enable_acf_theme_options() {
             btnContainer.append('<a href="' + editUrl + '" target="_blank" class="button">Edit</a>');
             field.append(btnContainer);
         }
-        $('.acf-field-group[data-name="loop_items"] .acf-field-post-object,' +
-          '.acf-field-group[data-name="pages"] .acf-field-post-object').each(function() {
+        $('.hexa-field-group[data-name="loop_items"] .hexa-field-post_object,' +
+          '.hexa-field-group[data-name="pages"] .hexa-field-post_object').each(function() {
             var field = $(this);
             appendButtons(field);
             field.on('change', 'select', function() {

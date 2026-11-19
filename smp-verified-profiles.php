@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 8.9.0
+ * Version: 8.9.1
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -45,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "8.9.0";
+    public static $plugin_version = "8.9.1";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -445,15 +445,15 @@ include_once __DIR__ . '/activate-snippets.php';
 
 // ============================================================================
 // FIELD GROUP REGISTRATION
-// Hexa WP Core Fields runs these on acf/init when ACF is active, otherwise on init.
+// Hexa WP Core registers these fields during its own initialization.
 // ============================================================================
 add_action( 'plugins_loaded', function() {
     \Hexa\PluginCore\Fields\FieldGroups::ready( function() {
         // Field group registrations
-        include_once __DIR__ . '/register-acf-structure-theme-options.php';
-        include_once __DIR__ . '/register-acf-structures.php';
-        include_once __DIR__ . '/register-acf-user-profile.php';
-        include_once __DIR__ . '/register-acf-verified-profile.php';
+        include_once __DIR__ . '/register-field-theme-options.php';
+        include_once __DIR__ . '/register-field-structures.php';
+        include_once __DIR__ . '/register-field-user-profile.php';
+        include_once __DIR__ . '/register-field-verified-profile.php';
 
         // Activate field-dependent snippets
         activate_snippets( 'acf' );

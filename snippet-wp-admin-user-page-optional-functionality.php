@@ -91,8 +91,8 @@ if (!function_exists(__NAMESPACE__ . '\\user_page_shortcut_functionality')) {
 
                     // Check if the email already exists in the notification list
                     var emailExists = false;
-                    $('.acf-field[data-name="notification_emails"] .acf-row:not(.acf-clone)').each(function() {
-                        var currentEmail = $(this).find('.acf-field[data-name="email"] input').val();
+                    $('.hexa-field[data-name="notification_emails"] .hexa-repeater-row').each(function() {
+                        var currentEmail = $(this).find('.hexa-field[data-name="email"] input').val();
                         if (currentEmail === email) {
                             emailExists = true;
                             return false; // Break the loop
@@ -101,9 +101,9 @@ if (!function_exists(__NAMESPACE__ . '\\user_page_shortcut_functionality')) {
 
                     // Add the email if it doesn't already exist
                     if (!emailExists) {
-                        $('.acf-field[data-name="notification_emails"] .acf-button').click();
-                        var newRow = $('.acf-field[data-name="notification_emails"] .acf-row:not(.acf-clone)').last();
-                        newRow.find('.acf-field[data-name="email"] input').val(email);
+                        $('.hexa-field[data-name="notification_emails"] .hexa-repeater-add').click();
+                        var newRow = $('.hexa-field[data-name="notification_emails"] .hexa-repeater-row').last();
+                        newRow.find('.hexa-field[data-name="email"] input').val(email);
                     }
                 }
             });

@@ -27,7 +27,7 @@ function smp_vp_render_content_types_tab(): void {
     echo ( new AcfFieldGroupRenderer() )->render(
         VerifiedProfileStructures::acf_groups(),
         [
-            'title'          => 'ACF Structures',
+            'title'          => 'Field Structures',
             'description'    => 'Enable or disable each Verified Profiles field structure and expand it for its exact location, dependencies, and field coverage.',
             'persist_prefix' => 'smp-vp-acf-structures',
         ]

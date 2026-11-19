@@ -131,7 +131,7 @@ function get_system_checks() {
     
     // Custom fields run on Hexa WP Core: ACF when active, native otherwise.
     $checks['acf'] = [
-        'label'  => 'Custom fields (' . \Hexa\PluginCore\Fields\Acf::mode() . ')',
+        'label'  => 'Hexa WP Core fields',
         'status' => 'good',
         'value'  => '✓',
     ];

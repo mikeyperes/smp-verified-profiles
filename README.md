@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Hexa WP Core 3.64.0 owns the Verified Profile and article association editors. The existing profile, link and repeater keys continue to resolve.
+
 - Profile schema registers immediately when its loader runs during init, so enabled guest and other profile types contribute Person or Organization nodes to the shared Hexa schema graph.
 
 
@@ -30,7 +32,7 @@ Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `
 
 ### Profiles
 - **Does:** the `profile` post type with its fields, claiming and unclaimed-profile workflows, profile managers, spawning and the profile manager dashboard.
-- **Code:** `smp-verified-profiles.php`, `register-acf-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
+- **Code:** `smp-verified-profiles.php`, `register-field-*.php`, `profile-manager-dashboard.php`, `verified-profile-spawner.php`.
 
 ### Sitemaps
 - **Does:** declares one sitemap per profile type, podcast guests included, recommended on. The Sitemaps tab shows each one's Rank Math state, address and a turn on/off button; HWS Base Tools shows them read-only and links here.
@@ -46,7 +48,7 @@ Read-only custom fields `_smp_profile_has_image`, `_smp_profile_has_no_image`, `
 - **Does:** chooses the post types the article integration runs on (posts, press releases, any public post type): the profiles box and profile detection in the editor, profile creation, the "in this article" section, and each profile's "featured in" and "articles written" lists. Defaults to posts and press releases, as before.
 - **Use:** Profile Types tab → "Where the article integration runs".
 - **Extend:** filter `smp_vp_integration_post_types`; helper `smp_verified_profiles\smp_vp_integration_post_types()`.
-- **Code:** `src/ProfileTypes/ProfileTypes.php`, `register-acf-structures.php`, `snippet-post-functionality.php`, `verified-profile-spawner.php`.
+- **Code:** `src/ProfileTypes/ProfileTypes.php`, `register-field-structures.php`, `snippet-post-functionality.php`, `verified-profile-spawner.php`.
 
 ### Profile shortcodes
 - **Use:** `[display_single_profile_education]`, `[display_single_profile_organizations_founded]`, `[display_single_profile_press_releases]`, `[display_single_profile_article_written_by]`, `[display_single_profile_articles_featured_in]`, `[display_single_profile_text_based_social_profiles]`, `[display_homepage_profiles]`, `[display_single_post_mentioned_in_article]`, `[display_theme_footer_text_social_links]`, `[display_single_profile_validate_schema_button]`, `[display_profiles_featured_in_single_post]`, `[display_profile_quick_contact]`, `[display_profile_current_residence]`, `[display_profile_location_born]`, `[display_profile_notable_mentions]`, `[get_profile_field]`, `[profiles_in_articles]`, `[verified_profile_page]`, `[verified_profile field="..."]`, `[post_mentioned_vocabulary]`, `[vocabulary_mentioned_posts]`, `[wiki_mentioned_posts]`. Each is listed with an example on the Shortcodes tab.
@@ -158,7 +160,7 @@ Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core.
 | PHP | 8.0 |
 | Hexa WP Core bundle | 3.46.2 |
 
-ACF Pro is not required: the profile field structures run on Hexa WP Core custom fields, which use ACF when it is active and store the same data natively when it is not. Elementor/JetEngine integrations require those plugins only when their templates are used.
+Verified Profiles registers and edits its own field groups through Hexa WP Core. Integrations retain their existing field keys and stored values.
 
 ## Installation
 

@@ -31,7 +31,7 @@ final class SnippetCatalog {
         return [
             'acf' => [
                 'label'       => 'ACF Field Groups',
-                'description' => 'Register Advanced Custom Fields groups, profile structures, and supporting post types.',
+                'description' => 'Register Hexa WP Core field groups, profile structures, and supporting post types.',
             ],
             'admin' => [
                 'label'       => 'Admin Features',

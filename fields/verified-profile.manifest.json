@@ -5,7 +5,7 @@
   "source": {
     "repo": "mikeyperes/smp-verified-profiles",
     "ref": "main",
-    "definition_file": "register-acf-verified-profile.php"
+    "definition_file": "register-field-verified-profile.php"
   },
   "post_type": "profile",
   "field_group": {
