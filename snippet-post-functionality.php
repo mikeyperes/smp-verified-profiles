@@ -21,7 +21,7 @@ function custom_post_admin_footer_scripts() {
     <script type="text/javascript">
         jQuery(document).ready(function($) {
 
-            // Add 'Process profiles' button next to ACF field
+            // Add 'Process profiles' next to the Core field
             $('.hexa-field[data-name="pending_profiles"]').after('<button id="process-profiles" class="button button-primary">Process profiles</button>');
 
             // Handle click event for 'Process profiles' button
@@ -83,15 +83,15 @@ function custom_post_admin_footer_scripts() {
 
 /**
  * Process profiles when saving a 'post' post type
- * Moves pending profiles to the 'profiles' ACF field and clears 'pending_profiles'.
+ * Moves pending profiles to the Core 'profiles' field and clears 'pending_profiles'.
  *
  * @param int $post_id The ID of the post being saved.
  * @param WP_Post $post The post object.
  * @param bool $update Whether this is an existing post being updated.
  */
 function process_profiles_on_save($post_id, $post, $update) {
-    // Skip autosave, post types outside the integration, or when ACF is inactive.
-    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !in_array($post->post_type, smp_vp_integration_post_types(), true) || !check_plugin_acf()) {
+    // Only process pending profiles when the article's Core fields are registered.
+    if ((defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) || !in_array($post->post_type, smp_vp_integration_post_types(), true) || ! \Hexa\PluginCore\Fields\FieldGroups::get_field('profiles', $post_id)) {
         return;
     }
 
@@ -183,16 +183,7 @@ function process_profiles_on_save($post_id, $post, $update) {
     }
 
     if ($attach_rows) {
-        if (function_exists(__NAMESPACE__ . '\\smp_vp_spawn_attach_profiles_to_post')) {
-            smp_vp_spawn_attach_profiles_to_post((int) $post_id, $attach_rows);
-        } elseif (function_exists('add_row')) {
-            foreach ($attach_rows as $row) {
-                $profile_id = (int) (is_array($row) ? ($row['wp_post_id'] ?? $row['post_id'] ?? 0) : 0);
-                if ($profile_id > 0) {
-                    add_row('profiles', ['profile' => $profile_id], $post_id);
-                }
-            }
-        }
+        smp_vp_spawn_attach_profiles_to_post((int) $post_id, $attach_rows);
     }
 
     \Hexa\PluginCore\Fields\Field::update('pending_profiles', array_values($remaining_pending), $post_id);

@@ -1567,16 +1567,28 @@ function smp_vp_spawn_post_has_profile( int $post_id, int $profile_id ): bool {
     return false;
 }
 
+/**
+ * Appends unique profiles to the article's Core repeater and returns their IDs.
+ * Bug: ACF owned profile attachments even when Core owned the editor.
+ * Fix: load the registered Core repeater and save the existing and new rows together.
+ * Why this way: the same field definition preserves raw rows, field keys and storage.
+ */
 function smp_vp_spawn_attach_profiles_to_post( int $post_id, array $created ): array {
-    if ( $post_id <= 0 || ! function_exists( 'add_row' ) ) {
+    if ( $post_id <= 0 || [] === $created ) {
         return [];
     }
 
+    $field = \Hexa\PluginCore\Fields\FieldGroups::get_field( 'profiles', $post_id );
+    if ( 'repeater' !== ( $field['type'] ?? '' ) || ! in_array( 'profile', array_column( $field['sub_fields'] ?? [], 'name' ), true ) ) {
+        return [];
+    }
+
+    $field_key = (string) $field['key'];
+    $rows = (array) \Hexa\PluginCore\Fields\Field::get( $field_key, $post_id, false );
     $existing = [];
     $existing_titles = [];
     $existing_master_ids = [];
-    $rows = \Hexa\PluginCore\Fields\Field::available() ? \Hexa\PluginCore\Fields\Field::get( 'profiles', $post_id, false ) : [];
-    foreach ( (array) $rows as $row ) {
+    foreach ( $rows as $row ) {
         $existing_id = 0;
         if ( is_array( $row ) ) {
             $existing_id = (int) ( $row['profile'] ?? $row['field_656c17629ad34'] ?? 0 );
@@ -1604,14 +1616,17 @@ function smp_vp_spawn_attach_profiles_to_post( int $post_id, array $created ): a
         if ( in_array( $title_key, $existing_titles, true ) || ( '' !== $master_id && in_array( $master_id, $existing_master_ids, true ) ) ) {
             continue;
         }
-        if ( add_row( 'profiles', [ 'profile' => $profile_id ], $post_id ) ) {
-            $attached[] = $profile_id;
-            $existing[] = $profile_id;
-            $existing_titles[] = $title_key;
-            if ( '' !== $master_id ) {
-                $existing_master_ids[] = $master_id;
-            }
+        $rows[] = [ 'profile' => $profile_id ];
+        $attached[] = $profile_id;
+        $existing[] = $profile_id;
+        $existing_titles[] = $title_key;
+        if ( '' !== $master_id ) {
+            $existing_master_ids[] = $master_id;
         }
+    }
+
+    if ( [] === $attached || ! \Hexa\PluginCore\Fields\Field::update( $field_key, $rows, $post_id ) ) {
+        return [];
     }
 
     return $attached;

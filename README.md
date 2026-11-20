@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Profile generation and the article editor attach profiles through the same Core repeater. The article keeps its existing rows and filters duplicate profile IDs, titles, and master profile IDs.
+
 - Snippet and shortcode help identify the existing groups as Field Structures. Stored profile fields and legacy shortcodes retain their keys.
 
 - Hexa WP Core 3.64.0 owns the Verified Profile and article association editors. The existing profile, link and repeater keys continue to resolve.
@@ -110,7 +112,7 @@ The **Custom Post Types** tab uses Hexa WP Core for:
 
 - Profile enable/disable state.
 - Editable public rewrite slug and WordPress labels.
-- ACF field-group toggles and detailed field breakdowns.
+- Field-group toggles and detailed field breakdowns.
 - The moved Verified Profile Program Settings panel.
 
 The post-type key remains `profile` so existing posts, URLs, relationships, and templates are not orphaned.
@@ -125,7 +127,7 @@ The consolidation preserves the plugin's established behavior:
 - Verified Profile application, welcome, badges, archive, and single-profile page assignments.
 - Display cards, Elementor/listing templates, MuckRack displays, and shortcode providers.
 - Profile reprocessing, schema controls, entity shortcodes, and public JSON-LD output.
-- Email/program settings and existing stored ACF values.
+- Email/program settings and existing stored field values.
 
 ## Canonical Entity
 
@@ -150,7 +152,7 @@ Legacy standalone Profile settings routes are redirected into the plugin dashboa
 
 ## Architecture
 
-`smp-verified-profiles.php` is the plugin entry. Focused adapters under `src/` integrate Core-managed content types, ACF groups, canonical entities, FAQ/schema utilities, tabs, AJAX guards, and update panels.
+`smp-verified-profiles.php` is the plugin entry. Focused adapters under `src/` integrate Core-managed content types, field groups, canonical entities, FAQ/schema utilities, tabs, AJAX guards, and update panels.
 
 Plugin updates and vendored Core updates are delegated entirely to Hexa WP Core. The retired standalone `GitHub_Updater.php` implementation has been removed.
 
@@ -166,7 +168,7 @@ Verified Profiles registers and edits its own field groups through Hexa WP Core.
 
 ## Installation
 
-Install the repository as `wp-content/plugins/smp-verified-profiles`, activate `smp-verified-profiles.php`, and open **Settings > Verified Profiles**. Existing profile posts, managers, page assignments, and ACF values are reused in place.
+Install the repository as `wp-content/plugins/smp-verified-profiles`, activate `smp-verified-profiles.php`, and open **Settings > Verified Profiles**. Existing profile posts, managers, page assignments, and field values are reused in place.
 
 ## Development
 
