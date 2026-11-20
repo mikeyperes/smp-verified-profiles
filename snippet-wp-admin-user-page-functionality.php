@@ -171,7 +171,7 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
                 var smpVpNonce = <?php echo wp_json_encode( function_exists( __NAMESPACE__ . '\\smp_vp_ajax_nonce' ) ? smp_vp_ajax_nonce() : wp_create_nonce( Config::$ajax_nonce_action ) ); ?>;
 
                 // Function to extract email content from TinyMCE editor using ACF field key
-                function getEmailContentFromACF(fieldKey) {
+                function getEmailContentFromFields(fieldKey) {
                     var iframeId = $('.hexa-field[data-key="' + fieldKey + '"] .wp-editor-wrap iframe').attr('id');
                     if (iframeId && tinyMCE.get(iframeId)) {
                         return tinyMCE.get(iframeId).getContent();
@@ -184,7 +184,7 @@ if (!function_exists(__NAMESPACE__ . '\\enqueue_custom_admin_scripts')) {
                 $(document).on('click', '#send-new-entity-email-btn', function(e) {
                     e.preventDefault();
                     var emailSubject = $('.hexa-field[data-key=field_65860330c6afd] input').val();
-                    var emailContent = getEmailContentFromACF('6586033cc6afe');
+                    var emailContent = getEmailContentFromFields('6586033cc6afe');
 
                     $.ajax({
                         url: ajaxurl,

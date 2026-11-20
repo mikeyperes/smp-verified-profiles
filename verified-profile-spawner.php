@@ -416,7 +416,7 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
                         <div id="smp-vp-current-profiles" class="smp-vp-state-list"><p class="smp-vp-empty">Loading current profiles...</p></div>
                     </div>
                     <div>
-                        <div class="smp-vp-entity-meta">Pending profile names from the existing ACF structure.</div>
+                        <div class="smp-vp-entity-meta">Pending profile names from the existing Core field.</div>
                         <div id="smp-vp-pending-profiles" class="smp-vp-state-list"><p class="smp-vp-empty">Loading pending profiles...</p></div>
                     </div>
                 </div>
@@ -799,7 +799,7 @@ function smp_vp_render_spawn_metabox( \WP_Post $post ): void {
         function fieldRows(fields){
             if(!fields || !fields.length){return '<p class="smp-vp-empty">No custom fields were reported for this profile.</p>'}
             return '<table class="smp-vp-field-report"><thead><tr><th>Field</th><th>Value</th><th>Source</th></tr></thead><tbody>' + fields.map(function(field){
-                return '<tr><td><strong>'+esc(field.label || field.name || 'Field')+'</strong><br><code>'+esc(field.name || '')+'</code></td><td>'+esc(field.value_preview || field.value || '')+'</td><td>'+esc(field.source || 'ACF')+'</td></tr>';
+                return '<tr><td><strong>'+esc(field.label || field.name || 'Field')+'</strong><br><code>'+esc(field.name || '')+'</code></td><td>'+esc(field.value_preview || field.value || '')+'</td><td>'+esc(field.source || 'Core field')+'</td></tr>';
             }).join('') + '</tbody></table>';
         }
         function initPersistentDetails(root){
@@ -1096,7 +1096,7 @@ function smp_vp_ajax_spawn_attach_existing(): void {
     if ( ! $already_attached && ! in_array( $profile_id, $attached, true ) ) {
         wp_send_json_error(
             [
-                'message' => 'Verified profile could not be attached to the post ACF field.',
+                'message' => 'Verified profile could not be attached to the post profile field.',
                 'state' => smp_vp_spawn_post_profile_state( $post_id ),
             ],
             200
@@ -1446,7 +1446,7 @@ function smp_vp_spawn_profile_field_report( int $profile_id, array $api_row = []
             $acf = [];
         }
     }
-    smp_vp_spawn_flatten_fields( $acf, '', $rows, 'ACF' );
+    smp_vp_spawn_flatten_fields( $acf, '', $rows, 'Core field' );
 
     if ( $profile_id > 0 ) {
         $meta_fields = [];

@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Profile-generation notices and field reports identify Core fields.
+
 - Profile generation and the article editor attach profiles through the same Core repeater. The article keeps its existing rows and filters duplicate profile IDs, titles, and master profile IDs.
 
 - Snippet and shortcode help identify the existing groups as Field Structures. Stored profile fields and legacy shortcodes retain their keys.

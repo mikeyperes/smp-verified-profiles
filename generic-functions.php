@@ -47,7 +47,7 @@ function activate_snippets( $type = '' ) {
                 && class_exists( ContentTypes\VerifiedProfileStructures::class )
                 && ! ContentTypes\VerifiedProfileStructures::acf_group_enabled( $required_acf_structure )
             ) {
-                write_log( "Snippet $snippet_id requires disabled ACF structure $required_acf_structure.", false );
+                write_log( "Snippet $snippet_id requires disabled field structure $required_acf_structure.", false );
                 continue;
             }
 
@@ -392,7 +392,7 @@ if (!function_exists('get_field_label')) {
                         \Hexa\PluginCore\Fields\Field::update('profiles', $profiles, 'user_' . $user_id);
                         write_log('Updated profile fields for user: ' . $params['slug'], false);
                     } else 
-                        write_log("ACF update_field function does not exist", false);
+                        write_log("The Hexa WP Core field engine is unavailable", false);
             
                     write_log('User created successfully: ' . $params['slug'], false);
                     return $user_id;
