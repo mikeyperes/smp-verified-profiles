@@ -171,7 +171,7 @@ function display_admin_profiles_dashboard() {
             $('.apply-link, .claim-link').click(function(e) {
                 if ($(this).attr('href') === '#') {
                     e.preventDefault();
-                    alert("Your account is not yet enabled to apply for this feature. Please reach out to " + <?php echo wp_json_encode( 'contact@' . wp_parse_url( home_url(), PHP_URL_HOST ) ); ?> + " for further help.");
+                    alert("Your account is not yet enabled to apply for this feature. Please reach out to " + <?php echo wp_json_encode( \SMP\VerifiedProfiles\Features\FeatureSettings::support_email() ); ?> + " for further help.");
                 }
             });
         });

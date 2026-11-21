@@ -169,15 +169,13 @@ echo '<h2 class="header">Orders Dashboard</h2>
     echo '</div></section>';
 
 
-      // Get the site's domain dynamically
-$domain = parse_url( home_url(), PHP_URL_HOST );
     ?>
 <script type="text/javascript">
 jQuery(document).ready(function($){
     $("a").on("click", function(e){
         if ($(this).attr("href") === "#") {
             e.preventDefault();
-            alert("Your account is not yet enabled to apply for this feature. Please reach out to contact@<?php echo $domain; ?> for further help.");
+            alert("Your account is not yet enabled to apply for this feature. Please reach out to " + <?php echo wp_json_encode( \SMP\VerifiedProfiles\Features\FeatureSettings::support_email() ); ?> + " for further help.");
         }
     });
 });

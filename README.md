@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- Profile manager help uses the saved support address or the WordPress administrator address when the setting is blank.
+
 - Profile manager checkout links and profile-page icons use settings owned by the site. Author archive verification uses the current WordPress author.
 
 - Profile-generation notices and field reports identify Core fields.

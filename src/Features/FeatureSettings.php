@@ -28,6 +28,7 @@ final class FeatureSettings {
             'claim_price_mode'     => 'payment',
             'legacy_checkout_product_id' => 0,
             'legacy_profile_icon_url'     => '',
+            'support_email'               => '',
         ];
     }
 
@@ -59,6 +60,15 @@ final class FeatureSettings {
         return add_query_arg( [ 'add-to-cart' => $id ] + $query, $checkout );
     }
 
+    /** Read the support email shown in the profile manager's help message. */
+    public static function support_email(): string {
+        // Bug: building contact@ from a URL could include the site's www prefix.
+        // Fix: use the saved support address or the WordPress administrator address.
+        // Why this way: both are real site settings and work regardless of the public hostname.
+        $email = (string) self::all()['support_email'];
+        return '' !== $email ? $email : sanitize_email( (string) get_option( 'admin_email', '' ) );
+    }
+
     /** Payments run only when switched on here and Stripe is ready in HWS Base Tools. */
     public static function payments_ready(): bool {
         return self::on( 'payments' ) && self::stripe_available() && \HWS\BaseTools\Payments\Stripe::ready();
@@ -87,6 +97,8 @@ final class FeatureSettings {
                 $out[ $key ] = absint( $value );
             } elseif ( 'legacy_profile_icon_url' === $key ) {
                 $out[ $key ] = esc_url_raw( (string) $value, [ 'http', 'https' ] );
+            } elseif ( 'support_email' === $key ) {
+                $out[ $key ] = sanitize_email( (string) $value );
             } elseif ( str_ends_with( $key, '_mode' ) ) {
                 $out[ $key ] = 'subscription' === $value ? 'subscription' : 'payment';
             } else {

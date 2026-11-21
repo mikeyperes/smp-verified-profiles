@@ -63,7 +63,8 @@ function smp_vp_render_features_tab(): void {
         echo CoreUi::card( [
             'title'     => 'Legacy profile links',
             'body_html' => '<p><label>WooCommerce product ID<br><input type="number" min="0" name="legacy_checkout_product_id" value="' . esc_attr( (string) $s['legacy_checkout_product_id'] ) . '"></label></p>'
-                . '<p><label>Profile page icon URL<br><input type="url" class="regular-text" name="legacy_profile_icon_url" value="' . esc_attr( (string) $s['legacy_profile_icon_url'] ) . '"></label></p>',
+                . '<p><label>Profile page icon URL<br><input type="url" class="regular-text" name="legacy_profile_icon_url" value="' . esc_attr( (string) $s['legacy_profile_icon_url'] ) . '"></label></p>'
+                . '<p><label>Support email<br><input type="email" class="regular-text" name="support_email" value="' . esc_attr( (string) $s['support_email'] ) . '"></label> <small>Leave blank to use the WordPress administrator email.</small></p>',
         ] );
         echo CoreUi::card( [ 'title' => 'Save', 'body_html' => '<button type="button" class="hpc-button smp-vp-f-save">Save features</button> <span class="smp-vp-f-status" aria-live="polite"></span>' ] );
 
