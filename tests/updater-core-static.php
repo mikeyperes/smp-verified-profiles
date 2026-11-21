@@ -11,7 +11,7 @@ $plugin_info = (string) file_get_contents( $root . '/settings-dashboard-plugin-i
 
 $checks = [
     'Uses the Hexa WP Core plugin updater inside CoreBootstrap.' => str_contains( $runtime, 'add_module( new GitHubPluginUpdater( Updates::plugin_config() ) )' ),
-    'Uses the Hexa WP Core updater configuration.' => str_contains( $updates, 'UpdaterConfig::from_plugin_file' ),
+    'Uses the Hexa WP Core updater configuration.' => str_contains( $updates, 'UpdaterConfig::from_managed_plugin_file' ),
     'Keeps updater compatibility functions as delegation facades.' => str_contains( $integration, 'return class_exists( UpdaterConfig::class ) ? Updates::plugin_config() : null;' )
         && ! str_contains( $integration, 'wp_update_themes();' ),
     'Contains no standalone updater implementation.' => ! is_file( $root . '/GitHub_Updater.php' )

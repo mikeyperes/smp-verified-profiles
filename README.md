@@ -9,6 +9,8 @@ Verified-profile registration, claiming, management, display, spawning, shortcod
 
 ## Features
 
+- The plugin updater uses the shared Hexa WP Core 3.65.3 configuration with its existing settings.
+
 - Profile manager help uses the saved support address or the WordPress administrator address when the setting is blank.
 
 - Profile manager checkout links and profile-page icons use settings owned by the site. Author archive verification uses the current WordPress author.

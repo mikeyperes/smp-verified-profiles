@@ -24,24 +24,20 @@ final class Updates {
             ? plugin_basename( $plugin_file )
             : Config::get_plugin_basename();
 
-        self::$plugin_config = UpdaterConfig::from_plugin_file(
+        self::$plugin_config = UpdaterConfig::from_managed_plugin_file(
             $plugin_file,
             Config::$github_repo,
+            Config::$plugin_folder_name,
+            Config::$updater_ajax_prefix,
             [
-                'plugin_slug'               => Config::$plugin_folder_name,
-                'proper_folder_name'        => Config::$plugin_folder_name,
-                'runtime_folder_name'       => dirname( $basename ),
-                'plugin_basename'           => $basename,
-                'canonical_plugin_basename' => Config::get_plugin_basename(),
-                'plugin_starter_file'       => Config::$plugin_starter_file,
-                'github_branch'             => Config::$github_branch,
-                'requires'                  => '5.0',
-                'tested'                    => '7.0',
-                'requires_php'              => '8.0',
-                'nonce_action'              => Config::$ajax_nonce_action,
-                'nonce_param'               => Config::$ajax_nonce_field,
-                'ajax_action_prefix'        => Config::$updater_ajax_prefix,
-                'progress_key'              => 'smp_vp_core_update_progress',
+                'plugin_starter_file' => Config::$plugin_starter_file,
+                'github_branch'       => Config::$github_branch,
+                'requires'            => '5.0',
+                'tested'              => '7.0',
+                'requires_php'        => '8.0',
+                'nonce_action'        => Config::$ajax_nonce_action,
+                'nonce_param'         => Config::$ajax_nonce_field,
+                'plugin_basename'     => $basename,
             ]
         );
 
