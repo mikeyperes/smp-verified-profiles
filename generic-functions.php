@@ -27,46 +27,23 @@ defined( 'ABSPATH' ) || exit;
  * @param string $type Type of snippets: 'acf', 'admin', or 'non_admin'
  */
 function activate_snippets( $type = '' ) {
-    // Get snippets for the specified type
-    $settings_snippets = get_snippets( $type );
-    
-    foreach ( $settings_snippets as $snippet ) {
-        $snippet_id       = $snippet['id'];
-        $function_to_call = $snippet['function'];
-
-        // Check if the snippet is enabled in WordPress options
-        $is_enabled = get_option( $snippet_id, false );
- 
-        // Log snippet processing (debug only)
-        write_log( "Processing snippet: {$snippet['name']} (ID: $snippet_id)", false );
-
-        if ( $is_enabled ) {
+    \Hexa\PluginCore\SnippetRegistry\LegacySnippetActivator::activate(
+        get_snippets( $type ),
+        __NAMESPACE__,
+        __NAMESPACE__ . '\\write_log',
+        eligible: static function ( array $snippet ): bool {
             $required_acf_structure = sanitize_key( (string) ( $snippet['requires_acf_structure'] ?? '' ) );
             if (
                 '' !== $required_acf_structure
                 && class_exists( ContentTypes\VerifiedProfileStructures::class )
                 && ! ContentTypes\VerifiedProfileStructures::acf_group_enabled( $required_acf_structure )
             ) {
-                write_log( "Snippet $snippet_id requires disabled field structure $required_acf_structure.", false );
-                continue;
+                write_log( "Snippet {$snippet['id']} requires disabled field structure {$required_acf_structure}.", false );
+                return false;
             }
-
-            write_log( "Snippet $snippet_id is enabled. Preparing to activate." );
-            
-            // Build fully qualified function name with namespace
-            $function_to_call = '\\' . __NAMESPACE__ . '\\' . $function_to_call;
-            
-            if ( function_exists( $function_to_call ) ) {
-                // Call the activation function
-                call_user_func( $function_to_call );
-                write_log( "✅ Snippet $snippet_id activated by calling $function_to_call.", false );
-            } else {
-                write_log( "🚫 Function $function_to_call does not exist for snippet $snippet_id.", true );
-            }
-        } else {
-            write_log( "🚫 Snippet $snippet_id is not enabled.", false );
+            return true;
         }
-    }
+    );
 }
 
 

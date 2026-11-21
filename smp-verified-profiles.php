@@ -4,7 +4,7 @@
  * Description: Verified Profile integration for Scale My Publication systems.
  * Author: Michael Peres
  * Plugin URI: https://github.com/mikeyperes/smp-verified-profiles
- * Version: 8.9.8
+ * Version: 8.9.9
  * Text Domain: smp-verified-profiles
  * Domain Path: /languages
  * Author URI: https://michaelperes.com
@@ -45,7 +45,7 @@ class Config {
     public static $plugin_short_id = "smp_vp";
 
     /** @var string Current plugin version */
-    public static $plugin_version = "8.9.8";
+    public static $plugin_version = "8.9.9";
 
     /** @var string Shared nonce action for Hexa core admin AJAX */
     public static $ajax_nonce_action = "smp_vp_admin";
@@ -310,41 +310,9 @@ if ( ! function_exists( __NAMESPACE__ . '\\write_log' ) ) {
      * @param bool   $display_stack Whether to include stack trace
      */
     function write_log( $log, $full_debug = false, $display_stack = false ) {
-        // Only log if debugging is enabled
-        if ( ! WP_DEBUG || ! WP_DEBUG_LOG || ! $full_debug ) {
-            return;
-        }
-        
-        // Prepare the log message
-        $msg = is_array( $log ) || is_object( $log )
-             ? print_r( $log, true )
-             : $log;
-        $msg .= "\n\n";
-        
-        // Add stack trace if requested
-        if ( $display_stack ) {
-            $backtrace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
-            
-            // Skip frame 0 (this function) and frame 1 (caller)
-            foreach ( array_slice( $backtrace, 2 ) as $index => $frame ) {
-                $class = isset( $frame['class'] ) ? $frame['class'] . $frame['type'] : '';
-                $func  = $frame['function'] ?? 'N/A';
-                $file  = $frame['file'] ?? 'N/A';
-                $line  = $frame['line'] ?? 'N/A';
-                
-                $msg .= sprintf(
-                    "Stack #%d → %s%s() in %s on line %s\n",
-                    $index + 1,
-                    $class,
-                    $func,
-                    $file,
-                    $line
-                );
-            }
-            $msg .= "\n---";
-        }
-        
-        error_log( $msg );
+        \Hexa\PluginCore\LogFiles\DebugLogger::write(
+            $log, (bool) $full_debug, (bool) $display_stack, \Hexa\PluginCore\LogFiles\DebugLogger::SPACED_STACK, stack_start: 3
+        );
     }
 }
 

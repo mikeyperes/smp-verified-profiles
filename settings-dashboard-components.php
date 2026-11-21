@@ -31,25 +31,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string HTML markup for the toggle switch
  */
 function render_toggle_switch( $id, $label = '', $checked = false, $onclick = '', $extra_class = '' ) {
-    // Build checked attribute if enabled
-    $checked_attr = $checked ? 'checked' : '';
-    
-    // Build onclick attribute if provided
-    $onclick_attr = $onclick ? ' onclick="' . esc_attr( $onclick ) . '"' : '';
-    
-    // Build the toggle HTML
-    $html = '<label class="smp-toggle-switch ' . esc_attr( $extra_class ) . '">';
-    $html .= '<input type="checkbox" id="' . esc_attr( $id ) . '" ' . $checked_attr . $onclick_attr . '>';
-    $html .= '<span class="smp-toggle-slider"></span>';
-    
-    // Add optional label
-    if ( $label ) {
-        $html .= '<span class="smp-toggle-label">' . esc_html( $label ) . '</span>';
-    }
-    
-    $html .= '</label>';
-    
-    return $html;
+    return \Hexa\PluginCore\WpAdminComponents\CoreUi::legacy_toggle(
+        (string) $id, (string) $label, (bool) $checked, (string) $onclick, (string) $extra_class, 'smp'
+    );
 }
 
 /**
