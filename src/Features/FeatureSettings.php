@@ -26,6 +26,8 @@ final class FeatureSettings {
             'profile_price_mode'   => 'payment',
             'claim_price_id'       => '',
             'claim_price_mode'     => 'payment',
+            'legacy_checkout_product_id' => 0,
+            'legacy_profile_icon_url'     => '',
         ];
     }
 
@@ -42,6 +44,19 @@ final class FeatureSettings {
 
     public static function on( string $feature ): bool {
         return ! empty( self::all()[ $feature ] );
+    }
+
+    /** Build a legacy WooCommerce action URL from this site's saved product. */
+    public static function legacy_checkout_url( array $query ): string {
+        // Bug: the legacy dashboard pointed every site at one site's product ID.
+        // Fix: read the local mapping before producing a WooCommerce checkout link.
+        // Why this way: both dashboards keep their existing order arguments and use the same setting.
+        $id = (int) self::all()['legacy_checkout_product_id'];
+        if ( $id < 1 ) {
+            return '#';
+        }
+        $checkout = function_exists( 'wc_get_checkout_url' ) ? wc_get_checkout_url() : home_url( '/checkout/' );
+        return add_query_arg( [ 'add-to-cart' => $id ] + $query, $checkout );
     }
 
     /** Payments run only when switched on here and Stripe is ready in HWS Base Tools. */
@@ -68,6 +83,10 @@ final class FeatureSettings {
             $value = $raw[ $key ] ?? $default;
             if ( is_bool( $default ) ) {
                 $out[ $key ] = (bool) $value;
+            } elseif ( 'legacy_checkout_product_id' === $key ) {
+                $out[ $key ] = absint( $value );
+            } elseif ( 'legacy_profile_icon_url' === $key ) {
+                $out[ $key ] = esc_url_raw( (string) $value, [ 'http', 'https' ] );
             } elseif ( str_ends_with( $key, '_mode' ) ) {
                 $out[ $key ] = 'subscription' === $value ? 'subscription' : 'payment';
             } else {

@@ -87,7 +87,8 @@ function display_admin_unclaimed_profiles() {
                     echo "<td>{$profile_title}</td>";
                     echo "<td><a href='{$profile_url}' target=_blank>View Profile</a></td>";
                     echo "<td>{$profile_type}</td>";
-                    echo "<td><a href='https://herforward.com/checkout/?add-to-cart=14140&unclaimed_profile_id={$profile_id}' target='_blank'>Claim This Profile</a></td>";
+                    $claim_url = \SMP\VerifiedProfiles\Features\FeatureSettings::legacy_checkout_url( [ 'unclaimed_profile_id' => $profile_id ] );
+                    echo "<td><a href='" . esc_url( $claim_url ) . "' target='_blank'>Claim This Profile</a></td>";
                     echo "</tr>";
                 }
             }
@@ -146,15 +147,15 @@ function display_admin_profiles_dashboard() {
 
     $verified_profile_link = empty($price_verified_profile) 
         ? '#' 
-        : 'https://herforward.com/checkout/?add-to-cart=14140&order_type=new';
+        : \SMP\VerifiedProfiles\Features\FeatureSettings::legacy_checkout_url( [ 'order_type' => 'new' ] );
 
     echo '<section class="display_admin_profiles_dashboard">';
     display_admin_unclaimed_profiles();
     display_admin_claimed_profiles();
     echo '<h2 class="header">Orders Dashboard</h2>
-    <a target=_blank href="https://herforward.com/my-account/">View Account Dashboard</a>';
+    <a target=_blank href="' . esc_url( home_url( '/my-account/' ) ) . '">View Account Dashboard</a>';
  echo '<h2 class="header">Additional Links</h2><div class="container_display_admin_profiles_dashboard_footer">
-    <a href="' . $verified_profile_link . '" class="apply-link" target="_blank">Apply for a new Her Forward Verified Profile</a>
+    <a href="' . esc_url( $verified_profile_link ) . '" class="apply-link" target="_blank">Apply for a new Her Forward Verified Profile</a>
 ';
     do_action( 'smp_verified_profiles_dashboard_links' );
     echo '</div></section>';
@@ -170,7 +171,7 @@ function display_admin_profiles_dashboard() {
             $('.apply-link, .claim-link').click(function(e) {
                 if ($(this).attr('href') === '#') {
                     e.preventDefault();
-                    alert("Your account is not yet enabled to apply for this feature. Please reach out to contact@herforward.com for further help.");
+                    alert("Your account is not yet enabled to apply for this feature. Please reach out to " + <?php echo wp_json_encode( 'contact@' . wp_parse_url( home_url(), PHP_URL_HOST ) ); ?> + " for further help.");
                 }
             });
         });

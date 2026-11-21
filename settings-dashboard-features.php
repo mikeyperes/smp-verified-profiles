@@ -60,6 +60,11 @@ function smp_vp_render_features_tab(): void {
             'body_html' => '<p>Payments use the one Stripe connection in HWS Base Tools, shared with every HWS plugin. ' . ( ! $stripe ? '<strong>HWS Base Tools 13.46 or newer is needed.</strong>' : ( $ready ? 'Stripe is connected in ' . esc_html( \HWS\BaseTools\Payments\Stripe::mode() ) . ' mode.' : '<strong>Stripe is off or has no key yet.</strong>' ) . ' <a href="' . esc_url( $payments_url ) . '">Open Payments in HWS Base Tools</a>' ) . '</p>'
                 . CoreUi::toggle( 'payments', (bool) $s['payments'], 'Take payments for profiles and claims', [ 'id' => 'smp-vp-f-payments', 'disabled' => ! $stripe ] ),
         ] );
+        echo CoreUi::card( [
+            'title'     => 'Legacy profile links',
+            'body_html' => '<p><label>WooCommerce product ID<br><input type="number" min="0" name="legacy_checkout_product_id" value="' . esc_attr( (string) $s['legacy_checkout_product_id'] ) . '"></label></p>'
+                . '<p><label>Profile page icon URL<br><input type="url" class="regular-text" name="legacy_profile_icon_url" value="' . esc_attr( (string) $s['legacy_profile_icon_url'] ) . '"></label></p>',
+        ] );
         echo CoreUi::card( [ 'title' => 'Save', 'body_html' => '<button type="button" class="hpc-button smp-vp-f-save">Save features</button> <span class="smp-vp-f-status" aria-live="polite"></span>' ] );
 
         $rows = '';

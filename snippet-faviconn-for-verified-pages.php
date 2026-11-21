@@ -11,8 +11,13 @@ if (!function_exists(__NAMESPACE__ . '\\custom_favicon_for_verified_pages')) {
         if (is_page('claim-your-profile') || 
             is_page('her-forward-verified-profiles') || 
             is_page('her-forward-verified-profile-badges')) {
-            // Output the custom favicon HTML tag
-            echo '<link rel="icon" type="image/png" href="https://herforward.com/wp-content/uploads/2024/01/faviconn-e1704592443814.png" />';
+            // Bug: the snippet printed another site's icon on a profile page.
+            // Fix: use the site's saved profile icon.
+            // Why this way: this override is independent of the ordinary WordPress site icon.
+            $url = (string) \SMP\VerifiedProfiles\Features\FeatureSettings::all()['legacy_profile_icon_url'];
+            if ( '' !== $url ) {
+                echo '<link rel="icon" type="image/png" href="' . esc_url( $url ) . '" />';
+            }
         }
     }
 } else write_log("⚠️ Warning: " . __NAMESPACE__ . "\\custom_favicon_for_verified_pages function is already declared", true);

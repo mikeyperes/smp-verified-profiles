@@ -47,12 +47,13 @@ if (!function_exists(__NAMESPACE__ . '\\muckrack_author')) {
     function muckrack_author($atts) {
 ///        if (!check_plugin_acf()) return;
 
-        global $wpdb;
-        $pageURL = $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
-        $nicename = str_replace(array("herforward.com/author/", "/"), "", $pageURL);
-
-        // Get author ID based on nicename
-        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
+        // Bug: the shortcodes parsed one site's author URLs and failed on other domains.
+        // Fix: read the author that WordPress resolved for the current archive.
+        // Why this way: WordPress already handles the site's permalink and query rules.
+        $author_id = is_author() ? get_queried_object_id() : 0;
+        if ( $author_id < 1 ) {
+            return '';
+        }
         $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
 
         if ($verified_field == 'true') {
@@ -84,11 +85,10 @@ if (!function_exists(__NAMESPACE__ . '\\verified_icon_author')) {
     function verified_icon_author($atts) {
        // if (!check_plugin_acf()) return;
 
-        global $wpdb;
-        $pageURL = $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
-        $nicename = str_replace(array("herforward.com/author/", "/"), "", $pageURL);
-
-        $author_id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE user_nicename = %s", $nicename));
+        $author_id = is_author() ? get_queried_object_id() : 0;
+        if ( $author_id < 1 ) {
+            return '';
+        }
         $verified_field = \Hexa\PluginCore\Fields\Field::get('is_verified', 'user_' . $author_id);
         $verified_image_url = "/wp-content/uploads/2022/07/checkmark.svg"; // Placeholder for image
 

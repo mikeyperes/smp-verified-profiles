@@ -81,8 +81,7 @@ if ( $profile_post ) {
     $profile_url   = get_permalink( $profile_id );
     $profile_type  = implode( ', ', wp_get_post_terms( $profile_id, 'category', [ 'fields' => 'names' ] ) );
     
-    // Dynamically build the claim profile URL using home_url()
-    $claim_url = home_url( '/checkout/?add-to-cart=14140&unclaimed_profile_id=' . $profile_id );
+    $claim_url = \SMP\VerifiedProfiles\Features\FeatureSettings::legacy_checkout_url( [ 'unclaimed_profile_id' => $profile_id ] );
     
     echo "<tr>";
     echo "<td>{$profile_id}</td>";
@@ -151,7 +150,7 @@ function display_admin_profiles_dashboard() {
 
 $verified_profile_link = empty($price_verified_profile)
     ? '#'
-    : home_url('/checkout/?add-to-cart=14140&order_type=new');
+    : \SMP\VerifiedProfiles\Features\FeatureSettings::legacy_checkout_url( [ 'order_type' => 'new' ] );
 
 
 

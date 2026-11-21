@@ -32,6 +32,8 @@ final class FeaturesAdmin implements ModuleInterface {
             'profile_price_mode' => $request->key( 'profile_price_mode', 'payment', 'post' ),
             'claim_price_id'     => $request->text( 'claim_price_id', '', 'post' ),
             'claim_price_mode'   => $request->key( 'claim_price_mode', 'payment', 'post' ),
+            'legacy_checkout_product_id' => $request->int( 'legacy_checkout_product_id', (int) FeatureSettings::all()['legacy_checkout_product_id'], 'post' ),
+            'legacy_profile_icon_url'     => $request->text( 'legacy_profile_icon_url', (string) FeatureSettings::all()['legacy_profile_icon_url'], 'post' ),
         ] );
 
         return [ 'saved' => true, 'message' => 'Features saved.', 'settings' => $settings ];
