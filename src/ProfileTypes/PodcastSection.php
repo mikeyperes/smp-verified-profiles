@@ -67,8 +67,8 @@ final class PodcastSection implements ModuleInterface {
         update_option('smp_vp_podcast_rewrite_pending', 1, false);
     }
     public static function save(): void {
-        if (!current_user_can('manage_options')) { wp_send_json_error(['message'=>'Insufficient permissions.'],403); }
-        check_ajax_referer('smp_verified_profiles_podcast', 'nonce');
+        if (!\Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows('manage_options')) { wp_send_json_error(['message'=>'Insufficient permissions.'],403); }
+        \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce('smp_verified_profiles_podcast', 'nonce');
         $value = isset($_POST['enabled']) ? wp_unslash($_POST['enabled']) : null;
         if (!in_array($value, ['0','1',0,1], true)) { wp_send_json_error(['message'=>'enabled must be 0 or 1.'],400); }
         self::set_enabled((bool)$value);

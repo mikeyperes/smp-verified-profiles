@@ -91,7 +91,7 @@ final class ClaimProfile implements ModuleInterface {
     }
 
     public static function handle_submit(): void {
-        if ( ! FeatureSettings::on( 'claim_profile' ) || ! check_ajax_referer( self::NONCE, 'nonce', false ) ) {
+        if ( ! FeatureSettings::on( 'claim_profile' ) || ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( self::NONCE, 'nonce', false ) ) {
             wp_send_json_error( [ 'message' => 'Claiming is not available. Refresh the page and try again.' ] );
         }
         $profile_id = absint( $_POST['profile_id'] ?? 0 );

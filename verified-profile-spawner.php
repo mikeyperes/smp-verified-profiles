@@ -1049,38 +1049,38 @@ function smp_vp_spawn_annotate_entities( array $entities, array $payload ): arra
 }
 
 function smp_vp_ajax_spawn_save_settings(): void {
-    if ( ! current_user_can( 'manage_options' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $settings = smp_vp_spawn_save_settings( isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : [] );
     wp_send_json_success( [ 'message' => 'Spawning API settings saved.', 'settings' => $settings ] );
 }
 
 function smp_vp_ajax_spawn_profile_state(): void {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_posts' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $post_id = isset( $_POST['post_id'] ) ? (int) $_POST['post_id'] : 0;
     wp_send_json_success( smp_vp_spawn_post_profile_state( $post_id ) );
 }
 
 function smp_vp_ajax_spawn_attach_existing(): void {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_posts' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
 
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
 
     $post_id = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
     $profile_id = isset( $_POST['profile_id'] ) ? absint( $_POST['profile_id'] ) : 0;
 
-    if ( $post_id <= 0 || ! current_user_can( 'edit_post', $post_id ) ) {
+    if ( $post_id <= 0 || ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_post', $post_id ) ) {
         wp_send_json_error( [ 'message' => 'Invalid or unauthorized post.' ], 403 );
     }
 
-    if ( $profile_id <= 0 || ! current_user_can( 'edit_post', $profile_id ) ) {
+    if ( $profile_id <= 0 || ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_post', $profile_id ) ) {
         wp_send_json_error( [ 'message' => 'Invalid or unauthorized verified profile.' ], 403 );
     }
 
@@ -1178,10 +1178,10 @@ function smp_vp_spawn_post_profile_state( int $post_id ): array {
 }
 
 function smp_vp_ajax_spawn_test_api(): void {
-    if ( ! current_user_can( 'manage_options' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'manage_options' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $settings = smp_vp_spawn_save_settings( isset( $_POST['settings'] ) && is_array( $_POST['settings'] ) ? wp_unslash( $_POST['settings'] ) : [] );
     $result = smp_vp_spawn_api_request( 'GET', '/health', [], $settings );
     $settings['last_test'] = [
@@ -1199,10 +1199,10 @@ function smp_vp_ajax_spawn_test_api(): void {
 }
 
 function smp_vp_ajax_spawn_detect_existing(): void {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_posts' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $payload = smp_vp_spawn_request_payload();
     $entities = [];
     foreach ( smp_vp_spawn_extract_candidate_names( $payload ) as $candidate ) {
@@ -1221,10 +1221,10 @@ function smp_vp_ajax_spawn_detect_existing(): void {
 }
 
 function smp_vp_ajax_spawn_propose(): void {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_posts' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $payload = smp_vp_spawn_request_payload();
     $result = smp_vp_spawn_api_request( 'POST', '/entities/propose', $payload );
     if ( empty( $result['success'] ) ) {
@@ -1237,10 +1237,10 @@ function smp_vp_ajax_spawn_propose(): void {
 }
 
 function smp_vp_ajax_spawn_approve(): void {
-    if ( ! current_user_can( 'edit_posts' ) ) {
+    if ( ! \Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows( 'edit_posts' ) ) {
         wp_send_json_error( [ 'message' => 'Insufficient permissions.' ], 403 );
     }
-    check_ajax_referer( SMP_VP_SPAWN_NONCE, 'nonce' );
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce( SMP_VP_SPAWN_NONCE, 'nonce' );
     $payload = smp_vp_spawn_request_payload();
     $incoming = isset( $_POST['entities'] ) && is_array( $_POST['entities'] ) ? wp_unslash( $_POST['entities'] ) : [];
     $spawn_entities = [];

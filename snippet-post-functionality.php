@@ -603,11 +603,11 @@ function render_find_profiles_metabox(\WP_Post $post) {
  */
 add_action('wp_ajax_smpvp_lookup_profile', __NAMESPACE__ . '\\ajax_lookup_profile');
 function ajax_lookup_profile() {
-    if (!current_user_can('edit_posts')) {
+    if (!\Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows('edit_posts')) {
         wp_send_json_error(['message' => 'Insufficient permissions.'], 200);
     }
 
-    check_ajax_referer('smpvp_nonce', 'nonce');
+    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce('smpvp_nonce', 'nonce');
 
     $name = isset($_POST['name']) ? wp_unslash($_POST['name']) : '';
     $name = trim((string)$name);
