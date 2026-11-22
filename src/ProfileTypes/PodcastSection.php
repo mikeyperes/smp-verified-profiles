@@ -1,5 +1,7 @@
 <?php
 namespace SMP\VerifiedProfiles\ProfileTypes;
+
+use Hexa\PluginCore\WpAdminAjax\AjaxGuard;
 use Hexa\PluginCore\CoreContracts\ModuleInterface;
 use SMP\VerifiedProfiles\ContentTypes\VerifiedProfileStructures;
 /** Storage and integration contract. Presentation intentionally left to the screen owner. */
@@ -67,8 +69,7 @@ final class PodcastSection implements ModuleInterface {
         update_option('smp_vp_podcast_rewrite_pending', 1, false);
     }
     public static function save(): void {
-        if (!\Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows('manage_options')) { wp_send_json_error(['message'=>'Insufficient permissions.'],403); }
-        \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce('smp_verified_profiles_podcast', 'nonce');
+        AjaxGuard::require_access( 'manage_options', 'smp_verified_profiles_podcast', 'nonce', capability_error: [ ['message'=>'Insufficient permissions.'], 403 ] );
         $value = isset($_POST['enabled']) ? wp_unslash($_POST['enabled']) : null;
         if (!in_array($value, ['0','1',0,1], true)) { wp_send_json_error(['message'=>'enabled must be 0 or 1.'],400); }
         self::set_enabled((bool)$value);

@@ -1,5 +1,7 @@
 <?php namespace smp_verified_profiles;
 
+use Hexa\PluginCore\WpAdminAjax\AjaxGuard;
+
 function snippet_post_functionality(){
 add_action('admin_footer', __NAMESPACE__.'\custom_post_admin_footer_scripts');
 add_action('save_post',  __NAMESPACE__.'\process_profiles_on_save', 10, 3);
@@ -603,11 +605,7 @@ function render_find_profiles_metabox(\WP_Post $post) {
  */
 add_action('wp_ajax_smpvp_lookup_profile', __NAMESPACE__ . '\\ajax_lookup_profile');
 function ajax_lookup_profile() {
-    if (!\Hexa\PluginCore\WpAdminAjax\AjaxGuard::allows('edit_posts')) {
-        wp_send_json_error(['message' => 'Insufficient permissions.'], 200);
-    }
-
-    \Hexa\PluginCore\WpAdminAjax\AjaxGuard::check_request_nonce('smpvp_nonce', 'nonce');
+    AjaxGuard::require_access( 'edit_posts', 'smpvp_nonce', 'nonce', capability_error: [ ['message' => 'Insufficient permissions.'], 200 ] );
 
     $name = isset($_POST['name']) ? wp_unslash($_POST['name']) : '';
     $name = trim((string)$name);
